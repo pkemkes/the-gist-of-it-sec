@@ -1,0 +1,9 @@
+langchain == 0.3.0
+langchain-community == 0.3.0
+langchain-openai == 0.2.0
+feedparser == 6.0.11
+beautifulsoup4 == 4.12.3
+python-telegram-bot == 21.6
+mariadb==1.1.11
+flask == 3.0.3
+gunicorn == 23.0.0

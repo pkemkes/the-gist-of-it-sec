@@ -1,0 +1,9 @@
+[project]
+name = "gists_utils"
+version = "0.1.0"
+dependencies = [
+	"mariadb == 1.1.11",
+	"langchain-openai == 0.2.14",
+	"langchain-chroma == 0.1.4",
+	"chromadb-client == 0.6.0"
+]

@@ -1,0 +1,127 @@
+services:
+    
+  telegram_bot:
+    image: pkemkes/the-gist-of-it-sec-telegram-bot
+    container_name: telegram_bot
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - DB_HOSTNAME=database
+      - DB_USERNAME=${DB_TELEGRAMBOT_USERNAME}
+      - DB_PASSWORD=${DB_TELEGRAMBOT_PASSWORD}
+      - TELEGRAM_API_KEY=${TELEGRAM_API_KEY}
+      - APP_BASE_URL=http://localhost:8081  # NOTE: Change this to your base URL
+    networks:
+      - database
+
+  gists_bot:  
+    image: pkemkes/the-gist-of-it-sec-gists-bot
+    container_name: gists_bot
+    depends_on:
+      database:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    environment:
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_PROJECT=the-gist-of-it-sec
+      - LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - DB_HOSTNAME=database
+      - DB_USERNAME=${DB_GISTSBOT_USERNAME}
+      - DB_PASSWORD=${DB_GISTSBOT_PASSWORD}
+      - CHROMA_HOST=chromadb
+      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
+      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
+      - APP_MODE=dev  # NOTE: remove this for production use
+    networks:
+      - database
+      - chromadb
+
+  rest_server:  
+    image: pkemkes/the-gist-of-it-sec-rest-server
+    container_name: rest_server
+    depends_on:
+      database:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    environment:
+      - SERVER_ORIGINS=http://localhost:8081,http://localhost:5173  # NOTE: Change this to your base URL
+      - DB_HOSTNAME=database
+      - DB_USERNAME=${DB_GISTSBOT_USERNAME}
+      - DB_PASSWORD=${DB_GISTSBOT_PASSWORD}
+      - CHROMA_HOST=chromadb
+      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
+      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
+    networks:
+      - database
+      - chromadb
+    ports:
+      - "8080:8080"
+
+  frontend:
+    image: pkemkes/the-gist-of-it-sec-frontend
+    container_name: frontend
+    depends_on:
+      rest_server:
+        condition: service_healthy
+    environment:
+      VITE_BACKEND_URL: http://localhost:8080/  # NOTE: Change this to your base URL
+      # NOTE: either remove or update the following three variables
+      VITE_TELEGRAM_URL: https://url-to-your-telegram-bot.this-is-not-a-real-url/ 
+      VITE_PRIVACY_URL: https://url-to-your-privacy-notice.this-is-not-a-real-url/
+      VITE_IMPRINT_URL: https://url-to-your-imprint.this-is-not-a-real-url/
+    ports:
+      - "8081:80"
+
+  database:
+    image: pkemkes/the-gist-of-it-sec-database
+    container_name: database
+    logging:
+      options:
+        max-size: 1g
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - DB_GISTSBOT_USERNAME=${DB_GISTSBOT_USERNAME}
+      - DB_GISTSBOT_PASSWORD=${DB_GISTSBOT_PASSWORD}
+      - DB_RESTAPI_USERNAME=${DB_RESTAPI_USERNAME}
+      - DB_RESTAPI_PASSWORD=${DB_RESTAPI_PASSWORD}
+      - DB_TELEGRAMBOT_USERNAME=${DB_TELEGRAMBOT_USERNAME}
+      - DB_TELEGRAMBOT_PASSWORD=${DB_TELEGRAMBOT_PASSWORD}
+    volumes:
+      - database_data:/var/lib/mysql
+    networks:
+      - database
+  
+  chromadb:
+    image: pkemkes/the-gist-of-it-sec-chromadb
+    container_name: chromadb
+    logging:
+      options:
+        max-size: 1g
+    environment:
+      - IS_PERSISTENT=TRUE
+      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.token_authn.TokenAuthenticationServerProvider
+      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
+      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
+      - PERSIST_DIRECTORY=/chroma/chroma
+    volumes:
+      - chromadb-data:/chroma/chroma
+    networks:
+      - chromadb
+
+
+networks:
+  database:
+  chromadb:
+
+volumes:
+  database_data:
+    driver: local
+  chromadb-data:
+    driver: local

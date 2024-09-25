@@ -1,0 +1,17 @@
+FROM python:3.12
+
+WORKDIR /usr/bin/thegistofitsec
+
+COPY ./gists_bot/requirements.txt ./requirements.txt
+COPY ./gists_utils ../gists_utils
+
+RUN pip install -r requirements.txt
+
+RUN addgroup --gid 1001 gister && \
+    yes | adduser --disabled-password --uid 1001 --ingroup gister gister
+
+USER gister
+
+COPY ./gists_bot/ ./
+
+ENTRYPOINT ["python3", "main.py"]
