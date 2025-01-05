@@ -13,7 +13,7 @@ class RSSEntry:
         self._entry_dict = entry_dict
         self.reference: str = self._extract("id")
         self.feed_id = feed_id
-        self.author: str = self._extract("author")
+        self.author: str = self._extract("author", "")
         self.title: str = self._extract("title")
         self.published: datetime = self._parse_datetime("published_parsed")
         self.updated: datetime = self._parse_datetime("updated_parsed")
@@ -26,8 +26,8 @@ class RSSEntry:
             "User-Agent": self.dummy_user_agent
         }
 
-    def _extract(self, field: str) -> Any:
-        extracted = self._entry_dict.get(field)
+    def _extract(self, field: str, default: any = None) -> Any:
+        extracted = self._entry_dict.get(field, default)
         if extracted is None:
             raise KeyError(f"Entry has no {field}")
         return extracted
