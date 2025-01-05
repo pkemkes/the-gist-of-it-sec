@@ -12,7 +12,8 @@ from feeds.feeds import (
     KrebsOnSecurity,
     BleepingComputer,
     DarkReading,
-    TheVergeCybersecurity
+    TheVergeCybersecurity,
+    GDATASecurityBlog
 )
 
 
@@ -42,7 +43,8 @@ def main():
         KrebsOnSecurity(),
         BleepingComputer(),
         DarkReading(),
-        TheVergeCybersecurity()
+        TheVergeCybersecurity(),
+        GDATASecurityBlog(),
     ]
     feed_handlers = [ FeedHandler(db, ai, chroma, google, feed) for feed in feeds ]
 

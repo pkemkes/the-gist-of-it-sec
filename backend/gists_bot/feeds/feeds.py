@@ -78,3 +78,21 @@ class TheVergeCybersecurity(RSSFeed):
         if len(entry_texts) == 0:
             raise RuntimeError(NO_TEXT_IN_CONTAINER_MSG)
         return "".join(entry_texts).strip()
+
+
+class GDATASecurityBlog(RSSFeed):
+    def __init__(self):
+        self._id = None
+        self._rss_url = "https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"
+        super().__init__()
+    
+    @staticmethod
+    def _extract_text(page: str) -> str:
+        soup = BeautifulSoup(page, "html.parser")
+        entry_content = soup.find("div", { "class": "nm-article-blog" })
+        if entry_content is None:
+            raise RuntimeError(MISSING_CONTAINER_MSG)
+        entry_texts = entry_content.find_all(string=True)
+        if len(entry_texts) == 0:
+            raise RuntimeError(NO_TEXT_IN_CONTAINER_MSG)
+        return "".join(entry_texts).strip()
