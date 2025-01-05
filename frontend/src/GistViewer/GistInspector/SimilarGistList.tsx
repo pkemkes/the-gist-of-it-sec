@@ -11,7 +11,7 @@ interface SimilarGistListProps {
 export const SimilarGistList = ({ gistId }: SimilarGistListProps) => {
   const { data, error, isFetching } = backendApi.useGetSimilarGistsQuery({ id: gistId });
 
-  if (error || data == undefined && isFetching) {
+  if (error || data == undefined && !isFetching) {
     return <ErrorMessage />;
   }
 
