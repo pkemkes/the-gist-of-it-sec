@@ -95,4 +95,23 @@ class GDATASecurityBlog(RSSFeed):
         entry_texts = entry_content.find_all(string=True)
         if len(entry_texts) == 0:
             raise RuntimeError(NO_TEXT_IN_CONTAINER_MSG)
+        return "".join(entry_texts).strip()    
+
+
+class TheRecord(RSSFeed):
+    def __init__(self):
+        self._id = None
+        self._rss_url = "https://therecord.media/feed"
+        super().__init__()
+    
+    @staticmethod
+    def _extract_text(page: str) -> str:
+        soup = BeautifulSoup(page, "html.parser")
+        article_content = soup.find("div", { "class": "article__content" })
+        entry_content = article_content.findChildren("span", { "class": "wysiwyg-parsed-content" })
+        if entry_content is None or len(entry_content) < 1:
+            raise RuntimeError(MISSING_CONTAINER_MSG)
+        entry_texts = entry_content[0].find_all(string=True)
+        if len(entry_texts) == 0:
+            raise RuntimeError(NO_TEXT_IN_CONTAINER_MSG)
         return "".join(entry_texts).strip()
