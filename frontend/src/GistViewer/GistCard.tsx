@@ -81,7 +81,7 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
     ? undefined 
     : <Box sx={{
         display: "flex",
-        justifyContent: "right"
+        justifyContent: "right",
       }}>
         <Typography sx={{ 
           color: "text.secondary",
@@ -99,7 +99,8 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
       <CardContent>
         <Box sx={{
           display: "grid",
-          gridTemplateColumns: "auto 8rem",
+          gridTemplateColumns: "auto auto",
+          columnGap: similarity ? "1rem" : undefined,
         }}>
           <Typography>
             { feedTitle }
