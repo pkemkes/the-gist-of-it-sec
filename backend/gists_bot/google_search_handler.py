@@ -29,8 +29,7 @@ class GoogleSearchHandler:
 		retry = Retry(total=3, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
 		session.mount("https://", HTTPAdapter(max_retries=retry))
 		url = self._url + quote(gist.search_query)
-		
-		response = requests.get(url)
+		response = session.get(url)
 		if response.status_code == 429:
 			self._logger.warning(f"The Google API quota was reached. Got status 429 for search for gist with id {gist.id}")
 			return None

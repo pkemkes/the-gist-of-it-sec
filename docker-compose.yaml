@@ -64,6 +64,19 @@ services:
     ports:
       - "8080:8080"
 
+  cleanup_bot:  
+    image: pkemkes/the-gist-of-it-sec-cleanup-bot
+    container_name: cleanup_bot
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - DB_HOSTNAME=database
+      - DB_USERNAME=${DB_CLEANUPBOT_USERNAME}
+      - DB_PASSWORD=${DB_CLEANUPBOT_PASSWORD}
+    networks:
+      - database
+
   frontend:
     image: pkemkes/the-gist-of-it-sec-frontend
     container_name: frontend
@@ -93,6 +106,8 @@ services:
       - DB_RESTAPI_PASSWORD=${DB_RESTAPI_PASSWORD}
       - DB_TELEGRAMBOT_USERNAME=${DB_TELEGRAMBOT_USERNAME}
       - DB_TELEGRAMBOT_PASSWORD=${DB_TELEGRAMBOT_PASSWORD}
+      - DB_CLEANUPBOT_USERNAME=${DB_CLEANUPBOT_USERNAME}
+      - DB_CLEANUPBOT_PASSWORD=${DB_CLEANUPBOT_PASSWORD}
     volumes:
       - database_data:/var/lib/mysql
     networks:
@@ -114,7 +129,6 @@ services:
       - chromadb-data:/chroma/chroma
     networks:
       - chromadb
-
 
 networks:
   database:

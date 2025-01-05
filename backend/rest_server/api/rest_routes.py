@@ -83,11 +83,16 @@ def get_similar_gists() -> Response:
     gist, error = get_gist_by_id_in_request()
     if error is not None:
         return error
-    search_result = CHROMA.get_similar_entries_with_relevance_scores(gist.reference)
-    response_data = [gist_and_similarity_to_api_data(
-        DB.get_gist_by_reference(reference), 
-        score
-    ) for reference, score in search_result]
+    # ToDo: This is pretty hacky. We are using k=20 and only take 5 gists. 
+    # 1 is always the given gist, so 19 potential similar gists. 
+    # If more than 14 gists are disabled, we won't be able to return 5 similar gists.
+    search_result = CHROMA.get_similar_entries_with_relevance_scores(gist.reference, k=20)
+    gists_and_scores = [(DB.get_gist_by_reference(reference), score) for reference, score in search_result]
+    gists_and_scores = [(gist, score) for gist, score in gists_and_scores if gist is not None][:5]
+    response_data = [
+        gist_and_similarity_to_api_data(gist, score) 
+        for gist, score in gists_and_scores
+    ]
     return jsonify(response_data), 200
 
 
@@ -104,6 +109,7 @@ def feed_info_to_api_data(feed_info: FeedInfo) -> FeedInfoApiResponse:
     return FeedInfoApiResponse(
         feed_info.id,
         feed_info.title,
+        feed_info.link,
         feed_info.language
     )
 

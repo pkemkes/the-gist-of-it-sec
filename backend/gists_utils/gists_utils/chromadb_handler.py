@@ -27,9 +27,3 @@ class ChromaDbHandler:
 			collection_name=collection_name,
 			embedding_function=self._embedding_function
 		)
-	
-	def get_similar_entries_with_relevance_scores(self, reference: str) -> list[tuple[str, float]]:
-		doc = self._chroma_store.get(reference, include=["embeddings"])
-		embedding = doc.get("embeddings")
-		search_result = self._chroma_store.similarity_search_by_vector_with_relevance_scores(embedding)
-		return [(doc.metadata.get(REFERENCE_KEY), score) for doc, score in search_result]

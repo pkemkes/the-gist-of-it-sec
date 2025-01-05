@@ -38,21 +38,22 @@ class MariaDbGistsHandler(MariaDbHandler):
     
     def insert_feed_info(self, feed: FeedInfo) -> None:
         query = (
-            "INSERT INTO feeds (title, link, language) "
-            "VALUES (?, ?, ?)"
+            "INSERT INTO feeds (title, link, rss_link, language) "
+            "VALUES (?, ?, ?, ?)"
         )
         try:
             with self._connection.cursor() as cur:
                 cur.execute(query, (
                     feed.title,
                     feed.link,
+                    feed.rss_link,
                     feed.language
                 ))
         except mariadb.Error as e:
             self._logger.error("Error inserting feed into databse", exc_info=True)
             raise e
     
-    def get_gist_id_by_reference(self, reference: str) -> int:
+    def get_gist_id_by_reference(self, reference: str) -> int | None:
         query = "SELECT id FROM gists WHERE reference = ?"
         try:
             with self._connection.cursor() as cur:
@@ -67,10 +68,7 @@ class MariaDbGistsHandler(MariaDbHandler):
         if len(results) > 1:
             self._logger.error(f"Found multiple gists with reference {reference}")
             raise KeyError(id)
-        if len(results) == 0:
-            self._logger.error(f"Found no gist with reference {reference}")
-            raise KeyError(id)
-        return results[0][0]
+        return None if len(results) == 0 else results[0][0]
 
     def insert_gist(self, gist: Gist) -> int:
         query = (
@@ -107,7 +105,7 @@ class MariaDbGistsHandler(MariaDbHandler):
             "UPDATE gists "
             "SET feed_id = ?, author = ?, title = ?, published = ?, "
                 "updated = ?, link = ?, summary = ?, tags = ?, search_query = ? "
-            "WHERE reference = ?"
+            "WHERE reference = ? AND disabled IS FALSE"
         )
         try:
             with self._connection.cursor() as cur:

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS feeds (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title TEXT NOT NULL,
     link MEDIUMTEXT NOT NULL,
+    rss_link MEDIUMTEXT NOT NULL,
     language TINYTEXT
 );
 
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS gists (
     summary LONGTEXT NOT NULL,
     tags LONGTEXT NOT NULL,
     search_query MEDIUMTEXT NOT NULL,
+    disabled BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (feed_id) REFERENCES feeds(id),
     FULLTEXT(summary),
     FULLTEXT(tags)

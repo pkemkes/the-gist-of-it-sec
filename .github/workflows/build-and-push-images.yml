@@ -51,6 +51,16 @@ jobs:
             pkemkes/the-gist-of-it-sec-rest-server:latest
             pkemkes/the-gist-of-it-sec-rest-server:${{ github.ref_name }}
 
+      - name: Build and push rest server
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:backend"
+          file: "Dockerfile.cleanup_bot"
+          push: true
+          tags: |
+            pkemkes/the-gist-of-it-sec-rest-server:latest
+            pkemkes/the-gist-of-it-sec-cleanup-bot:${{ github.ref_name }}
+
       - name: Build and push database
         uses: docker/build-push-action@v6
         with:

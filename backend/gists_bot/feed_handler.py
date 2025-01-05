@@ -1,5 +1,4 @@
 from uuid import uuid4
-from datetime import datetime
 
 from gists_utils.logger import get_logger
 from gists_utils.types import Gist, SearchResult
@@ -65,6 +64,8 @@ class FeedHandler:
         # Note: This is quite hacky and might be a problem if a search legitimately returns no results.
         #       This can only really be solved by paying for the API though...
         gist_id = self._db.get_gist_id_by_reference(entry.reference)
+        if gist_id is None:
+            return
         results = self._db.get_search_results_by_gist_id(gist_id)
         if len(results) != 0:
             return

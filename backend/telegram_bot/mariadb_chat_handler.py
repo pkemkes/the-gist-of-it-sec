@@ -10,7 +10,7 @@ class MariaDbChatHandler(MariaDbHandler):
         super().__init__()
 
     def get_next_gists(self, last_id: int) -> list[Gist]:
-        query = ("SELECT * FROM gists WHERE id > ? ORDER BY id ASC")
+        query = ("SELECT * FROM gists WHERE id > ? AND disabled IS FALSE ORDER BY id ASC")
         try:
             with self._connection.cursor() as cur:
                 cur.execute(query, (last_id,))
@@ -51,7 +51,7 @@ class MariaDbChatHandler(MariaDbHandler):
     
     def _get_most_recent_gist_id(self, cur: mariadb.Cursor) -> int:
         try:
-            cur.execute("SELECT id FROM gists ORDER BY id DESC LIMIT 1")
+            cur.execute("SELECT id FROM gists WHERE disabled IS FALSE ORDER BY id DESC LIMIT 1")
             result = cur.fetchone()
             return 0 if result is None else result[0]
         except mariadb.Error as e:

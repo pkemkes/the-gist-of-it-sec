@@ -32,7 +32,7 @@ class MariaDbHandler:
     def query_response_to_gist(response: tuple) -> Gist:
         (
             id, reference, feed_id, author, title, published, 
-            updated, link, summary, tags, search_query
+            updated, link, summary, tags, search_query, disabled
         ) = response
         return Gist(
             id, reference, feed_id, author, title, 
@@ -42,7 +42,7 @@ class MariaDbHandler:
         )
         
     def get_gist_by_id(self, gist_id: int) -> Gist | None:
-        query = "SELECT * FROM gists WHERE id = ?"
+        query = "SELECT * FROM gists WHERE id = ? AND disabled = FALSE"
         try:
             with self._connection.cursor() as cur:
                 cur.execute(query, (gist_id,))
@@ -53,7 +53,7 @@ class MariaDbHandler:
             raise e
     
     def get_feed_by_id(self, gist_id: int) -> FeedInfo | None:
-        query = "SELECT id, title, link, language FROM feeds WHERE id = ?"
+        query = "SELECT * FROM feeds WHERE id = ?"
         try:
             with self._connection.cursor() as cur:
                 cur.execute(query, (gist_id,))

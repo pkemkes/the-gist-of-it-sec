@@ -19,6 +19,7 @@ export type FeedInfoBackendResponse = FeedInfo[];
 export interface FeedInfo {
   id: number,
   title: string,
+  link: string,
   language: string,
 }
 

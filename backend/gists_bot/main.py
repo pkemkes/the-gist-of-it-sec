@@ -1,8 +1,7 @@
-from time import time, sleep
-from typing import Callable, List, Any
 from os import getenv
 
 from gists_utils.logger import get_logger
+from gists_utils.run_in_loop import run_in_loop
 from mariadb_gists_handler import MariaDbGistsHandler
 from openai_handler import OpenAIHandler
 from chromadb_inserter import ChromaDbInserter
@@ -17,20 +16,7 @@ from feeds.feeds import (
 )
 
 
-def run_in_loop(
-        to_be_run: Callable[[Any], None],
-        args: list, timeframe: float = 60
-    ) -> None:
-    while True:
-        started = time()
-        to_be_run(*args)
-        next_execution = started + timeframe
-        now = time()
-        if now < next_execution:
-            sleep(next_execution - now)
-
-
-def process_entries(feed_handlers: List[FeedHandler], mode: str) -> None:
+def process_entries(feed_handlers: list[FeedHandler], mode: str) -> None:
     logger = get_logger("gists_bot")
     entries: list[RSSEntry] = []
     for feed_handler in feed_handlers:
@@ -60,7 +46,7 @@ def main():
     ]
     feed_handlers = [ FeedHandler(db, ai, chroma, google, feed) for feed in feeds ]
 
-    run_in_loop(process_entries, [feed_handlers, mode])
+    run_in_loop(process_entries, [feed_handlers, mode], 60)
 
 
 if __name__ == "__main__":

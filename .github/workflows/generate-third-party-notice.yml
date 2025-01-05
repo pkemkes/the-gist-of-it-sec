@@ -50,6 +50,7 @@ jobs:
           cat ./gists_bot/requirements.txt \
               ./rest_server/requirements.txt \
               ./telegram_bot/requirements.txt \
+              ./cleanup_bot/requirements.txt \
               > ./licenses/requirements.txt
 
       - name: Install requirements

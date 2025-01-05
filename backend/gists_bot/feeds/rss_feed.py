@@ -50,6 +50,7 @@ class RSSFeed(ABC):
             self.id,
             self.title,
             self.link,
+            self.rss_url,
             self.language
         )
     

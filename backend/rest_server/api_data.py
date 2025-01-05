@@ -27,5 +27,6 @@ class SimilarGistApiResponse:
 class FeedInfoApiResponse:
     id: int
     title: str
+    link: str
     language: str
     

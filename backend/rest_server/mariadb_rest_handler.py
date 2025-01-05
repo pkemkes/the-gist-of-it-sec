@@ -25,7 +25,7 @@ class MariaDbRestHandler(MariaDbHandler):
         tags = [f"\\b{tag}\\b" for tag in tags]
         params = (last_id, *search_params, *tags, *disabled_feeds, take)
 
-        constraints = ["id < ?"]
+        constraints = ["disabled is FALSE", "id < ?"]
         constraints += ["(LOWER(title) LIKE ? OR LOWER(summary) LIKE ?)" for _ in search_words]
         constraints += ["tags REGEXP ?" for _ in tags]
         if len(disabled_feeds) > 0:
@@ -53,7 +53,7 @@ class MariaDbRestHandler(MariaDbHandler):
             raise e
         
     def get_gist_by_reference(self, reference: str) -> Gist | None:
-        query = "SELECT * FROM gists WHERE reference = ?"
+        query = "SELECT * FROM gists WHERE reference = ? AND disabled IS FALSE"
         try:
             with self._connection.cursor() as cur:
                 cur.execute(query, (reference,))
@@ -65,8 +65,8 @@ class MariaDbRestHandler(MariaDbHandler):
     
     @staticmethod
     def query_response_to_feed_info(response: tuple) -> FeedInfo:
-        id, title, link, language = response
-        return FeedInfo(id, title, link, language)
+        id, title, link, rss_link, language = response
+        return FeedInfo(id, title, link, rss_link, language)
     
     def get_all_feed_info(self) -> list[FeedInfo]:
         query = "SELECT * FROM feeds"

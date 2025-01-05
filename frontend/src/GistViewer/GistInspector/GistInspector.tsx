@@ -9,6 +9,9 @@ import { SearchResultList } from "./SearchResultList";
 import { useNavigate, useSearchParams } from "react-router";
 import { LoadingBar } from "../LoadingBar";
 import { ErrorMessage } from "../ErrorMessage";
+import { BaseQueryError, fetchBaseQuery, FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { SerializedError } from "@reduxjs/toolkit";
+import { GistNotFoundMessage } from "../GistNotFoundMessage";
 
 interface GistInspectorProps {
   gistId: number
@@ -35,8 +38,27 @@ export const GistInspector = ({ gistId }: GistInspectorProps) => {
     </GistViewerBody>
   }
 
+  const isParsingError = (error: any): error is FetchBaseQueryError => {
+    return (
+      typeof error === "object" &&
+      error !== null &&
+      error.status === "PARSING_ERROR" &&
+      typeof error.originalStatus === "number" &&
+      typeof error.data === "string" &&
+      typeof error.error === "string"
+    )
+  };
+
+  if (error != undefined && isParsingError(error) && error.status == "PARSING_ERROR" && error.originalStatus == 404 ) {
+    return <GistViewerBody>
+      <BackButton />
+      <GistNotFoundMessage />
+    </GistViewerBody>
+  }
+
   if (error || data == undefined) {
     return <GistViewerBody>
+      <BackButton />
       <ErrorMessage />
     </GistViewerBody>
   }

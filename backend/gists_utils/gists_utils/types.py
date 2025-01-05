@@ -7,6 +7,7 @@ class FeedInfo:
     id: int | None
     title: str
     link: str
+    rss_link: str
     language: str
 
 
