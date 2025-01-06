@@ -6,18 +6,19 @@ from mariadb_gists_handler import MariaDbGistsHandler
 from openai_handler import OpenAIHandler
 from chromadb_inserter import ChromaDbInserter
 from google_search_handler import GoogleSearchHandler
+from feeds.feeds import FeedDefinition
 from feeds.rss_feed import RSSFeed
 from feeds.rss_entry import RSSEntry
 
 
 class FeedHandler:
     def __init__(self, db: MariaDbGistsHandler, ai: OpenAIHandler, chromadb: ChromaDbInserter,
-                 google: GoogleSearchHandler, feed: RSSFeed):
+                 google: GoogleSearchHandler, feed_definition: FeedDefinition):
         self._db = db
         self._ai = ai
         self._chromadb = chromadb
         self._google = google
-        self._feed = feed
+        self._feed = RSSFeed(feed_definition)
         self.store_feed_info_if_not_present()
         self._logger = get_logger(f"feed_handler_{self._feed.id}")
         self._dummy_empty_search_result = lambda gist_id: [SearchResult(
@@ -35,7 +36,7 @@ class FeedHandler:
         logger = get_logger(f"feed_handler_{str(uuid4())[:8]}")
         feed_id = self._db.get_feed_id_by_link(self._feed.link)
         if feed_id is None:
-            self._db.insert_feed_info(self._feed.feed_info)
+            self._db.insert_feed_info(self._feed.to_feed_info())
             feed_id = self._db.get_feed_id_by_link(self._feed.link)
             logger.info(f"Stored feed info of feed with link {self._feed.link} and id {feed_id}")
         self._feed.set_id(feed_id)
@@ -74,6 +75,8 @@ class FeedHandler:
         self.get_and_insert_search_results(gist, False)
 
     def process_entry(self, entry: RSSEntry) -> None:
+        if not self._feed.is_correct_category(entry):
+            return
         updated = self._db.get_gist_updated_by_reference_if_exists(entry.reference)
         if updated == entry.updated:  # Current version already exists in db
             self.check_for_potentially_missing_search_results(entry)

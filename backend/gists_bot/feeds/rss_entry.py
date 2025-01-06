@@ -9,7 +9,8 @@ from gists_utils.logger import get_logger
 
 
 class RSSEntry:
-    def __init__(self, entry_dict: feedparser.FeedParserDict, feed_id: str, extract_text: Callable):
+    def __init__(self, entry_dict: feedparser.FeedParserDict, feed_id: str, 
+                 extract_text: Callable[[str], str]):
         self._entry_dict = entry_dict
         self.reference: str = self._extract("id")
         self.feed_id = feed_id
@@ -18,6 +19,7 @@ class RSSEntry:
         self.published: datetime = self._parse_datetime("published_parsed")
         self.updated: datetime = self._parse_datetime("updated_parsed")
         self.link: str = self._extract("link")
+        self.categories: list[str] = self._extract_categories()
         self._extract_text_func: Callable = extract_text
         self.text_content: str | None
         self.logger = get_logger("feed_entry")
@@ -48,6 +50,10 @@ class RSSEntry:
     
     def fetch_text(self) -> None:
         self.text_content = self._extract_text_func(self._fetch_page())
+    
+    def _extract_categories(self) -> list[str]:
+        tags = self._extract("tags", [])
+        return [tag.get("term") for tag in tags]
     
     def to_gist(self, ai_response: AIResponse) -> Gist:
         return Gist(
