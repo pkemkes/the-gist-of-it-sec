@@ -46,7 +46,10 @@ export const SearchResultList = ({ gistId, searchQuery }: SearchResultListProps)
     <SearchResultCard key={ i } searchResult={ searchResult } />
   )));
 
-  dataToDisplay.push(isFetching ? <LoadingBar /> : <GistEndCard />);
+  dataToDisplay.push(isFetching 
+    ? <LoadingBar key={dataToDisplay.length} /> 
+    : <GistEndCard key={dataToDisplay.length} />
+  );
 
   return dataToDisplay;
 };

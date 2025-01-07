@@ -19,7 +19,10 @@ export const SimilarGistList = ({ gistId }: SimilarGistListProps) => {
     <GistCard key={ i } gist={ gist } similarity={ similarity } />
   )) : [];
 
-  dataToDisplay.push(isFetching ? <LoadingBar /> : <GistEndCard />);
+  dataToDisplay.push(isFetching 
+    ? <LoadingBar key={dataToDisplay.length} /> 
+    : <GistEndCard key={dataToDisplay.length} />
+  );
 
   return dataToDisplay
 }

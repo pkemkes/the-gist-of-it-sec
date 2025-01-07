@@ -62,7 +62,10 @@ export const GistList = () => {
     <GistCard key={i} gist={gist} />
   ));
 
-  dataToDisplay.push(isFetching ? <LoadingBar /> : <GistEndCard />);
+  dataToDisplay.push(isFetching 
+    ? <LoadingBar key={dataToDisplay.length} /> 
+    : <GistEndCard key={dataToDisplay.length} />
+  );
 
   return <GistViewerBody scrollRef={ viewerBodyRef }>
     { dataToDisplay }
