@@ -4,10 +4,15 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import gistSlice, { initialState } from './GistViewer/slice';
 import throttle from 'lodash.throttle';
-import { loadDisabledFeeds, saveDisabledFeeds } from './localStorage';
+import { loadDisabledFeeds, loadTimezone, saveStateData } from './localStorage';
 
-const throttledSaveDisabledFeeds = throttle(() => 
-  saveDisabledFeeds(store.getState().gists.disabledFeeds), 1000);
+const throttledSaveDisabledFeeds = throttle(() => {
+  const state = store.getState().gists;
+  saveStateData({
+    disabledFeeds: state.disabledFeeds,
+    timezone: state.timezone,
+  })
+}, 1000);
 
 const rootReducer = combineReducers({
   [backendApi.reducerPath]: backendApi.reducer,
@@ -18,7 +23,11 @@ export const store = configureStore({
   reducer: rootReducer,
   middleware: getDefaultMiddleware => 
     getDefaultMiddleware().concat(backendApi.middleware),
-  preloadedState: { gists: { ...initialState, disabledFeeds: loadDisabledFeeds() ?? initialState.disabledFeeds } }
+  preloadedState: { gists: { 
+    ...initialState, 
+    disabledFeeds: loadDisabledFeeds() ?? initialState.disabledFeeds,
+    timezone: loadTimezone() ?? initialState.timezone,
+  } }
 });
 
 store.subscribe(throttledSaveDisabledFeeds);

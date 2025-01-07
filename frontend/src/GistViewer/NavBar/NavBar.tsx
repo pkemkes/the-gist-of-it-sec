@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router"
 import React from "react"
 import { SearchBar } from "./SearchBar"
 import { TitleIcon } from "./TitleIcon"
+import { TimezoneSelector } from "./TimezoneSelector"
 
 export const NavBar = () => {
   const [searchParams, _] = useSearchParams();
@@ -14,6 +15,7 @@ export const NavBar = () => {
     <SearchBar />
     <FeedSelector />
     <ResetButton />
+    <TimezoneSelector />
   </React.Fragment> 
 
   return (

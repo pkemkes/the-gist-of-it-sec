@@ -14,7 +14,6 @@ export const ResetButton = () => {
         dispatch(backendApi.util.resetApiState());
         dispatch(gistListReset());
       }}
-      sx={{ mr: "1rem" }}
       edge='start'
       color='inherit'
     >

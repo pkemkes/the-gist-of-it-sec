@@ -30,6 +30,7 @@
         "react-dom": "18.3.1",
         "react-redux": "9.1.2",
         "react-router": "7.1.1",
+        "react-timezone-select": "^3.2.8",
         "typescript": "5.6.3",
         "vite": "5.4.10",
         "vitest": "2.1.4"

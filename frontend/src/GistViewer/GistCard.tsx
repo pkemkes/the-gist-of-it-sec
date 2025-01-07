@@ -4,6 +4,10 @@ import { Box, Button, CardContent, SxProps, Typography } from '@mui/material';
 import { ClickableTag } from './GistList/ClickableTag';
 import { useNavigate } from 'react-router';
 import { TextTag } from './GistInspector/TextTag';
+import { useAppSelector } from '../store';
+import { selectTimezone } from './slice';
+import { ITimezone, ITimezoneOption } from 'react-timezone-select';
+import { parseTimezone } from './NavBar/TimezoneSelector';
 
 
 interface GistCardProps {
@@ -39,22 +43,24 @@ const TextTagList = (tagTexts: string[]) =>
     }
   </Box>;
 
-const ToLocaleString = (isoTime: string) => (
+const ToLocaleString = (isoTime: string, timezone: string) => (
   new Date(isoTime).toLocaleString("de-DE", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    timeZone: timezone,
   })
 );
 
 export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
   const navigate = useNavigate();
+  const timezone = parseTimezone(useAppSelector(selectTimezone)).value;
 
-  let dateString = ToLocaleString(gist.published);
+  let dateString = ToLocaleString(gist.published, timezone);
   if (gist.published != gist.updated) {
-    dateString += " — updated: " + ToLocaleString(gist.updated)
+    dateString += " — updated: " + ToLocaleString(gist.updated, timezone)
   }
 
   let feedTitle = gist.feed_title;
