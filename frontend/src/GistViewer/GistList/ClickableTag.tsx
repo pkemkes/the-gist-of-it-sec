@@ -1,6 +1,6 @@
-import ToggleButton from '@mui/material/ToggleButton';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { selectTags, tagToggled } from '../slice';
+import ToggleButton from "@mui/material/ToggleButton";
+import { useAppDispatch, useAppSelector } from "../../store";
+import { selectTags, tagToggled } from "../slice";
 
 
 interface ClickableTagProps {

@@ -1,13 +1,11 @@
-import Card from '@mui/material/Card';
-import { Gist } from '../types';
-import { Box, Button, CardContent, SxProps, Typography } from '@mui/material';
-import { ClickableTag } from './GistList/ClickableTag';
-import { useNavigate } from 'react-router';
-import { TextTag } from './GistInspector/TextTag';
-import { useAppSelector } from '../store';
-import { selectTimezone } from './slice';
-import { ITimezone, ITimezoneOption } from 'react-timezone-select';
-import { parseTimezone } from './NavBar/TimezoneSelector';
+import Card from "@mui/material/Card";
+import { Gist } from "../types";
+import { Box, Button, CardContent, SxProps, Typography } from "@mui/material";
+import { ClickableTag } from "./GistList/ClickableTag";
+import { useNavigate } from "react-router";
+import { TextTag } from "./GistInspector/TextTag";
+import { useAppSelector } from "../store";
+import { selectTimezone } from "./slice";
 
 
 interface GistCardProps {
@@ -56,7 +54,7 @@ const ToLocaleString = (isoTime: string, timezone: string) => (
 
 export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
   const navigate = useNavigate();
-  const timezone = parseTimezone(useAppSelector(selectTimezone)).value;
+  const timezone = useAppSelector(selectTimezone);
 
   let dateString = ToLocaleString(gist.published, timezone);
   if (gist.published != gist.updated) {
@@ -69,15 +67,15 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
   }
 
   let sxProps: SxProps = { 
-    mb: '1rem',
+    mb: "1rem",
   }
 
   if (highlighted) {
     sxProps = {
       ...sxProps,
-      borderStyle: 'outset',
-      borderWidth: '3px',
-      borderColor: 'divider',
+      borderStyle: "outset",
+      borderWidth: "3px",
+      borderColor: "divider",
     }
   }
 
@@ -113,13 +111,13 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
           </Typography>
           { similarityNote }
         </Box>
-        <Typography variant='h5' component='div'>
+        <Typography variant="h5" component="div">
           { gist.title }
         </Typography>
-        <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
+        <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
           { dateString }
         </Typography>
-        <Typography variant='body2' sx={{ mb: 1.5 }}>
+        <Typography variant="body2" sx={{ mb: 1.5 }}>
           { gist.summary }
         </Typography>
         { 

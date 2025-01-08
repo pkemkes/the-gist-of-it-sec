@@ -1,11 +1,10 @@
 import { AppBar, Toolbar } from "@mui/material"
 import { ResetButton } from "./ResetButton"
-import { FeedSelector } from "./FeedSelector"
 import { useSearchParams } from "react-router"
 import React from "react"
 import { SearchBar } from "./SearchBar"
 import { TitleIcon } from "./TitleIcon"
-import { TimezoneSelector } from "./TimezoneSelector"
+import { SettingsMenu } from "./SettingsMenu/SettingsMenu"
 
 export const NavBar = () => {
   const [searchParams, _] = useSearchParams();
@@ -13,9 +12,7 @@ export const NavBar = () => {
 
   const tools = <React.Fragment>
     <SearchBar />
-    <FeedSelector />
     <ResetButton />
-    <TimezoneSelector />
   </React.Fragment> 
 
   return (
@@ -23,6 +20,7 @@ export const NavBar = () => {
       <Toolbar disableGutters>
         <TitleIcon />
         { gistIdIsSet ? undefined : tools }
+        <SettingsMenu />
       </Toolbar>
     </AppBar>
   )

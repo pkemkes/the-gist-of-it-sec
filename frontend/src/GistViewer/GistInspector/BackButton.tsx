@@ -1,5 +1,5 @@
 import { Button } from "@mui/material";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router";
 
 export const BackButton = () => {

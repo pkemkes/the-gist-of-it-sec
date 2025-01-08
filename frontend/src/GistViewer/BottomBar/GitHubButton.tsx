@@ -1,5 +1,5 @@
 import { Button } from "@mui/material";
-import GitHubIcon from '@mui/icons-material/GitHub';
+import GitHubIcon from "@mui/icons-material/GitHub";
 
 
 export const GitHubButton = () => {

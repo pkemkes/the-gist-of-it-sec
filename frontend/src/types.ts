@@ -1,5 +1,3 @@
-export type GistsBackendResponse = Gist[];
-
 export interface Gist {
   id: number,
   feed_title: string,
@@ -14,8 +12,6 @@ export interface Gist {
   search_query: string,
 }
 
-export type FeedInfoBackendResponse = FeedInfo[];
-
 export interface FeedInfo {
   id: number,
   title: string,
@@ -23,14 +19,10 @@ export interface FeedInfo {
   language: string,
 }
 
-export type SimilarGistsBackendResponse = SimilarGist[];
-
 export interface SimilarGist {
   gist: Gist,
   similarity: number,
 }
-
-export type SearchResultsBackendResponse = SearchResult[];
 
 export interface SearchResult {
   id: number,

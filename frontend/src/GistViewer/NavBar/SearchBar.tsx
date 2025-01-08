@@ -1,5 +1,5 @@
 import { InputAdornment, TextField, useTheme } from "@mui/material"
-import SearchIcon from '@mui/icons-material/Search';
+import SearchIcon from "@mui/icons-material/Search";
 import { useAppDispatch } from "../../store";
 import { searchQueryChanged } from "../slice";
 import { useEffect, useState } from "react";

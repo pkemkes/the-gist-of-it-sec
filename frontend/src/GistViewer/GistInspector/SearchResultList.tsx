@@ -1,7 +1,7 @@
 import { Box, Button } from "@mui/material";
-import { backendApi } from "../../services/backend";
+import { backendApi } from "../../backend";
 import { SearchResultCard } from "./SearchResultCard";
-import GoogleIcon from '@mui/icons-material/Google';
+import GoogleIcon from "@mui/icons-material/Google";
 import { LoadingBar } from "../LoadingBar";
 import { GistEndCard } from "../GistEndCard";
 import { ErrorMessage } from "../ErrorMessage";
@@ -20,7 +20,7 @@ export const SearchResultList = ({ gistId, searchQuery }: SearchResultListProps)
     return <ErrorMessage />;
   }
 
-  const searchQueryHeader = <Box key={-1}>
+  const searchQueryHeader = <Box key={ -1 }>
     <Button
       component="a"
       href={ "https://www.google.com/search?q=" + encodeURIComponent(searchQuery) }

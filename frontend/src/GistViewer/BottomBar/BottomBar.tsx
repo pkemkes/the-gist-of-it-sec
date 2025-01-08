@@ -1,6 +1,5 @@
 import { AppBar, Toolbar } from "@mui/material"
 import { GitHubButton } from "./GitHubButton"
-import { ThemeToggle } from "./ThemeToggle"
 import { TelegramButton } from "./TelegramButton"
 import { OptionalTextButton } from "./OptionalTextButton"
 
@@ -18,14 +17,13 @@ export const BottomBar = () => {
         minHeight: "2.5rem",
       }}
     >
-      <ThemeToggle />
       <TelegramButton />
       <OptionalTextButton 
-        urlEnvVar={ import.meta.env.VITE_IMPRINT_URL } 
+        urlEnvVar={ import.meta.env.VITE_IMPRINT_URL ?? "foo" } 
         label="Imprint" 
       />
       <OptionalTextButton 
-        urlEnvVar={ import.meta.env.VITE_PRIVACY_URL }
+        urlEnvVar={ import.meta.env.VITE_PRIVACY_URL ?? "bar" }
         label="Privacy Policy"
       />
       <GitHubButton />

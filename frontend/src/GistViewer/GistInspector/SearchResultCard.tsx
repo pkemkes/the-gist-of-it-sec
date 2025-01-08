@@ -6,7 +6,7 @@ interface SearchResultCardProps {
 }
 
 export const SearchResultCard = ({ searchResult }: SearchResultCardProps) => {
-  return <Card elevation={3} sx={{ 
+  return <Card elevation={ 3 } sx={{ 
     mb: "1rem",
   }}>
     <CardActionArea
@@ -26,7 +26,7 @@ export const SearchResultCard = ({ searchResult }: SearchResultCardProps) => {
                 float: "right",
                 ml: "1rem",
               }}
-              image={searchResult.thumbnail_link}
+              image={ searchResult.thumbnail_link }
             />
           : undefined
       }

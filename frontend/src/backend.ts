@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { GistsBackendResponse, FeedInfoBackendResponse, Gist, SimilarGistsBackendResponse, SearchResultsBackendResponse } from '../types';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { Gist, FeedInfo, SimilarGist, SearchResult } from "./types";
 
 interface GistsQueryParameters {
   lastGist: number | undefined,
@@ -15,12 +15,12 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL == undefined
   : import.meta.env.VITE_BACKEND_URL;
 
 export const backendApi = createApi({
-  reducerPath: 'backendApi',
+  reducerPath: "backendApi",
   baseQuery: fetchBaseQuery({
     baseUrl: backendUrl,
   }),
   endpoints: builder => ({
-    getGists: builder.query<GistsBackendResponse, GistsQueryParameters>({
+    getGists: builder.query<Gist[], GistsQueryParameters>({
       query: ({ lastGist, searchQuery, tags, disabledFeeds }) => {
         let pathAndParams = "gists?";
         if (lastGist != undefined) {
@@ -54,16 +54,16 @@ export const backendApi = createApi({
         )
       },
     }),
-    getAllFeedInfo: builder.query<FeedInfoBackendResponse, void>({
+    getAllFeedInfo: builder.query<FeedInfo[], void>({
       query: () => "feeds",
     }),
     getGistById: builder.query<Gist, { id: number }>({
       query: ({ id }) => `gists/by_id?id=${id}`,
     }),
-    getSimilarGists: builder.query<SimilarGistsBackendResponse, { id: number }>({
+    getSimilarGists: builder.query<SimilarGist[], { id: number }>({
       query: ({ id }) => `gists/similar?id=${id}`,
     }),
-    getSearchResults: builder.query<SearchResultsBackendResponse, { id: number }>({
+    getSearchResults: builder.query<SearchResult[], { id: number }>({
       query: ({ id }) => `gists/search_results?id=${id}`,
     }),
   }),

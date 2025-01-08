@@ -1,21 +1,21 @@
-import { backendApi } from '../../services/backend';
-import { GistCard } from '../GistCard';
-import { GistEndCard } from '../GistEndCard';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { lastGistChanged, selectDisabledFeeds, selectLastGist, selectSearchQuery, selectTags } from '../slice';
-import { GistsBackendResponse, Gist } from 'src/types';
-import { GistViewerBody } from '../GistViewerBody';
-import { ErrorMessage } from '../ErrorMessage';
-import { useEffect, useRef } from 'react';
-import { LoadingBar } from '../LoadingBar';
+import { backendApi } from "../../backend";
+import { GistCard } from "../GistCard";
+import { GistEndCard } from "../GistEndCard";
+import { useAppDispatch, useAppSelector } from "../../store";
+import { lastGistChanged, selectDisabledFeedIds, selectLastGist, selectSearchQuery, selectTags } from "../slice";
+import { Gist } from "src/types";
+import { GistViewerBody } from "../GistViewerBody";
+import { ErrorMessage } from "../ErrorMessage";
+import { useEffect, useRef } from "react";
+import { LoadingBar } from "../LoadingBar";
 
 
-const FindLastGistId = (data: GistsBackendResponse | undefined) => {
+const FindLastGistId = (data: Gist[] | undefined) => {
   const ids = data?.map((gist: Gist) => gist.id)
   return ids == undefined || ids.length == 0 ? undefined : Math.min(...ids);
 };
 
-const SortByUpdatedDateDesc = (data: GistsBackendResponse) => {
+const SortByUpdatedDateDesc = (data: Gist[]) => {
   const sorted = data.slice();
   sorted.sort((a: Gist, b: Gist) => 
     new Date(b.updated).valueOf() - new Date(a.updated).valueOf());
@@ -27,7 +27,7 @@ export const GistList = () => {
   const lastGist = useAppSelector(selectLastGist);
   const searchQuery = useAppSelector(selectSearchQuery);
   const tags = useAppSelector(selectTags);
-  const disabledFeeds = useAppSelector(selectDisabledFeeds);
+  const disabledFeeds = useAppSelector(selectDisabledFeedIds);
 
   const { data, error, isFetching } = backendApi.useGetGistsQuery({ lastGist, searchQuery, tags, disabledFeeds });
 

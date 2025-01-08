@@ -1,5 +1,5 @@
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
-import { backendApi } from "../../services/backend";
+import { backendApi } from "../../backend";
 import { GistViewerBody } from "../GistViewerBody";
 import { GistCard } from "../GistCard";
 import { BackButton } from "./BackButton";
@@ -9,8 +9,7 @@ import { SearchResultList } from "./SearchResultList";
 import { useNavigate, useSearchParams } from "react-router";
 import { LoadingBar } from "../LoadingBar";
 import { ErrorMessage } from "../ErrorMessage";
-import { BaseQueryError, fetchBaseQuery, FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { SerializedError } from "@reduxjs/toolkit";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { GistNotFoundMessage } from "../GistNotFoundMessage";
 
 interface GistInspectorProps {
@@ -65,12 +64,12 @@ export const GistInspector = ({ gistId }: GistInspectorProps) => {
 
   return <GistViewerBody>
     <BackButton />
-    <GistCard gist={data} highlighted />
+    <GistCard gist={ data } highlighted />
     <ToggleButtonGroup
       color="primary"
-      value={mode}
+      value={ mode }
       exclusive
-      onChange={handleModeChange}
+      onChange={ handleModeChange }
       sx={{
         display: "grid",
         gridTemplateColumns: "50% auto",

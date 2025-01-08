@@ -1,4 +1,4 @@
-import { backendApi } from "../../services/backend";
+import { backendApi } from "../../backend";
 import { GistCard } from "../GistCard";
 import { GistEndCard } from "../GistEndCard";
 import { LoadingBar } from "../LoadingBar";

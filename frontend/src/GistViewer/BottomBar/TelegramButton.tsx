@@ -1,5 +1,5 @@
 import { IconButton, Tooltip } from "@mui/material";
-import TelegramIcon from '@mui/icons-material/Telegram';
+import TelegramIcon from "@mui/icons-material/Telegram";
 
 export const TelegramButton = () => {
 	const telegramUrl = import.meta.env.VITE_TELEGRAM_URL;

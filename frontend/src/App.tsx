@@ -1,39 +1,19 @@
 import { GistViewer } from "./GistViewer/GistViewer";
 import { store } from "./store";
 import { Provider } from "react-redux";
-import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
-import { BrowserRouter, Route, Router, Routes } from "react-router";
-import { lightBlue, orange } from "@mui/material/colors";
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { BrowserRouter, Route, Routes } from "react-router";
+import { theme } from "./theme";
 
-const theme = createTheme({
-  colorSchemes: {
-    dark: {
-      palette: {
-        primary: orange,
-        secondary: {
-          main: "#FFFFFF",
-        }
-      }
-    },
-    light: {
-      palette: {
-        primary: lightBlue,
-        secondary: {
-          main: "#000000",
-        }
-      }
-    }
-  }
-});
 
 export const App = () => {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={ theme }>
       <CssBaseline />
-      <Provider store={store}>
+      <Provider store={ store }>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<GistViewer />} />
+            <Route path="/" element={ <GistViewer /> } />
           </Routes>
         </BrowserRouter>
       </Provider>
