@@ -26,7 +26,7 @@ export const TimezoneSelectorMenuItem = () => {
 	const dispatch = useDispatch();
 	const selectedTimezone = useAppSelector(selectTimezone);
 
-	const { options } = useTimezoneSelect({ labelStyle: "original", timezones: timeZones });
+	const { options, parseTimezone } = useTimezoneSelect({ labelStyle: "original", timezones: timeZones });
 
   const handleChange = (event: SelectChangeEvent) => {
     dispatch(timezoneChanged(event.target.value));
@@ -38,7 +38,7 @@ export const TimezoneSelectorMenuItem = () => {
       <Select
         labelId="demo-simple-select-label"
         id="demo-simple-select"
-        value={ selectedTimezone }
+        value={ parseTimezone(selectedTimezone).value }
         label="Timezone"
         onChange={ handleChange }
         MenuProps={ MenuProps }
