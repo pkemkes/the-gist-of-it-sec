@@ -38,7 +38,7 @@ def main():
         for feed_definition in feed_definitions
     ]
 
-    run_in_loop(process_entries, [feed_handlers, mode], 60)
+    run_in_loop(process_entries, [feed_handlers, mode], 5*60)
 
 
 if __name__ == "__main__":
