@@ -19,11 +19,11 @@ export const BottomBar = () => {
     >
       <TelegramButton />
       <OptionalTextButton 
-        urlEnvVar={ import.meta.env.VITE_IMPRINT_URL ?? "foo" } 
+        urlEnvVar={ import.meta.env.VITE_IMPRINT_URL } 
         label="Imprint" 
       />
       <OptionalTextButton 
-        urlEnvVar={ import.meta.env.VITE_PRIVACY_URL ?? "bar" }
+        urlEnvVar={ import.meta.env.VITE_PRIVACY_URL }
         label="Privacy Policy"
       />
       <GitHubButton />
