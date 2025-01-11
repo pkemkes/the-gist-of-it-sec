@@ -11,6 +11,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -89,3 +92,21 @@ jobs:
           tags: |
             pkemkes/the-gist-of-it-sec-frontend:latest
             pkemkes/the-gist-of-it-sec-frontend:${{ github.ref_name }}
+      
+      - name: Build release body
+        run: |
+          previous_tag=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=2 | tail -n 1))
+          git log --pretty=format:"- %s %H%n%n%b%n" ${previous_tag}..${{ github.ref_name }} \
+            | awk '{if ($0 !~ /^-/) print "  " $0; else print $0}' > ./inner_release_body
+          { 
+            echo -e "This release contains the following changes:\n"
+            cat ./inner_release_body
+            echo "**Full changelog**: https://github.com/pkemkes/the-gist-of-it-sec/compare/${previous_tag}..${{ github.ref_name }}"
+          } > ./release_body 
+      
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ github.ref_name }}
+          body_path: ./release_body
+          make_latest: true
