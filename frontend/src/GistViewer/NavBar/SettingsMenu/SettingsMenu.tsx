@@ -4,14 +4,11 @@ import React from "react";
 import { FeedSelectorMenuItem } from "./FeedSelectorMenuItem";
 import { ThemeToggleMenuItem } from "./ThemeToggleMenuItem";
 import { TimezoneSelectorMenuItem } from "./TimezonSelectorMenuItem";
-import { useSearchParams } from "react-router";
 
 
 export const SettingsMenu = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const menuOpened = Boolean(anchorEl);
-  const [searchParams, _] = useSearchParams();
-  const isInInspectorMode = searchParams.get("gist") != undefined;
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -47,7 +44,7 @@ export const SettingsMenu = () => {
         horizontal: "right",
       }}
     >
-      { isInInspectorMode ? undefined : <FeedSelectorMenuItem /> }
+      <FeedSelectorMenuItem />
       <TimezoneSelectorMenuItem />
       <ThemeToggleMenuItem />
     </Menu>

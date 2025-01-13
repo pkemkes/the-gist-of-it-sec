@@ -6,11 +6,12 @@ import chromadb
 from chromadb.config import Settings as ChromaDbSettings
 
 
-REFERENCE_KEY = "reference"
-
-
 class ChromaDbHandler:
 	def __init__(self) -> None:
+		self.reference_key = "reference"
+		self.feed_id_key = "feed_id"
+		self.disabled_key = "disabled"
+
 		self._embedding_function = OpenAIEmbeddings() if getenv("OPENAI_API_KEY") else None
 		self._chroma_client = chromadb.HttpClient(
 			host=getenv("CHROMA_HOST"),
@@ -27,3 +28,10 @@ class ChromaDbHandler:
 			collection_name=collection_name,
 			embedding_function=self._embedding_function
 		)
+	
+	@staticmethod
+	def validate_reference(reference: str):
+		if type(reference) != str:
+			raise Exception("Reference is not a str!")
+		if len(reference) == 0 or len(reference) > 1000000:
+			raise Exception(f"Reference length is invalid: {len(reference)}")

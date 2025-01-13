@@ -5,7 +5,12 @@ interface GistsQueryParameters {
   lastGist: number | undefined,
   searchQuery: string,
   tags: string[],
-  disabledFeeds: number[]
+  disabledFeeds: number[],
+}
+
+interface SimilarGistsQueryParameters {
+  id: number, 
+  disabledFeeds: number[],
 }
 
 const pageSize = 20;
@@ -13,6 +18,9 @@ const pageSize = 20;
 const backendUrl = import.meta.env.VITE_BACKEND_URL == undefined 
   ? "http://localhost:8080/" 
   : import.meta.env.VITE_BACKEND_URL;
+
+const JoinDisabledFeedsParam = (disabledFeeds: number[]) => 
+  encodeURIComponent(disabledFeeds.join(","));
 
 export const backendApi = createApi({
   reducerPath: "backendApi",
@@ -29,7 +37,7 @@ export const backendApi = createApi({
         pathAndParams += `take=${pageSize}&`;
         pathAndParams += `q=${encodeURIComponent(searchQuery)}&`
         pathAndParams += `tags=${encodeURIComponent(tags.join(";;"))}&`;
-        pathAndParams += `disabled_feeds=${encodeURIComponent(disabledFeeds.join(","))}`;
+        pathAndParams += `disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`;
         return pathAndParams;
       },
       // taken from: https://redux-toolkit.js.org/rtk-query/api/createApi#merge
@@ -60,8 +68,13 @@ export const backendApi = createApi({
     getGistById: builder.query<Gist, { id: number }>({
       query: ({ id }) => `gists/by_id?id=${id}`,
     }),
-    getSimilarGists: builder.query<SimilarGist[], { id: number }>({
-      query: ({ id }) => `gists/similar?id=${id}`,
+    getSimilarGists: builder.query<SimilarGist[], SimilarGistsQueryParameters>({
+      query: ({ id, disabledFeeds }) => {
+        let pathAndParams = "gists/similar?";
+        pathAndParams += `id=${id}&`;
+        pathAndParams += `disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`;
+        return pathAndParams
+      },
     }),
     getSearchResults: builder.query<SearchResult[], { id: number }>({
       query: ({ id }) => `gists/search_results?id=${id}`,

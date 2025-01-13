@@ -40,7 +40,7 @@ export const FeedSelectorMenuItem = () => {
   }
 
   if (feeds == undefined || error) {
-    return <MenuItem>
+    return <MenuItem disableRipple disableTouchRipple>
       <Typography>
         An error occurred loading the feed info. Please try again later.
       </Typography>
@@ -72,7 +72,7 @@ export const FeedSelectorMenuItem = () => {
   };
 
   return (
-    <MenuItem>
+    <MenuItem disableRipple disableTouchRipple>
       <FormControl sx={{ my: "0.5rem", width: "20rem" }}>
         <InputLabel id="disabled-feeds-selector-label">Feeds</InputLabel>
         <Select

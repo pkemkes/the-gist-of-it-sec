@@ -32,7 +32,7 @@ export const TimezoneSelectorMenuItem = () => {
     dispatch(timezoneChanged(event.target.value));
   }
 
-  return <MenuItem>
+  return <MenuItem disableRipple disableTouchRipple>
     <FormControl sx={{ my: "0.5rem", width: "20rem" }}>
       <InputLabel id="demo-simple-select-label">Timezone</InputLabel>
       <Select

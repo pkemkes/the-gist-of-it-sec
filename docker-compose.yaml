@@ -129,6 +129,8 @@ services:
       - chromadb-data:/chroma/chroma
     networks:
       - chromadb
+    ports:
+      - 8000:8000
 
 networks:
   database:

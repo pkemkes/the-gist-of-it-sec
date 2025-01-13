@@ -28,7 +28,7 @@ class MariaDbCleanupHandler(MariaDbHandler):
             self._logger.error(f"Error getting disabled state gist with id {gist.id}", exc_info=True)
             raise e
     
-    def set_disable_state_of_gist(self, disabled: bool, gist: Gist) -> None:
+    def _set_disable_state_of_gist(self, disabled: bool, gist: Gist) -> None:
         query = "UPDATE gists SET disabled = ? WHERE id = ?"
         try:
             with self._connection.cursor() as cur:
@@ -41,3 +41,9 @@ class MariaDbCleanupHandler(MariaDbHandler):
         except mariadb.Error as e:
             self._logger.error(f"Error when trying to set disabled state of gist with id {gist.id}", exc_info=True)
             raise e
+    
+    def disable_gist(self, gist: Gist) -> None:
+        self._set_disable_state_of_gist(True, gist)
+    
+    def enable_gist(self, gist: Gist) -> None:
+        self._set_disable_state_of_gist(False, gist)

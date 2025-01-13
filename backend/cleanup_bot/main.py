@@ -5,6 +5,7 @@ from logging import Logger
 from time import sleep
 
 from mariadb_cleanup_handler import MariaDbCleanupHandler
+from chromadb_cleanup_handler import ChromaDbCleanupHandler
 from gists_utils.types import Gist
 from gists_utils.run_in_loop import run_in_loop
 from gists_utils.logger import get_logger
@@ -37,35 +38,38 @@ def gist_should_be_disabled(gist: Gist, feeds: dict[int, any]) -> bool:
 	return False
 
 
-def get_feeds(db: MariaDbCleanupHandler, gists: list[Gist]) -> dict[int, any]:
+def get_feeds(mariadb: MariaDbCleanupHandler, gists: list[Gist]) -> dict[int, any]:
 	feed_ids = set(gist.feed_id for gist in gists)
-	feed_infos_by_ids = {feed_id: db.get_feed_by_id(feed_id) for feed_id in feed_ids}
+	feed_infos_by_ids = {feed_id: mariadb.get_feed_by_id(feed_id) for feed_id in feed_ids}
 	return {
 		feed_id: feedparser.parse(feed_info.rss_link) 
 		for feed_id, feed_info in feed_infos_by_ids.items()
 	}
 
 
-def cleanup_gists(db: MariaDbCleanupHandler, logger: Logger) -> None:
-	gists = db.get_all_gists()
-	feeds = get_feeds(db, gists)
+def cleanup_gists(mariadb: MariaDbCleanupHandler, chromadb: ChromaDbCleanupHandler, logger: Logger) -> None:
+	gists = mariadb.get_all_gists()
+	feeds = get_feeds(mariadb, gists)
 	for gist in gists:
 		should_be_disabled = gist_should_be_disabled(gist, feeds)
-		is_disabled = db.gist_is_disabled(gist)
+		is_disabled = mariadb.gist_is_disabled(gist)
 		if should_be_disabled and not is_disabled:
-			db.set_disable_state_of_gist(True, gist)
+			mariadb.disable_gist(gist)
+			chromadb.disable_gist(gist)
 			logger.info(f"Disabled gist with id {gist.id} and link {gist.link}")
 		if is_disabled and not should_be_disabled:
-			db.set_disable_state_of_gist(False, gist)
+			mariadb.enable_gist(gist)
+			chromadb.enable_gist(gist)
 			logger.info(f"Enabled gist with id {gist.id} and link {gist.link}")
 		sleep(0.2)
 	logger.info("Cleanup search done!")
 
 
 def main():
-	db = MariaDbCleanupHandler()
+	mariadb = MariaDbCleanupHandler()
+	chromadb = ChromaDbCleanupHandler()
 	logger = get_logger("cleanup_bot")
-	run_in_loop(cleanup_gists, [db, logger], 60*10)
+	run_in_loop(cleanup_gists, [mariadb, chromadb, logger], 60*10)
 
 
 if __name__ == "__main__":

@@ -39,13 +39,25 @@ def gist_and_similarity_to_api_data(gist: Gist, similarity: float) -> SimilarGis
     )
 
 
+def get_disabled_feeds_from_request() -> tuple[list[int] | None, Response | None]:
+    disabled_feeds_param = request.args.get("disabled_feeds")
+    if disabled_feeds_param is None:
+        return [], None
+    split_disabled_feeds_param = [df for df in disabled_feeds_param.split(",") if df != ""]
+    if not all(disabled_feed_str.isdigit() for disabled_feed_str in split_disabled_feeds_param):
+        return None, ("Parameter \"disabled_feeds\" contains elements that are not valid numbers!")
+    return [int(df) for df in split_disabled_feeds_param], None
+
+
 @app.route("/gists", methods=["GET"])
 def get_gists() -> Response:
     last_gist_id = int(request.args.get("last_gist", "-1"))
     take = int(request.args.get("take", "20"))
     search_query = request.args.get("q")
     tags = [tag for tag in request.args.get("tags", "").split(";;") if tag != ""]
-    disabled_feeds = [int(df) for df in request.args.get("disabled_feeds", "").split(",") if df != ""]
+    disabled_feeds, error = get_disabled_feeds_from_request()
+    if error is not None:
+        return error
     gists = DB.get_prev_gists(last_gist_id, take, search_query, tags, disabled_feeds)
     response_data = [gist_to_api_data(g) for g in gists]
     return jsonify(response_data), 200
@@ -83,12 +95,11 @@ def get_similar_gists() -> Response:
     gist, error = get_gist_by_id_in_request()
     if error is not None:
         return error
-    # ToDo: This is pretty hacky. We are using k=20 and only take 5 gists. 
-    # 1 is always the given gist, so 19 potential similar gists. 
-    # If more than 14 gists are disabled, we won't be able to return 5 similar gists.
-    search_result = CHROMA.get_similar_entries_with_relevance_scores(gist.reference, k=20)
+    disabled_feeds, error = get_disabled_feeds_from_request()
+    if error is not None:
+        return error
+    search_result = CHROMA.get_similar_entries_with_relevance_scores(gist.reference, disabled_feed_ids=disabled_feeds)
     gists_and_scores = [(DB.get_gist_by_reference(reference), score) for reference, score in search_result]
-    gists_and_scores = [(gist, score) for gist, score in gists_and_scores if gist is not None][:5]
     response_data = [
         gist_and_similarity_to_api_data(gist, score) 
         for gist, score in gists_and_scores
