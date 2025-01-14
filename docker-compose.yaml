@@ -74,8 +74,12 @@ services:
       - DB_HOSTNAME=database
       - DB_USERNAME=${DB_CLEANUPBOT_USERNAME}
       - DB_PASSWORD=${DB_CLEANUPBOT_PASSWORD}
+      - CHROMA_HOST=chromadb
+      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
+      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
     networks:
       - database
+      - chromadb
 
   frontend:
     image: pkemkes/the-gist-of-it-sec-frontend

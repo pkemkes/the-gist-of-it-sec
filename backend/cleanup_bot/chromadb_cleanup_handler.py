@@ -19,3 +19,12 @@ class ChromaDbCleanupHandler(ChromaDbHandler):
     
     def enable_gist(self, gist: Gist):
         self._set_disabled(gist.reference, False)
+    
+    def get_metadata(self, reference: str) -> dict:
+        metadatas = self._collection.get(reference, include=["metadatas"]).get("metadatas")
+        if metadatas is None or len(metadatas) == 0:
+            return {}
+        return metadatas[0]
+
+    def set_metadata(self, reference: str, metadata: dict) -> None:
+        self._collection.update(reference, metadatas=metadata)

@@ -47,3 +47,21 @@ class MariaDbCleanupHandler(MariaDbHandler):
     
     def enable_gist(self, gist: Gist) -> None:
         self._set_disable_state_of_gist(False, gist)
+    
+    def get_feed_id_by_gist_reference(self, reference: str) -> int:
+        query = "SELECT feed_id FROM gists WHERE reference = ?"
+        try:
+            with self._connection.cursor() as cur:
+                cur.execute(query, (reference, ))
+                result = cur.fetchall()
+                if len(result) < 1:
+                    raise Exception(f"Did not find gist with reference {reference}")
+                if len(result) > 1:
+                    raise Exception(f"Found more than one gist with reference {reference}")
+                return result[0][0]
+        except mariadb.Error as e:
+            self._logger.error(
+                f"Error when trying to get feed id for gist with reference {reference}",
+                exc_info=True
+            )
+            raise e
