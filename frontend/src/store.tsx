@@ -9,7 +9,7 @@ import { loadDisabledFeeds, loadTimezone, saveStateData } from "./localStorage";
 const throttledSaveDisabledFeeds = throttle(() => {
   const state = store.getState().gists;
   saveStateData({
-    disabledFeeds: state.disabledFeedIds,
+    disabledFeeds: state.disabledFeeds,
     timezone: state.timezone,
   })
 }, 1000);
@@ -25,7 +25,7 @@ export const store = configureStore({
     getDefaultMiddleware().concat(backendApi.middleware),
   preloadedState: { gists: { 
     ...initialState, 
-    disabledFeeds: loadDisabledFeeds() ?? initialState.disabledFeedIds,
+    disabledFeeds: loadDisabledFeeds() ?? initialState.disabledFeeds,
     timezone: loadTimezone() ?? initialState.timezone,
   } }
 });

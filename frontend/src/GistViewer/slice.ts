@@ -7,7 +7,7 @@ export interface GistsState {
   lastGist: number | undefined,
   searchQuery: string,
   tags: string[],
-  disabledFeedIds: number[],
+  disabledFeeds: number[],
   timezone: string,
 }
 
@@ -15,7 +15,7 @@ export const initialState: GistsState = {
   lastGist: undefined,
   searchQuery: "",
   tags: [],
-  disabledFeedIds: [],
+  disabledFeeds: [],
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 }
 
@@ -42,14 +42,14 @@ export const slice = createSlice({
       state.lastGist = initialState.lastGist;
     },
     disabledFeedToggled: (state, action: PayloadAction<number>) => {
-      if (state.disabledFeedIds.includes(action.payload)){
-        state.disabledFeedIds.splice(state.disabledFeedIds.indexOf(action.payload), 1)
+      if (state.disabledFeeds.includes(action.payload)){
+        state.disabledFeeds.splice(state.disabledFeeds.indexOf(action.payload), 1)
       } else {
-        state.disabledFeedIds.push(action.payload)
+        state.disabledFeeds.push(action.payload)
       }
     },
-    disabledFeedIdsChanged: (state, action: PayloadAction<number[]>) => {
-      state.disabledFeedIds = action.payload;
+    disabledFeedsChanged: (state, action: PayloadAction<number[]>) => {
+      state.disabledFeeds = action.payload;
       state.lastGist = initialState.lastGist;
     },
     gistListReset: (state) => {
@@ -68,7 +68,7 @@ export const {
   searchQueryChanged,
   tagToggled,
   disabledFeedToggled,
-  disabledFeedIdsChanged,
+  disabledFeedsChanged,
   gistListReset,
   timezoneChanged,
 } = slice.actions;
@@ -76,7 +76,7 @@ export const {
 export const selectLastGist = (state: RootState) => state.gists.lastGist;
 export const selectSearchQuery = (state: RootState) => state.gists.searchQuery;
 export const selectTags = (state: RootState) => state.gists.tags;
-export const selectDisabledFeedIds = (state: RootState) => state.gists.disabledFeedIds;
+export const selectDisabledFeeds = (state: RootState) => state.gists.disabledFeeds;
 export const selectTimezone = (state: RootState) => state.gists.timezone;
 
 export default slice.reducer;

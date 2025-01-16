@@ -1,4 +1,4 @@
-import { disabledFeedIdsChanged, selectDisabledFeedIds } from "../../slice";
+import { disabledFeedsChanged, selectDisabledFeeds } from "../../slice";
 import { useAppDispatch, useAppSelector } from "../../../store";
 import {
   CircularProgress, 
@@ -29,7 +29,7 @@ const MenuProps = {
 
 export const FeedSelectorMenuItem = () => {
   const dispatch = useAppDispatch();
-  const disabledFeedIds = useAppSelector(selectDisabledFeedIds);
+  const disabledFeeds = useAppSelector(selectDisabledFeeds);
     
   const { data: feeds, error, isFetching } = backendApi.useGetAllFeedInfoQuery();
 
@@ -58,11 +58,11 @@ export const FeedSelectorMenuItem = () => {
     const selectedEnabledFeedIds = typeof value === "string"
       ? value.split(",").map(numString => parseInt(numString))
       : value;
-    const disabledFeedIds = filterFeedsByIds(selectedEnabledFeedIds).map(feed => feed.id);
-    dispatch(disabledFeedIdsChanged(disabledFeedIds));
+    const disabledFeeds = filterFeedsByIds(selectedEnabledFeedIds).map(feed => feed.id);
+    dispatch(disabledFeedsChanged(disabledFeeds));
   };
 
-  const enabledFeeds = filterFeedsByIds(disabledFeedIds);
+  const enabledFeeds = filterFeedsByIds(disabledFeeds);
 
   const getFeedTitleForId = (feedId: number) => feeds.filter(feed => feed.id == feedId)[0].title;
 

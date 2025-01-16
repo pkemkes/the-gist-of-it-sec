@@ -4,14 +4,14 @@ import { GistEndCard } from "../GistEndCard";
 import { LoadingBar } from "../LoadingBar";
 import { ErrorMessage } from "../ErrorMessage";
 import { useAppSelector } from "../../store";
-import { selectDisabledFeedIds } from "../slice";
+import { selectDisabledFeeds } from "../slice";
 
 interface SimilarGistListProps {
   gistId: number
 }
 
 export const SimilarGistList = ({ gistId }: SimilarGistListProps) => {
-  const disabledFeeds = useAppSelector(selectDisabledFeedIds);
+  const disabledFeeds = useAppSelector(selectDisabledFeeds);
   const { data, error, isFetching } = backendApi.useGetSimilarGistsQuery({ id: gistId, disabledFeeds });
 
   if (error || data == undefined && !isFetching) {

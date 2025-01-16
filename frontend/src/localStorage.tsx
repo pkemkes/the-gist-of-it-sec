@@ -18,8 +18,8 @@ export const saveStateData = (stateData: SaveableStateData) => {
 export const loadDisabledFeeds = (): number[] | undefined => {
   try {
     const serializedDisabledFeeds = localStorage.getItem(disabledFeedsLocalStorageKey);
-    if (serializedDisabledFeeds === null) return undefined
-    return JSON.parse(serializedDisabledFeeds)
+    if (serializedDisabledFeeds === null) return undefined;
+    return JSON.parse(serializedDisabledFeeds);
   }
   catch {
     return undefined;

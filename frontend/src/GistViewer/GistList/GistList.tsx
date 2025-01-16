@@ -2,7 +2,7 @@ import { backendApi } from "../../backend";
 import { GistCard } from "../GistCard";
 import { GistEndCard } from "../GistEndCard";
 import { useAppDispatch, useAppSelector } from "../../store";
-import { lastGistChanged, selectDisabledFeedIds, selectLastGist, selectSearchQuery, selectTags } from "../slice";
+import { lastGistChanged, selectDisabledFeeds, selectLastGist, selectSearchQuery, selectTags } from "../slice";
 import { Gist } from "src/types";
 import { GistViewerBody } from "../GistViewerBody";
 import { ErrorMessage } from "../ErrorMessage";
@@ -27,7 +27,7 @@ export const GistList = () => {
   const lastGist = useAppSelector(selectLastGist);
   const searchQuery = useAppSelector(selectSearchQuery);
   const tags = useAppSelector(selectTags);
-  const disabledFeeds = useAppSelector(selectDisabledFeedIds);
+  const disabledFeeds = useAppSelector(selectDisabledFeeds);
 
   const { data, error, isFetching } = backendApi.useGetGistsQuery({ lastGist, searchQuery, tags, disabledFeeds });
 
