@@ -6,6 +6,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      prometheus:
+        condition: service_healthy
     environment:
       - DB_HOSTNAME=database
       - DB_USERNAME=${DB_TELEGRAMBOT_USERNAME}
@@ -14,6 +16,7 @@ services:
       - APP_BASE_URL=http://localhost:8081  # NOTE: Change this to your base URL
     networks:
       - database
+      - prometheus
 
   gists_bot:  
     image: pkemkes/the-gist-of-it-sec-gists-bot
@@ -22,6 +25,8 @@ services:
       database:
         condition: service_healthy
       chromadb:
+        condition: service_healthy
+      prometheus:
         condition: service_healthy
     environment:
       - LANGCHAIN_TRACING_V2=true
@@ -41,6 +46,7 @@ services:
     networks:
       - database
       - chromadb
+      - prometheus
 
   rest_server:  
     image: pkemkes/the-gist-of-it-sec-rest-server
@@ -49,6 +55,8 @@ services:
       database:
         condition: service_healthy
       chromadb:
+        condition: service_healthy
+      prometheus:
         condition: service_healthy
     environment:
       - SERVER_ORIGINS=http://localhost:8081,http://localhost:5173  # NOTE: Change this to your base URL
@@ -61,6 +69,7 @@ services:
     networks:
       - database
       - chromadb
+      - prometheus
     ports:
       - "8080:8080"
 
@@ -69,6 +78,8 @@ services:
     container_name: cleanup_bot
     depends_on:
       database:
+        condition: service_healthy
+      prometheus:
         condition: service_healthy
     environment:
       - DB_HOSTNAME=database
@@ -80,6 +91,7 @@ services:
     networks:
       - database
       - chromadb
+      - prometheus
 
   frontend:
     image: pkemkes/the-gist-of-it-sec-frontend
@@ -112,8 +124,10 @@ services:
       - DB_TELEGRAMBOT_PASSWORD=${DB_TELEGRAMBOT_PASSWORD}
       - DB_CLEANUPBOT_USERNAME=${DB_CLEANUPBOT_USERNAME}
       - DB_CLEANUPBOT_PASSWORD=${DB_CLEANUPBOT_PASSWORD}
+      - DB_GRAFANA_USERNAME=${DB_GRAFANA_USERNAME}
+      - DB_GRAFANA_PASSWORD=${DB_GRAFANA_PASSWORD}
     volumes:
-      - database_data:/var/lib/mysql
+      - database-data:/var/lib/mysql
     networks:
       - database
   
@@ -133,13 +147,53 @@ services:
       - chromadb-data:/chroma/chroma
     networks:
       - chromadb
+  
+  prometheus:
+    image: pkemkes/the-gist-of-it-sec-prometheus
+    container_name: prometheus
+    logging:
+      options:
+        max-size: 1g
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - prometheus
+  
+  grafana:
+    image: pkemkes/the-gist-of-it-sec-grafana
+    container_name: grafana
+    logging:
+      options:
+        max-size: 1g
+    environment:
+      - DB_GRAFANA_USERNAME=${DB_GRAFANA_USERNAME}
+      - DB_GRAFANA_PASSWORD=${DB_GRAFANA_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - prometheus
+      - database
+    ports:
+      - 3000:3000
 
 networks:
   database:
   chromadb:
+  prometheus:
 
 volumes:
-  database_data:
+  database-data:
     driver: local
   chromadb-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
     driver: local

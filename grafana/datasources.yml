@@ -1,0 +1,52 @@
+# Configuration file version
+apiVersion: 1
+
+# Mark provisioned data sources for deletion if they are no longer in a provisioning file.
+# It takes no effect if data sources are already listed in the deleteDatasources section.
+prune: true
+
+# List of data sources to insert/update depending on what's
+# available in the database.
+datasources:
+  # <string, required> Sets the name you use to refer to
+  # the data source in panels and queries.
+  - name: Prometheus
+    # <string, required> Sets the data source type.
+    type: prometheus
+    # <string, required> Sets the access mode, either
+    # proxy or direct (Server or Browser in the UI).
+    # Some data sources are incompatible with any setting
+    # but proxy (Server).
+    access: proxy
+    # <int> Sets the organization id. Defaults to orgId 1.
+    orgId: 1
+    # <string> Sets a custom UID to reference this
+    # data source in other parts of the configuration.
+    # If not specified, Grafana generates one.
+    uid: 2178de4d-8506-49c7-bbab-9c72f102e76a
+    # <string> Sets the data source's URL, including the
+    # port.
+    url: http://prometheus:9090
+    # <int> Sets the version. Used to compare versions when
+    # updating. Ignored when creating a new data source.
+    version: 1
+    # <bool> Allows users to edit data sources from the
+    # Grafana UI.
+    editable: false
+  - name: Database
+    type: mysql
+    access: proxy
+    orgId: 1
+    uid: 028fb935-0e9c-4a1f-8f65-c31f3401d3b2
+    url: database:3306
+    user: ${DB_GRAFANA_USERNAME}
+    version: 1
+    editable: false
+    jsonData:
+      database: thegistofitsec
+      maxOpenConns: 100
+      maxIdleConns: 100
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: ${DB_GRAFANA_PASSWORD}

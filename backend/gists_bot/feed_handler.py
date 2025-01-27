@@ -1,4 +1,6 @@
 from uuid import uuid4
+from prometheus_client import Summary
+from time import time
 
 from gists_utils.logger import get_logger
 from gists_utils.types import Gist, SearchResult
@@ -11,6 +13,17 @@ from feeds.rss_feed import RSSFeed
 from feeds.rss_entry import RSSEntry
 
 
+PROCESS_ENTRY_SUMMARY = Summary("process_entry_seconds", "Time spent processing a single entry",
+                                [ "feed_title" ])
+UPSERT_GIST_SUMMARY = Summary("upsert_gist_seconds", "Time spent upserting a single gist", 
+                              [ "previous_version_exists", "feed_title" ])
+UPSERT_SEARCH_RESULT_SUMMARY = Summary(
+    "upsert_search_result_seconds", 
+    "Time spent upserting a single set of search results", 
+    [ "previous_version_exists", "feed_title" ]
+)
+
+
 class FeedHandler:
     def __init__(self, db: MariaDbGistsHandler, ai: OpenAIHandler, chromadb: ChromaDbInserter,
                  google: GoogleSearchHandler, feed_definition: FeedDefinition):
@@ -21,13 +34,14 @@ class FeedHandler:
         self._feed = RSSFeed(feed_definition)
         self.store_feed_info_if_not_present()
         self._logger = get_logger(f"feed_handler_{self._feed.id}")
+        dummyEmptyString = "DUMMYEMPTYSEARCHRESULT"
         self._dummy_empty_search_result = lambda gist_id: [SearchResult(
             None,
             gist_id,
-            "DUMMYEMPTYSEARCHRESULT",
-            "DUMMYEMPTYSEARCHRESULT",
-            "DUMMYEMPTYSEARCHRESULT",
-            "DUMMYEMPTYSEARCHRESULT",
+            dummyEmptyString,
+            dummyEmptyString,
+            dummyEmptyString,
+            dummyEmptyString,
             None,
             None
         )]
@@ -42,13 +56,15 @@ class FeedHandler:
         self._feed.set_id(feed_id)
     
     def upsert_gist(self, gist: Gist, previous_version_exists: bool) -> None:
-        gist.id = self._db.update_gist(gist) if previous_version_exists else self._db.insert_gist(gist)
+        with UPSERT_GIST_SUMMARY.labels(previous_version_exists, self._feed.title).time():
+            gist.id = self._db.update_gist(gist) if previous_version_exists else self._db.insert_gist(gist)
     
     def upsert_search_results(self, results: list[SearchResult], gist_id: int, previous_version_exists: bool) -> None:
-        if previous_version_exists:
-            self._db.update_search_results(results, gist_id)
-        else:
-            self._db.insert_search_results(results, gist_id)
+        with UPSERT_SEARCH_RESULT_SUMMARY.labels(previous_version_exists, self._feed.title).time():
+            if previous_version_exists:
+                self._db.update_search_results(results, gist_id)
+            else:
+                self._db.insert_search_results(results, gist_id)
 
     def get_and_insert_search_results(self, gist: Gist, previous_version_exists: bool) -> None:
         results = self._google.get_search_results(gist)
@@ -75,6 +91,7 @@ class FeedHandler:
         self.get_and_insert_search_results(gist, False)
 
     def process_entry(self, entry: RSSEntry) -> None:
+        start_time = time()
         if not self._feed.is_correct_category(entry):
             return
         updated = self._db.get_gist_updated_by_reference_if_exists(entry.reference)
@@ -92,6 +109,7 @@ class FeedHandler:
             ("Updated " if previous_version_exists else "Inserted new ") + 
             f"gist with reference {gist.reference} and id {gist.id}"
         )
+        PROCESS_ENTRY_SUMMARY.labels(self._feed.title).observe(time() - start_time)
 
     def get_entries(self) -> list[RSSEntry]:
         self._feed.parse_feed()

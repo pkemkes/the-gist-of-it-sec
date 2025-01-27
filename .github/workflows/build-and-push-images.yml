@@ -81,6 +81,24 @@ jobs:
           tags: |
             pkemkes/the-gist-of-it-sec-chromadb:latest
             pkemkes/the-gist-of-it-sec-chromadb:${{ github.ref_name }}
+
+      - name: Build and push prometheus
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:prometheus"
+          push: true
+          tags: |
+            pkemkes/the-gist-of-it-sec-prometheus:latest
+            pkemkes/the-gist-of-it-sec-prometheus:${{ github.ref_name }}
+
+      - name: Build and push grafana
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:grafana"
+          push: true
+          tags: |
+            pkemkes/the-gist-of-it-sec-grafana:latest
+            pkemkes/the-gist-of-it-sec-grafana:${{ github.ref_name }}
             
       - name: Build and push frontend
         uses: docker/build-push-action@v6

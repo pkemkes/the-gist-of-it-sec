@@ -1,4 +1,5 @@
 from os import getenv
+from prometheus_client import start_http_server, Gauge
 
 from gists_utils.logger import get_logger
 from gists_utils.run_in_loop import run_in_loop
@@ -11,6 +12,9 @@ from feeds.rss_entry import RSSEntry
 from feeds.feeds import feed_definitions
 
 
+PROCESS_ENTRIES_GAUGE = Gauge("process_all_entries_seconds", "Time spent processing all entries")
+
+@PROCESS_ENTRIES_GAUGE.time()
 def process_entries(feed_handlers: list[FeedHandler], mode: str) -> None:
     logger = get_logger("gists_bot")
     entries_and_feed_handlers: list[tuple[RSSEntry, FeedHandler]] = []
@@ -28,6 +32,7 @@ def process_entries(feed_handlers: list[FeedHandler], mode: str) -> None:
 
 
 def main():
+    start_http_server(9090)
     mode = getenv("APP_MODE", "prod")
     db = MariaDbGistsHandler()
     ai = OpenAIHandler()

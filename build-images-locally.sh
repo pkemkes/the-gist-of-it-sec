@@ -4,4 +4,6 @@ docker build -t pkemkes/the-gist-of-it-sec-rest-server -f ./backend/Dockerfile.r
 docker build -t pkemkes/the-gist-of-it-sec-cleanup-bot -f ./backend/Dockerfile.cleanup_bot ./backend
 docker build -t pkemkes/the-gist-of-it-sec-database ./database
 docker build -t pkemkes/the-gist-of-it-sec-chromadb ./chromadb
+docker build -t pkemkes/the-gist-of-it-sec-prometheus ./prometheus
+docker build -t pkemkes/the-gist-of-it-sec-grafana ./grafana
 docker build -t pkemkes/the-gist-of-it-sec-frontend ./frontend

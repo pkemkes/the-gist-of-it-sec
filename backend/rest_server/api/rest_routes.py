@@ -49,8 +49,13 @@ def get_disabled_feeds_from_request() -> tuple[list[int] | None, Response | None
     return [int(df) for df in split_disabled_feeds_param], None
 
 
+def get_gists(last_gist_id: int, take: int, search_query: str, tags: list[str], disabled_feeds: list[int]):
+    gists = DB.get_prev_gists(last_gist_id, take, search_query, tags, disabled_feeds)
+    return [gist_to_api_data(g) for g in gists]
+
+
 @app.route("/gists", methods=["GET"])
-def get_gists() -> Response:
+def get_gists_route() -> Response:
     last_gist_id = int(request.args.get("last_gist", "-1"))
     take = int(request.args.get("take", "20"))
     search_query = request.args.get("q")
@@ -58,8 +63,13 @@ def get_gists() -> Response:
     disabled_feeds, error = get_disabled_feeds_from_request()
     if error is not None:
         return error
-    gists = DB.get_prev_gists(last_gist_id, take, search_query, tags, disabled_feeds)
-    response_data = [gist_to_api_data(g) for g in gists]
+    response_data = get_gists(last_gist_id, take, search_query, tags, disabled_feeds)
+    return jsonify(response_data), 200
+
+
+@app.route("/health", methods=["GET"])
+def health_route() -> Response:
+    response_data = get_gists(-1, 1, None, [], [])
     return jsonify(response_data), 200
 
 

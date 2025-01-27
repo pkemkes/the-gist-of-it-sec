@@ -7,10 +7,14 @@ from langchain_core.messages import SystemMessage
 from langchain_core.prompts import HumanMessagePromptTemplate, ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import RunnableSerializable
+from prometheus_client import Summary
 
 from feeds.rss_entry import RSSEntry
 from gists_utils.logger import get_logger
 from gists_utils.types import AIResponse
+
+
+SUMMARIZE_ENTRY_SUMMARY = Summary("summarize_entry_seconds", "Time spent summarizing an entry")
 
 
 class OpenAIHandler:
@@ -37,6 +41,7 @@ class OpenAIHandler:
                 filtered_tags.append(tag)
         return filtered_tags
 
+    @SUMMARIZE_ENTRY_SUMMARY.time()
     def summarize_entry(self, entry: RSSEntry) -> AIResponse:
         result: dict = self._get_summary_chain().invoke({
             "title": entry.title,

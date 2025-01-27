@@ -1,0 +1,28 @@
+import { IconButton, Tooltip, useTheme } from "@mui/material";
+import { ReactNode } from "react";
+
+interface OptionalIconButtonProps {
+  urlEnvVar?: string,
+  children: ReactNode,
+}
+
+export const OptionalIconButton = ({ urlEnvVar, children }: OptionalIconButtonProps) => {
+  const isLightMode = useTheme().palette.mode == "light";
+
+  if (!urlEnvVar) {
+    return undefined;
+  }
+
+  return <Tooltip title="Open Telegram bot" placement="top-start">
+    <IconButton
+      component="a"
+      href={ urlEnvVar }
+      target="_blank"
+      sx={{ ml: "0.5rem" }}
+      size="small"
+      color={ isLightMode ? "secondary" : "primary" }
+    >
+      { children }
+    </IconButton>
+  </Tooltip>
+}

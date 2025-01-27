@@ -1,8 +1,10 @@
-import { Button } from "@mui/material";
+import { Button, useTheme } from "@mui/material";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 
 export const GitHubButton = () => {
+  const isLightMode = useTheme().palette.mode == "light";
+
   const version = import.meta.env.VITE_APP_VERSION == undefined 
     ? "0.0.0" 
     : import.meta.env.VITE_APP_VERSION;
@@ -14,7 +16,7 @@ export const GitHubButton = () => {
     sx={{ ml: "auto", mr: "1rem", textTransform: "none" }}
     endIcon={ <GitHubIcon /> }
     size="small"
-    color="secondary"
+    color={ isLightMode ? "secondary" : "primary" }
   >
     {`v${version}`}
   </Button>

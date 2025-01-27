@@ -4,10 +4,18 @@ import requests
 from requests.adapters import HTTPAdapter, Retry
 from typing import Any
 import json
+from prometheus_client import Summary
+from time import time
 
 from gists_utils.types import Gist, SearchResult
 from gists_utils.logger import get_logger
 from mariadb_gists_handler import MariaDbGistsHandler
+
+
+GET_SEARCH_RESULTS_SUMMARY = Summary(
+	"get_search_results_seconds", 
+	"Time spent to fetch a single batch of search results"
+)
 
 
 class GoogleSearchHandler:
@@ -24,6 +32,7 @@ class GoogleSearchHandler:
 			raise KeyError(f"Did not find {key} in response {json.dumps(json_object)} for search {search_query}")
 		return value
 	
+	@GET_SEARCH_RESULTS_SUMMARY.time()
 	def get_search_results(self, gist: Gist) -> list[SearchResult] | None:
 		session = requests.Session()
 		retry = Retry(total=3, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
@@ -64,17 +73,5 @@ class GoogleSearchHandler:
 				exc_info=True
 			)
 			return None
-	
-		return search_results
-	
-	def store_search_results(self, results: list[SearchResult]) -> None:
-		for result in results:
-			self._db.store_search_result(result)
 
-	def get_and_store_search_results(self, gist: Gist) -> None:
-		results = self.get_search_results(gist)
-		self._logger.info(
-			f"Found {len(results)} search results for gist "
-			f"with reference {gist.reference} and query {gist.search_query}"
-		)
-		self.store_search_results(results)
+		return search_results
