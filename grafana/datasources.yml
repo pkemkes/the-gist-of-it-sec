@@ -26,7 +26,7 @@ datasources:
     uid: 2178de4d-8506-49c7-bbab-9c72f102e76a
     # <string> Sets the data source's URL, including the
     # port.
-    url: http://prometheus:9090
+    url: ${PROMETHEUS_URL}
     # <int> Sets the version. Used to compare versions when
     # updating. Ignored when creating a new data source.
     version: 1
@@ -38,7 +38,7 @@ datasources:
     access: proxy
     orgId: 1
     uid: 028fb935-0e9c-4a1f-8f65-c31f3401d3b2
-    url: database:3306
+    url: ${DATABASE_HOST_AND_PORT}
     user: ${DB_GRAFANA_USERNAME}
     version: 1
     editable: false

@@ -169,6 +169,8 @@ services:
     environment:
       - DB_GRAFANA_USERNAME=${DB_GRAFANA_USERNAME}
       - DB_GRAFANA_PASSWORD=${DB_GRAFANA_PASSWORD}
+      - PROMETHEUS_URL=http://prometheus:9090
+      - DATABASE_HOST_AND_PORT=database:3306
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
