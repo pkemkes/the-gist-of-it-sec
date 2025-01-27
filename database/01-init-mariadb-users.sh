@@ -20,6 +20,12 @@ mariadb --user=root --password="$MARIADB_ROOT_PASSWORD" <<-EOSQL
   CREATE USER IF NOT EXISTS '${DB_CLEANUPBOT_USERNAME}'@'%' IDENTIFIED BY '${DB_CLEANUPBOT_PASSWORD}';
   GRANT SELECT, INSERT, UPDATE, DELETE on thegistofitsec.gists TO '${DB_CLEANUPBOT_USERNAME}'@'%';
   GRANT SELECT on thegistofitsec.feeds TO '${DB_CLEANUPBOT_USERNAME}'@'%';
+  
+  CREATE USER IF NOT EXISTS '${DB_GRAFANA_USERNAME}'@'%' IDENTIFIED BY '${DB_GRAFANA_PASSWORD}';
+  GRANT SELECT on thegistofitsec.gists TO '${DB_GRAFANA_USERNAME}'@'%';
+  GRANT SELECT on thegistofitsec.feeds TO '${DB_GRAFANA_USERNAME}'@'%';
+  GRANT SELECT on thegistofitsec.search_results TO '${DB_GRAFANA_USERNAME}'@'%';
+  GRANT SELECT on thegistofitsec.chats TO '${DB_GRAFANA_USERNAME}'@'%';
 
   FLUSH PRIVILEGES;
 EOSQL

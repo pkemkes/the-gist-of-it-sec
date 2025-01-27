@@ -1,7 +1,9 @@
 import { AppBar, Toolbar } from "@mui/material"
 import { GitHubButton } from "./GitHubButton"
-import { TelegramButton } from "./TelegramButton"
 import { OptionalTextButton } from "./OptionalTextButton"
+import { OptionalIconButton } from "./OptionalIconButton"
+import MultilineChartIcon from '@mui/icons-material/MultilineChart';
+import TelegramIcon from "@mui/icons-material/Telegram";
 
 export const BottomBar = () => {
 	return <AppBar position="fixed" sx={{ 
@@ -17,8 +19,13 @@ export const BottomBar = () => {
         minHeight: "2.5rem",
       }}
     >
-      <TelegramButton />
-      <OptionalTextButton 
+      <OptionalIconButton urlEnvVar={ import.meta.env.VITE_METRICS_URL }>
+        <MultilineChartIcon />
+      </OptionalIconButton>
+      <OptionalIconButton urlEnvVar={ import.meta.env.VITE_TELEGRAM_URL }>
+        <TelegramIcon />
+      </OptionalIconButton>
+      <OptionalTextButton
         urlEnvVar={ import.meta.env.VITE_IMPRINT_URL } 
         label="Imprint" 
       />

@@ -1,5 +1,5 @@
 import SettingsIcon from "@mui/icons-material/Settings";
-import { IconButton, Menu } from "@mui/material";
+import { IconButton, Menu, useTheme } from "@mui/material";
 import React from "react";
 import { FeedSelectorMenuItem } from "./FeedSelectorMenuItem";
 import { ThemeToggleMenuItem } from "./ThemeToggleMenuItem";
@@ -7,6 +7,8 @@ import { TimezoneSelectorMenuItem } from "./TimezonSelectorMenuItem";
 
 
 export const SettingsMenu = () => {
+  const isLightMode = useTheme().palette.mode == "light";
+
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const menuOpened = Boolean(anchorEl);
 
@@ -26,6 +28,7 @@ export const SettingsMenu = () => {
       aria-haspopup="true"
       onClick={ handleMenuClick }
       sx={{ mr: "1rem" }}
+      color={ isLightMode ? "secondary" : "primary" }
     >
       <SettingsIcon />
     </IconButton>

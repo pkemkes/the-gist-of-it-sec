@@ -1,5 +1,3 @@
-from datetime import timezone
-
 from gists_utils.types import Gist
 from gists_utils.mariadb_handler import MariaDbHandler, mariadb
 from registered_chat_data import ChatInfo

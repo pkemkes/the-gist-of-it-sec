@@ -1,7 +1,7 @@
 import mariadb
 
 from gists_utils.mariadb_handler import MariaDbHandler
-from gists_utils.types import Gist, SearchResult
+from gists_utils.types import Gist
 
 
 class MariaDbCleanupHandler(MariaDbHandler):

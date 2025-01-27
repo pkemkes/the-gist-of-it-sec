@@ -18,7 +18,7 @@ export const OptionalTextButton = ({ urlEnvVar, label }: OptionalTextButtonProps
     href={ urlEnvVar }
     target="_blank"
     sx={{ ml: "0.3rem" }}
-    color={isLightMode ? "secondary" : "primary" }
+    color={ isLightMode ? "secondary" : "primary" }
   >
     { label }
   </Button>

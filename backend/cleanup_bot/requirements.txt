@@ -1,3 +1,4 @@
 -e ../gists_utils/
 feedparser == 6.0.11
 requests == 2.32.3
+prometheus-client == 0.21.1
