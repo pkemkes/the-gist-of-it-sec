@@ -173,9 +173,6 @@ services:
       - DATABASE_HOST_AND_PORT=database:3306
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       prometheus:
         condition: service_healthy

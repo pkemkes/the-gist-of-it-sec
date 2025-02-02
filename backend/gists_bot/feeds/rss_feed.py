@@ -1,5 +1,6 @@
 import feedparser
 from typing import List, Any
+from html import unescape
 
 from gists_utils.types import FeedInfo
 from feeds.rss_entry import RSSEntry
@@ -15,7 +16,7 @@ class RSSFeed():
         self.categories = feed_definition.categories
         self.extract_text = feed_definition.extract_text
         self.parse_feed()
-        self.title = self._extract("title")
+        self.title = unescape(self._extract("title"))
         self.link = self._extract("link")
         self.language = self._extract("language")
 

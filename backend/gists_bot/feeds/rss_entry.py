@@ -3,6 +3,7 @@ import requests
 from typing import Callable, Any
 from time import mktime
 from datetime import datetime, timezone
+from html import unescape
 
 from gists_utils.types import Gist, AIResponse
 from gists_utils.logger import get_logger
@@ -15,7 +16,7 @@ class RSSEntry:
         self.reference: str = self._extract("id")
         self.feed_id = feed_id
         self.author: str = self._extract("author", "")
-        self.title: str = self._extract("title")
+        self.title: str = unescape(self._extract("title"))
         self.published: datetime = self._parse_datetime("published_parsed")
         self.updated: datetime = self._parse_datetime("updated_parsed")
         self.link: str = self._extract("link")
