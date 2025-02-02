@@ -79,7 +79,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists;",
+          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = FALSE;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -107,7 +107,7 @@
           "table": "gists"
         }
       ],
-      "title": "Total number of gists in database",
+      "title": "Total number of active gists in database",
       "type": "stat"
     },
     {
@@ -168,7 +168,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists GROUP BY feed_id;",
+          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = FALSE GROUP BY feed_id;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -196,7 +196,7 @@
           "table": "gists"
         }
       ],
-      "title": "Number of gists in database by feed",
+      "title": "Number of active gists in database by feed",
       "transformations": [
         {
           "id": "sortBy",
@@ -252,7 +252,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 10,
+        "h": 15,
         "w": 8,
         "x": 16,
         "y": 0
@@ -354,6 +354,95 @@
             "mode": "absolute",
             "steps": [
               {
+                "color": "red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 7,
+        "x": 0,
+        "y": 5
+      },
+      "id": 27,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "dataset": "thegistofitsec",
+          "datasource": {
+            "type": "mysql",
+            "uid": "028fb935-0e9c-4a1f-8f65-c31f3401d3b2"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = TRUE;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "COUNT",
+                "parameters": [
+                  {
+                    "name": "*",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "gists"
+        }
+      ],
+      "title": "Total number of disabled gists in database",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "028fb935-0e9c-4a1f-8f65-c31f3401d3b2"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
                 "color": "green",
                 "value": null
               },
@@ -370,7 +459,7 @@
         "h": 5,
         "w": 7,
         "x": 0,
-        "y": 5
+        "y": 10
       },
       "id": 25,
       "options": {
@@ -433,12 +522,119 @@
       "type": "stat"
     },
     {
+      "datasource": {
+        "type": "mysql",
+        "uid": "028fb935-0e9c-4a1f-8f65-c31f3401d3b2"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 9,
+        "x": 7,
+        "y": 10
+      },
+      "id": 28,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "dataset": "thegistofitsec",
+          "datasource": {
+            "type": "mysql",
+            "uid": "028fb935-0e9c-4a1f-8f65-c31f3401d3b2"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = TRUE GROUP BY feed_id;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "COUNT",
+                "parameters": [
+                  {
+                    "name": "*",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "gists"
+        }
+      ],
+      "title": "Number of disabled gists in database by feed",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "# Gists"
+              }
+            ]
+          }
+        },
+        {
+          "id": "transpose",
+          "options": {}
+        }
+      ],
+      "type": "stat"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 15
       },
       "id": 4,
       "panels": [],
@@ -513,7 +709,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 16
       },
       "id": 1,
       "options": {
@@ -615,7 +811,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 22
       },
       "id": 8,
       "options": {
@@ -723,7 +919,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 28
       },
       "id": 2,
       "options": {
@@ -831,7 +1027,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 28
       },
       "id": 3,
       "options": {
@@ -933,7 +1129,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 28
+        "y": 33
       },
       "id": 9,
       "options": {
@@ -1036,7 +1232,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 28
+        "y": 33
       },
       "id": 10,
       "options": {
@@ -1080,7 +1276,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 38
       },
       "id": 12,
       "panels": [],
@@ -1152,7 +1348,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 39
       },
       "id": 13,
       "options": {
@@ -1216,7 +1412,7 @@
         "h": 5,
         "w": 16,
         "x": 0,
-        "y": 41
+        "y": 46
       },
       "id": 14,
       "options": {
@@ -1285,7 +1481,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 41
+        "y": 46
       },
       "id": 15,
       "options": {
@@ -1333,7 +1529,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 51
       },
       "id": 16,
       "panels": [],
@@ -1405,7 +1601,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 47
+        "y": 52
       },
       "id": 17,
       "options": {
@@ -1507,7 +1703,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 54
+        "y": 59
       },
       "id": 18,
       "options": {
@@ -1609,7 +1805,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 54
+        "y": 59
       },
       "id": 19,
       "options": {
@@ -1711,7 +1907,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 65
       },
       "id": 20,
       "options": {
@@ -1754,7 +1950,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 72
       },
       "id": 21,
       "panels": [],
@@ -1826,7 +2022,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 68
+        "y": 73
       },
       "id": 22,
       "options": {
@@ -1875,6 +2071,6 @@
   "timezone": "browser",
   "title": "The Gist of IT Sec - Metrics",
   "uid": "deaokso813f28f",
-  "version": 4,
+  "version": 8,
   "weekStart": ""
 }
