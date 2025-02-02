@@ -32,6 +32,7 @@ class CleanUpBot:
         self._feeds: dict[int, any] | None = None
         dummy_user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0"
         self._headers = { "User-Agent": dummy_user_agent }
+        self._domains_to_ignore = [ "https://feeds.feedblitz.com" ]
     
     @CLEANUP_GISTS_GAUGE.time()
     def cleanup_gists(self) -> None:
@@ -91,9 +92,11 @@ class CleanUpBot:
                 self._logger.info(f"Set new metadata in chromadb on gist with reference {gist.reference}")
     
     def _gist_should_be_disabled(self, gist: Gist) -> bool:
+        if any(gist.link.startswith(domain) for domain in self._domains_to_ignore):
+            return False
         session = self._get_session()
-        resp = session.get(gist.link, headers=self._headers, allow_redirects=False)
-        if resp.status_code == 404:
+        resp = session.head(gist.link, headers=self._headers)
+        if resp.status_code == 400:
             return True
         if resp.is_redirect:
             if gist.link not in self._get_entry_links_for_feed(self._feeds[gist.feed_id]):
