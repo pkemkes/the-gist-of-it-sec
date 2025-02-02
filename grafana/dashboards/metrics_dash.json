@@ -79,7 +79,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = FALSE;",
+          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = FALSE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -107,7 +107,7 @@
           "table": "gists"
         }
       ],
-      "title": "Total number of active gists in database",
+      "title": "Total number of active gists added in last 7 days",
       "type": "stat"
     },
     {
@@ -118,18 +118,16 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
         },
         "overrides": []
       },
@@ -141,11 +139,17 @@
       },
       "id": 24,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
+        "displayLabels": [
+          "name",
+          "value"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false,
+          "values": []
+        },
+        "pieType": "donut",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -153,9 +157,10 @@
           "fields": "",
           "values": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "pluginVersion": "11.4.0",
       "targets": [
@@ -168,7 +173,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = FALSE GROUP BY feed_id;",
+          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = FALSE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY) GROUP BY feed_id;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -196,7 +201,7 @@
           "table": "gists"
         }
       ],
-      "title": "Number of active gists in database by feed",
+      "title": "Number of active gists added in last 7 days by feed",
       "transformations": [
         {
           "id": "sortBy",
@@ -215,7 +220,7 @@
           "options": {}
         }
       ],
-      "type": "stat"
+      "type": "piechart"
     },
     {
       "datasource": {
@@ -287,7 +292,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \r\n  CONCAT(\r\n    '{',\r\n    REGEXP_REPLACE(\r\n      CONCAT('\"', REPLACE(tags, ';;', '\", \"'), '\"'),\r\n      '\"([^\"]+)\"',\r\n      '\"\\\\1\": 1'\r\n    ),\r\n    '}'\r\n  ) AS 'Tags'\r\n  FROM thegistofitsec.gists;",
+          "rawSql": "SELECT \r\n  CONCAT(\r\n    '{',\r\n    REGEXP_REPLACE(\r\n      CONCAT('\"', REPLACE(tags, ';;', '\", \"'), '\"'),\r\n      '\"([^\"]+)\"',\r\n      '\"\\\\1\": 1'\r\n    ),\r\n    '}'\r\n  ) AS 'Tags'\r\n  FROM thegistofitsec.gists \r\n  WHERE disabled = FALSE \r\n    AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -308,7 +313,7 @@
           }
         }
       ],
-      "title": "Tag distribution over all gists",
+      "title": "Tag distribution over gists in last 7 days",
       "transformations": [
         {
           "id": "extractFields",
@@ -397,7 +402,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = TRUE;",
+          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = TRUE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -425,7 +430,7 @@
           "table": "gists"
         }
       ],
-      "title": "Total number of disabled gists in database",
+      "title": "Total number of disabled gists added in last 7 days",
       "type": "stat"
     },
     {
@@ -565,7 +570,7 @@
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "wideLayout": true
       },
       "pluginVersion": "11.4.0",
@@ -579,7 +584,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = TRUE GROUP BY feed_id;",
+          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = TRUE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY) GROUP BY feed_id;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -607,7 +612,7 @@
           "table": "gists"
         }
       ],
-      "title": "Number of disabled gists in database by feed",
+      "title": "Number of disabled gists added in last 7 days by feed",
       "transformations": [
         {
           "id": "sortBy",
@@ -2071,6 +2076,6 @@
   "timezone": "browser",
   "title": "The Gist of IT Sec - Metrics",
   "uid": "deaokso813f28f",
-  "version": 8,
+  "version": 9,
   "weekStart": ""
 }
