@@ -15,37 +15,12 @@
       }
     ]
   },
-  "editable": false,
+  "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 2,
+  "id": 1,
   "links": [],
   "panels": [
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 5,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "# The Gist of IT Sec - Metrics",
-        "mode": "markdown"
-      },
-      "pluginVersion": "11.4.0",
-      "title": "",
-      "type": "text"
-    },
     {
       "datasource": {
         "type": "mysql",
@@ -63,10 +38,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -77,7 +48,7 @@
         "h": 5,
         "w": 7,
         "x": 0,
-        "y": 2
+        "y": 0
       },
       "id": 23,
       "options": {
@@ -156,10 +127,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -170,7 +137,7 @@
         "h": 10,
         "w": 9,
         "x": 7,
-        "y": 2
+        "y": 0
       },
       "id": 24,
       "options": {
@@ -288,7 +255,7 @@
         "h": 10,
         "w": 8,
         "x": 16,
-        "y": 2
+        "y": 0
       },
       "id": 26,
       "options": {
@@ -403,7 +370,7 @@
         "h": 5,
         "w": 7,
         "x": 0,
-        "y": 7
+        "y": 5
       },
       "id": 25,
       "options": {
@@ -471,7 +438,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 10
       },
       "id": 4,
       "panels": [],
@@ -546,7 +513,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 11
       },
       "id": 1,
       "options": {
@@ -648,7 +615,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 17
       },
       "id": 8,
       "options": {
@@ -756,7 +723,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 25
+        "y": 23
       },
       "id": 2,
       "options": {
@@ -864,7 +831,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 25
+        "y": 23
       },
       "id": 3,
       "options": {
@@ -966,7 +933,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 30
+        "y": 28
       },
       "id": 9,
       "options": {
@@ -1069,7 +1036,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 30
+        "y": 28
       },
       "id": 10,
       "options": {
@@ -1113,7 +1080,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 33
       },
       "id": 12,
       "panels": [],
@@ -1185,7 +1152,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 34
       },
       "id": 13,
       "options": {
@@ -1249,7 +1216,7 @@
         "h": 5,
         "w": 16,
         "x": 0,
-        "y": 43
+        "y": 41
       },
       "id": 14,
       "options": {
@@ -1318,7 +1285,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 43
+        "y": 41
       },
       "id": 15,
       "options": {
@@ -1361,12 +1328,12 @@
       "type": "stat"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 46
       },
       "id": 16,
       "panels": [],
@@ -1438,7 +1405,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 47
       },
       "id": 17,
       "options": {
@@ -1540,7 +1507,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 56
+        "y": 54
       },
       "id": 18,
       "options": {
@@ -1642,7 +1609,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 56
+        "y": 54
       },
       "id": 19,
       "options": {
@@ -1744,7 +1711,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 62
+        "y": 60
       },
       "id": 20,
       "options": {
@@ -1787,7 +1754,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 69
+        "y": 67
       },
       "id": 21,
       "panels": [],
@@ -1859,7 +1826,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 70
+        "y": 68
       },
       "id": 22,
       "options": {
@@ -1901,13 +1868,13 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "The Gist of IT Sec - Metrics",
   "uid": "deaokso813f28f",
-  "version": 26,
+  "version": 4,
   "weekStart": ""
 }
