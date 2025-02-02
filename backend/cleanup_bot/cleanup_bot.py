@@ -11,7 +11,7 @@ from gists_utils.types import Gist
 
 
 CLEANUP_GISTS_GAUGE = Gauge("cleanup_gists_seconds", "Time spent to cleanup all gists")
-CHECK_GIST_SUMMARY = Summary("check_gist_seconds", "Time spent to check a single gist")
+CHECK_GIST_SUMMARY = Summary("check_gist_seconds", "Time spent to check a single gist", [ "feed_title" ])
 ENSURE_CORRECT_DISABLED_SUMMARY = Summary(
     "ensure_correct_disabled_seconds", 
     "Time spent to ensure that a single gist has the correct disabled state",
