@@ -83,6 +83,17 @@ def extract_text_the_record(page: str) -> str:
     return "".join(entry_texts).strip()
 
 
+def extract_text_ars_technica(page: str) -> str:
+    soup = BeautifulSoup(page, "html.parser")
+    entry_contents = soup.find_all("div", { "class": "post-content" })
+    if entry_contents is None or len(entry_contents) < 1:
+        raise RuntimeError(MISSING_CONTAINER_MSG)
+    entry_texts = sum([content.find_all(string=True) for content in entry_contents], [])
+    if len(entry_texts) == 0:
+        raise RuntimeError(NO_TEXT_IN_CONTAINER_MSG)
+    return "".join(entry_texts).strip().replace("\n", " ")
+
+
 feed_definitions = [
     FeedDefinition(
         "https://krebsonsecurity.com/feed",
@@ -113,5 +124,10 @@ feed_definitions = [
         "https://therecord.media/feed",
         extract_text_the_record,
         None
-    )
+    ),
+    FeedDefinition(
+        "https://feeds.arstechnica.com/arstechnica/technology-lab",
+        extract_text_ars_technica,
+        [ "Security" ]
+    ),
 ]
