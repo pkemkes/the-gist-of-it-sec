@@ -51,13 +51,13 @@ def extract_text_dark_reading(page: str) -> str:
 
 def extract_text_the_verge(page: str) -> str:
     soup = BeautifulSoup(page, "html.parser")
-    entry_content = soup.find("div", { "class": "duet--article--article-body-component-container" })
-    if entry_content is None:
+    entry_contents = soup.find_all("div", { "class": "duet--article--article-body-component" })
+    if entry_contents is None or len(entry_contents) < 1:
         raise RuntimeError(MISSING_CONTAINER_MSG)
-    entry_texts = entry_content.find_all(string=True)
+    entry_texts = sum([content.find_all(string=True) for content in entry_contents], [])
     if len(entry_texts) == 0:
         raise RuntimeError(NO_TEXT_IN_CONTAINER_MSG)
-    return "".join(entry_texts).strip()
+    return "".join(entry_texts).strip().replace("\n", " ")
 
 
 def extract_text_gdata(page: str) -> str:
