@@ -3,6 +3,7 @@ import feedparser
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from prometheus_client import Gauge, Summary
+from dataclasses import dataclass
 
 from mariadb_cleanup_handler import MariaDbCleanupHandler
 from chromadb_cleanup_handler import ChromaDbCleanupHandler
@@ -22,6 +23,13 @@ ENSURE_CHROMADB_SUMMARY = Summary(
     "Time spent to ensure that a single entry is present in the chroma db and has the correct metadata",
     [ "feed_title", "should_be_disabled", "is_disabled", "feed_id_in_db" ]
 )
+GISTS_CHECKED_GAUGE = Gauge("gists_checked", "Total number of gists checked in one run")
+
+
+@dataclass
+class DelayInfo:
+    times_delayed: int
+    score: int
 
 
 class CleanUpBot:
@@ -33,15 +41,20 @@ class CleanUpBot:
         dummy_user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0"
         self._headers = { "User-Agent": dummy_user_agent }
         self._domains_to_ignore = [ "https://feeds.feedblitz.com" ]
+        self._gists_delay_info: dict[int, DelayInfo] = {}
     
     @CLEANUP_GISTS_GAUGE.time()
     def cleanup_gists(self) -> None:
         gists = self._mariadb.get_all_gists()
+        GISTS_CHECKED_GAUGE.set(len(gists) - self._number_of_delayed_gists())
         self._fetch_feeds(gists)
         for gist in gists:
             self._check_gist(gist)
             sleep(0.2)
         self._logger.info("Cleanup search done!")
+    
+    def _number_of_delayed_gists(self) -> int:
+        return len([gist_id for gist_id, delay_info in self._gists_delay_info.items() if delay_info.score != 0])
     
     def _fetch_feeds(self, gists: list[Gist]) -> dict[int, any]:
         feed_ids = set(gist.feed_id for gist in gists)
@@ -54,11 +67,30 @@ class CleanUpBot:
         }
 
     def _check_gist(self, gist: Gist) -> None:
+        if self._is_delayed(gist):
+            return
         feed_title = self._feeds[gist.feed_id].feed.get("title")
         with CHECK_GIST_SUMMARY.labels(feed_title).time():
             should_be_disabled = self._gist_should_be_disabled(gist)
             self._ensure_correct_disabled_state(gist, should_be_disabled)
             self._ensure_chromadb_completeness(gist, should_be_disabled)
+    
+    def _is_delayed(self, gist: Gist) -> bool:
+        if gist.id not in self._gists_delay_info:
+            self._reset_delay(gist)
+            return False
+        delay_info = self._gists_delay_info[gist.id]
+        if delay_info.score == 0:
+            self._gists_delay_info[gist.id] = DelayInfo(
+                max(delay_info.times_delayed + 1, 7), 
+                2 ** delay_info.times_delayed
+            )
+            return False
+        self._gists_delay_info[gist.id] = DelayInfo(delay_info.times_delayed, delay_info.score - 1)
+        return True
+
+    def _reset_delay(self, gist: Gist) -> None:
+        self._gists_delay_info[gist.id] = DelayInfo(1, 1)
 
     def _ensure_correct_disabled_state(self, gist: Gist, should_be_disabled: bool) -> None:
         is_disabled = self._mariadb.gist_is_disabled(gist)
@@ -67,10 +99,12 @@ class CleanUpBot:
             if should_be_disabled and not is_disabled:
                 self._mariadb.disable_gist(gist)
                 self._chromadb.disable_gist(gist)
+                self._reset_delay(gist)
                 self._logger.info(f"Disabled gist with id {gist.id} and link {gist.link}")
             if is_disabled and not should_be_disabled:
                 self._mariadb.enable_gist(gist)
                 self._chromadb.enable_gist(gist)
+                self._reset_delay(gist)
                 self._logger.info(f"Enabled gist with id {gist.id} and link {gist.link}")
     
     def _ensure_chromadb_completeness(self, gist: Gist, should_be_disabled: bool) -> None:
@@ -89,6 +123,7 @@ class CleanUpBot:
                     self._chromadb.feed_id_key: self._mariadb.get_feed_id_by_gist_reference(gist.reference)
                 }
                 self._chromadb.set_metadata(gist.reference, new_metadata)
+                self._reset_delay(gist)
                 self._logger.info(f"Set new metadata in chromadb on gist with reference {gist.reference}")
     
     def _gist_should_be_disabled(self, gist: Gist) -> bool:

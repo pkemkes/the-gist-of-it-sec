@@ -1671,6 +1671,104 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 59
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "gists_checked",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Gists checked",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Number of gists that have been checked in a single cleanup run",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
             "lineWidth": 5,
             "pointSize": 5,
             "scaleDistribution": {
@@ -1708,7 +1806,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 59
+        "y": 66
       },
       "id": 18,
       "options": {
@@ -1810,7 +1908,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 59
+        "y": 66
       },
       "id": 19,
       "options": {
@@ -1912,7 +2010,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 65
+        "y": 72
       },
       "id": 20,
       "options": {
@@ -1955,7 +2053,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 79
       },
       "id": 21,
       "panels": [],
@@ -2027,7 +2125,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 73
+        "y": 80
       },
       "id": 22,
       "options": {
@@ -2076,6 +2174,6 @@
   "timezone": "browser",
   "title": "The Gist of IT Sec - Metrics",
   "uid": "deaokso813f28f",
-  "version": 9,
+  "version": 2,
   "weekStart": ""
 }
