@@ -96,7 +96,7 @@ class CleanUpBot:
             return False
         session = self._get_session()
         resp = session.head(gist.link, headers=self._headers)
-        if resp.status_code == 400:
+        if resp.status_code >= 400 and resp.status_code < 500:
             return True
         if resp.is_redirect:
             if gist.link not in self._get_entry_links_for_feed(self._feeds[gist.feed_id]):
