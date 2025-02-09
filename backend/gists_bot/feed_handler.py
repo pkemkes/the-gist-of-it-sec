@@ -4,10 +4,10 @@ from time import time
 
 from gists_utils.logger import get_logger
 from gists_utils.types import Gist, SearchResult
-from mariadb_gists_handler import MariaDbGistsHandler
-from openai_handler import OpenAIHandler
-from chromadb_inserter import ChromaDbInserter
-from google_search_handler import GoogleSearchHandler
+from base_handler.mariadb_gists_handler import MariaDbGistsHandler
+from base_handler.openai_handler import OpenAIHandler
+from base_handler.chromadb_inserter import ChromaDbInserter
+from base_handler.google_search_handler import GoogleSearchHandler
 from feeds.feeds import FeedDefinition
 from feeds.rss_feed import RSSFeed
 from feeds.rss_entry import RSSEntry

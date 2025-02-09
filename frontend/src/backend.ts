@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Gist, FeedInfo, SimilarGist, SearchResult } from "./types";
+import { Gist, FeedInfo, SimilarGist, SearchResult, Recap } from "./types";
 
 interface GistsQueryParameters {
   lastGist: number | undefined,
@@ -78,6 +78,9 @@ export const backendApi = createApi({
     }),
     getSearchResults: builder.query<SearchResult[], { id: number }>({
       query: ({ id }) => `gists/search_results?id=${id}`,
+    }),
+    getRecap: builder.query<Recap, { type: string }>({
+      query: ({ type }) => `recap?type=${type}`,
     }),
   }),
 });

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 import { TextTag } from "./GistInspector/TextTag";
 import { useAppSelector } from "../store";
 import { selectTimezone } from "./slice";
+import { ToLocaleString } from "./utils";
 
 
 interface GistCardProps {
@@ -40,17 +41,6 @@ const TextTagList = (tagTexts: string[]) =>
       />) 
     }
   </Box>;
-
-const ToLocaleString = (isoTime: string, timezone: string) => (
-  new Date(isoTime).toLocaleString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: timezone,
-  })
-);
 
 export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
   const navigate = useNavigate();
@@ -127,10 +117,9 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
         }
         <Box
           sx={{
-            // mx: "1rem",
             mt: "1rem",
             display: "grid",
-            gridTemplateColumns: "50% auto",
+            gridTemplateColumns: "1fr 1fr",
             columnGap: "1rem",
           }}
         >
@@ -147,7 +136,7 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
             Read the full article
           </Button>
           { highlighted 
-            ? undefined
+            ? <div />
             : <Button
                 onClick={ () => { 
                   navigate(investigationUrl);

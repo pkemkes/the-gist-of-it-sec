@@ -49,4 +49,20 @@ CREATE TABLE IF NOT EXISTS search_results (
     thumbnail_link MEDIUMTEXT,
     image_link MEDIUMTEXT,
     FOREIGN KEY (gist_id) REFERENCES gists(id)
-)
+);
+
+CREATE TABLE IF NOT EXISTS recaps_daily (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    created DATETIME NOT NULL,
+    recap LONGTEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS recaps_daily_by_created ON recaps_daily(created);
+
+CREATE TABLE IF NOT EXISTS recaps_weekly (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    created DATETIME NOT NULL,
+    recap LONGTEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS recaps_weekly_by_created ON recaps_weekly(created);

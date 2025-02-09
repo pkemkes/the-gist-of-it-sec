@@ -6,11 +6,15 @@ mariadb --user=root --password="$MARIADB_ROOT_PASSWORD" <<-EOSQL
   GRANT SELECT, INSERT, UPDATE, DELETE on thegistofitsec.gists TO '${DB_GISTSBOT_USERNAME}'@'%';
   GRANT SELECT, INSERT, UPDATE, DELETE on thegistofitsec.feeds TO '${DB_GISTSBOT_USERNAME}'@'%';
   GRANT SELECT, INSERT, UPDATE, DELETE on thegistofitsec.search_results TO '${DB_GISTSBOT_USERNAME}'@'%';
+  GRANT SELECT, INSERT, UPDATE, DELETE on thegistofitsec.recaps_daily TO '${DB_GISTSBOT_USERNAME}'@'%';
+  GRANT SELECT, INSERT, UPDATE, DELETE on thegistofitsec.recaps_weekly TO '${DB_GISTSBOT_USERNAME}'@'%';
 
   CREATE USER IF NOT EXISTS '${DB_RESTAPI_USERNAME}'@'%' IDENTIFIED BY '${DB_RESTAPI_PASSWORD}';
   GRANT SELECT on thegistofitsec.gists TO '${DB_RESTAPI_USERNAME}'@'%';
   GRANT SELECT on thegistofitsec.feeds TO '${DB_RESTAPI_USERNAME}'@'%';
   GRANT SELECT on thegistofitsec.search_results TO '${DB_RESTAPI_USERNAME}'@'%';
+  GRANT SELECT on thegistofitsec.recaps_daily TO '${DB_RESTAPI_USERNAME}'@'%';
+  GRANT SELECT on thegistofitsec.recaps_weekly TO '${DB_RESTAPI_USERNAME}'@'%';
   
   CREATE USER IF NOT EXISTS '${DB_TELEGRAMBOT_USERNAME}'@'%' IDENTIFIED BY '${DB_TELEGRAMBOT_PASSWORD}';
   GRANT SELECT on thegistofitsec.gists TO '${DB_TELEGRAMBOT_USERNAME}'@'%';

@@ -3,4 +3,5 @@ Flask-Cors == 5.0.0
 gunicorn == 23.0.0
 prometheus-flask-exporter == 0.23.1
 prometheus-client == 0.21.1
+dacite == 1.9.2
 -e ../gists_utils/

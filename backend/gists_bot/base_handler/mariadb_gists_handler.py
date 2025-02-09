@@ -1,7 +1,9 @@
 import mariadb
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import json
+from dataclasses import asdict
 
-from gists_utils.types import Gist, FeedInfo, SearchResult
+from gists_utils.types import Gist, FeedInfo, SearchResult, CategoryRecap
 from gists_utils.mariadb_handler import MariaDbHandler
 
 
@@ -178,10 +180,74 @@ class MariaDbGistsHandler(MariaDbHandler):
             )
             raise e
     
-    def update_search_results(self, results: list[SearchResult], gist_id: int):
+    def update_search_results(self, results: list[SearchResult], gist_id: int) -> None:
         self._connection.autocommit = False
         self._delete_search_results(gist_id)
         for result in results:
             self._insert_search_result(result, gist_id)
         self._connection.commit()
         self._connection.autocommit = True
+    
+    def get_last_daily_recap_created(self) -> datetime:
+        return self._get_last_recap_created("daily")
+    
+    def get_last_weekly_recap_created(self) -> datetime:
+        return self._get_last_recap_created("weekly")
+    
+    def _get_last_recap_created(self, recap_type: str) -> datetime:
+        query = f"SELECT created FROM recaps_{recap_type} ORDER BY id DESC LIMIT 1"
+        try:
+            with self._connection.cursor() as cur:
+                cur.execute(query)
+                result = cur.fetchone()
+                if result is None:
+                    return datetime.now(timezone.utc) - timedelta(days=365)
+                return result[0].replace(tzinfo=timezone.utc)
+        except mariadb.Error as e:
+            self._logger.error(
+                f"Error getting created for last {recap_type} recap",
+                exc_info=True
+            )
+            raise e
+    
+    def get_gists_of_last_day(self) -> list[Gist]:
+        return self._get_gists_of_last_days(1)
+    
+    def get_gists_of_last_week(self) -> list[Gist]:
+        return self._get_gists_of_last_days(7)
+        
+    def _get_gists_of_last_days(self, days: int) -> list[Gist]:
+        query = "SELECT * FROM gists WHERE updated >= ?"
+        updated_after = datetime.now(timezone.utc) - timedelta(days)
+        try:
+            with self._connection.cursor() as cur:
+                cur.execute(query, (updated_after,))
+                return [self.query_response_to_gist(row) for row in cur.fetchall()]
+        except mariadb.Error as e:
+            self._logger.error(
+                f"Error getting gists for last {days} days",
+                exc_info=True
+            )
+            raise e
+    
+    def insert_daily_recap(self, recap: list[CategoryRecap]) -> None:
+        self._insert_recap(recap, "daily")
+    
+    def insert_weekly_recap(self, recap: list[CategoryRecap]) -> None:
+        self._insert_recap(recap, "weekly")
+    
+    def _insert_recap(self, recap: list[CategoryRecap], recap_type: str) -> None:
+        query = f"INSERT INTO recaps_{recap_type} (created, recap) VALUES (?, ?)"
+        created = datetime.now(timezone.utc)
+        recap = json.dumps([asdict(category_recap) for category_recap in recap])
+        try:
+            with self._connection.cursor() as cur:
+                cur.execute(query, (created, recap))
+                if cur.rowcount != 1:
+                    self._logger.warning(f"Could not insert following {recap_type} recap: {recap}")
+        except mariadb.Error as e:
+            self._logger.error(
+                f"Error inserting following {recap_type} recap: {recap}",
+                exc_info=True
+            )
+            raise e

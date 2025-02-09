@@ -6,6 +6,9 @@ from api_data import (
 	GistApiResponse, 
 	FeedInfoApiResponse, 
 	SimilarGistApiResponse,
+    RecapApiResponse,
+    RecapCategoryApiResponse,
+    RelatedGistInRecap,
 )
 from mariadb_rest_handler import MariaDbRestHandler
 from chromadb_fetcher import ChromaDbFetcher
@@ -45,7 +48,7 @@ def get_disabled_feeds_from_request() -> tuple[list[int] | None, Response | None
         return [], None
     split_disabled_feeds_param = [df for df in disabled_feeds_param.split(",") if df != ""]
     if not all(disabled_feed_str.isdigit() for disabled_feed_str in split_disabled_feeds_param):
-        return None, ("Parameter \"disabled_feeds\" contains elements that are not valid numbers!")
+        return None, ("Parameter \"disabled_feeds\" contains elements that are not valid numbers!", 400)
     return [int(df) for df in split_disabled_feeds_param], None
 
 
@@ -140,3 +143,34 @@ def get_feeds() -> Response:
     all_feed_info = DB.get_all_feed_info()
     response_data = [feed_info_to_api_data(fi) for fi in all_feed_info]
     return jsonify(response_data), 200
+
+
+@app.route("/recap", methods=["GET"])
+def get_recap() -> Response:
+    recap_type = request.args.get("type")
+    if recap_type == "daily":
+        result = DB.get_daily_recap()
+    elif recap_type == "weekly":
+        result = DB.get_weekly_recap()
+    else:
+        return "Given value for parameter type is invalid!", 400
+    if result is None:
+        return "Could not retrieve latest recap", 500
+    categories, created = result
+    gist_ids = sorted(set(sum([cat.related for cat in categories], [])))
+    gist_titles = DB.get_gist_titles_for_ids(gist_ids)
+    gist_titles_by_ids = dict(zip(gist_ids, gist_titles))
+    categories_api_response = [ 
+        RecapCategoryApiResponse(
+            cat.heading, 
+            cat.recap,
+            [ 
+                RelatedGistInRecap(gist_id, gist_titles_by_ids[gist_id]) 
+                for gist_id in cat.related 
+            ]
+        ) for cat in categories ]
+    recap = RecapApiResponse(
+        categories_api_response,
+        created.isoformat()
+    )
+    return jsonify(recap), 200

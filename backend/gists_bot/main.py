@@ -3,11 +3,12 @@ from prometheus_client import start_http_server, Gauge
 
 from gists_utils.logger import get_logger
 from gists_utils.run_in_loop import run_in_loop
-from mariadb_gists_handler import MariaDbGistsHandler
-from openai_handler import OpenAIHandler
-from chromadb_inserter import ChromaDbInserter
-from google_search_handler import GoogleSearchHandler
+from base_handler.mariadb_gists_handler import MariaDbGistsHandler
+from base_handler.openai_handler import OpenAIHandler
+from base_handler.chromadb_inserter import ChromaDbInserter
+from base_handler.google_search_handler import GoogleSearchHandler
 from feed_handler import FeedHandler
+from recap_handler import RecapHandler
 from feeds.rss_entry import RSSEntry
 from feeds.feeds import feed_definitions
 
@@ -31,6 +32,11 @@ def process_entries(feed_handlers: list[FeedHandler], mode: str) -> None:
             logger.error(f"Error when processing entry with reference {entry.reference}", exc_info=True)
 
 
+def run_tasks(feed_handlers: list[FeedHandler], mode: str, recap_handler: RecapHandler):
+    process_entries(feed_handlers, mode)
+    recap_handler.recap_if_necessary()
+
+
 def main():
     start_http_server(9090)
     mode = getenv("APP_MODE", "prod")
@@ -42,8 +48,9 @@ def main():
         FeedHandler(db, ai, chroma, google, feed_definition)
         for feed_definition in feed_definitions
     ]
+    recap_handler = RecapHandler(db, ai)
 
-    run_in_loop(process_entries, [feed_handlers, mode], 5*60)
+    run_in_loop(run_tasks, [feed_handlers, mode, recap_handler], 5*60)
 
 
 if __name__ == "__main__":

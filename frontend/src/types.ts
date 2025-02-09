@@ -34,3 +34,19 @@ export interface SearchResult {
   thumbnail_link: string | undefined,
   image_link: string | undefined
 }
+
+export interface RecapRelatedGist {
+  id: number,
+  title: string,
+}
+
+export interface RecapCategory {
+  heading: string,
+  recap: string,
+  related: RecapRelatedGist[],
+}
+
+export interface Recap {
+  created: string,
+  recap: RecapCategory[],
+}

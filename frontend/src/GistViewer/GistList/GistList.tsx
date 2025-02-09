@@ -8,6 +8,8 @@ import { GistViewerBody } from "../GistViewerBody";
 import { ErrorMessage } from "../ErrorMessage";
 import { useEffect, useRef } from "react";
 import { LoadingBar } from "../LoadingBar";
+import { Button } from "@mui/material";
+import { RecapButtons } from "./RecapButtons";
 
 
 const FindLastGistId = (data: Gist[] | undefined) => {
@@ -58,16 +60,9 @@ export const GistList = () => {
 
   const sortedData = data ? SortByUpdatedDateDesc(data) : [];
 
-  const dataToDisplay = sortedData.map((gist, i) => (
-    <GistCard key={i} gist={gist} />
-  ));
-
-  dataToDisplay.push(isFetching 
-    ? <LoadingBar key={dataToDisplay.length} /> 
-    : <GistEndCard key={dataToDisplay.length} />
-  );
-
   return <GistViewerBody scrollRef={ viewerBodyRef }>
-    { dataToDisplay }
+    { <RecapButtons /> }
+    { sortedData.map((gist, i) => ( <GistCard key={i} gist={gist} /> )) }
+    { isFetching ? <LoadingBar /> : <GistEndCard /> }
   </GistViewerBody>;
 };
