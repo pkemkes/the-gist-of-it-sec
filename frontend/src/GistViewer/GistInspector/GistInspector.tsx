@@ -2,8 +2,8 @@ import { ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { backendApi } from "../../backend";
 import { GistViewerBody } from "../GistViewerBody";
 import { GistCard } from "../GistCard";
-import { BackButton } from "./BackButton";
-import React from "react";
+import { BackButton } from "../BackButton";
+import React, { useState } from "react";
 import { SimilarGistList } from "./SimilarGistList";
 import { SearchResultList } from "./SearchResultList";
 import { useNavigate, useSearchParams } from "react-router";
@@ -17,16 +17,13 @@ interface GistInspectorProps {
 }
 
 export const GistInspector = ({ gistId }: GistInspectorProps) => {
-  const [searchParams, _] = useSearchParams();
-  let mode = searchParams.get("mode") ?? "similar";
-
-  const navigate = useNavigate();
+  let [ mode, setMode ] = useState("similar");
 
   const handleModeChange = (
     _: React.MouseEvent<HTMLElement>,
     newMode: string,
   ) => {
-    navigate(`/?gist=${gistId}&mode=${newMode}`);
+    setMode(newMode);
   };
 
   const { data, error, isFetching } = backendApi.useGetGistByIdQuery({ id: gistId });

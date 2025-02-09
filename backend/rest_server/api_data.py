@@ -29,4 +29,23 @@ class FeedInfoApiResponse:
     title: str
     link: str
     language: str
+
+
+@dataclass
+class RelatedGistInRecap:
+    id: int
+    title: str
+
+
+@dataclass
+class RecapCategoryApiResponse:
+    heading: str
+    recap: str
+    related: list[RelatedGistInRecap]
+
+
+@dataclass
+class RecapApiResponse:
+    recap: list[RecapCategoryApiResponse]
+    created: str
     

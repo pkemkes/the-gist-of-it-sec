@@ -2,13 +2,12 @@ import { Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router";
 
+
 export const BackButton = () => {
   const navigate = useNavigate();
   
   return <Button
-    onClick={() => {
-      navigate("/");
-    }}
+    onClick={() => navigate(-1)}
     variant="outlined"
     startIcon={<ArrowBackIcon />}
     sx={{

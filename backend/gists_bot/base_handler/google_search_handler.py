@@ -5,11 +5,10 @@ from requests.adapters import HTTPAdapter, Retry
 from typing import Any
 import json
 from prometheus_client import Summary
-from time import time
 
 from gists_utils.types import Gist, SearchResult
 from gists_utils.logger import get_logger
-from mariadb_gists_handler import MariaDbGistsHandler
+from base_handler.mariadb_gists_handler import MariaDbGistsHandler
 
 
 GET_SEARCH_RESULTS_SUMMARY = Summary(

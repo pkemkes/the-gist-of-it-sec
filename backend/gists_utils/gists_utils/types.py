@@ -27,6 +27,13 @@ class Gist:
 
 
 @dataclass
+class CategoryRecap:
+    heading: str
+    recap: str
+    related: list[int]
+
+
+@dataclass
 class SearchResult:
     id: int | None
     gist_id: int
