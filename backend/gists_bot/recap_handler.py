@@ -34,9 +34,10 @@ class RecapHandler:
 		is_time_to_create = now.hour >= self._utc_hour_to_create_after
 		if not is_time_to_create:
 			return False, False
-		daily_is_created_too_long_ago = (now - self._db.get_last_daily_recap_created()) > timedelta(days=1)
-		weekly_is_created_too_long_ago = (now - self._db.get_last_weekly_recap_created()) > timedelta(days=1)
-		return (daily_is_created_too_long_ago, weekly_is_created_too_long_ago)
+		return (
+			self._db.get_last_daily_recap_created().day < now.day, 
+			self._db.get_last_weekly_recap_created().day < now.day
+		)
 	
 	@DAILY_RECAP_GAUGE.time()
 	def _create_daily_recap(self) -> None:
