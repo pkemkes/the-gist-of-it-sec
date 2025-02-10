@@ -37,8 +37,8 @@ class RecapHandler:
 		last_daily_recap_created = self._db.get_last_daily_recap_created()
 		last_weekly_recap_created = self._db.get_last_weekly_recap_created()
 		return (
-			last_daily_recap_created is not None and last_daily_recap_created.day < now.day, 
-			last_weekly_recap_created is not None and last_weekly_recap_created.day < now.day
+			last_daily_recap_created is None or last_daily_recap_created.day < now.day, 
+			last_weekly_recap_created is None or last_weekly_recap_created.day < now.day
 		)
 	
 	@DAILY_RECAP_GAUGE.time()
