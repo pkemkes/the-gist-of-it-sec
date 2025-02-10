@@ -42,6 +42,9 @@ class RecapHandler:
 	@DAILY_RECAP_GAUGE.time()
 	def _create_daily_recap(self) -> None:
 		gists = self._db.get_gists_of_last_day()
+		if len(gists) == 0:
+			self._logger.info("No gists created in last 24h. Skipping recap.")
+			return
 		recap = self._ai.generate_daily_recap(gists)
 		self._db.insert_daily_recap(recap)
 		self._logger.info("Daily recap created")
@@ -49,6 +52,9 @@ class RecapHandler:
 	@WEEKLY_RECAP_GAUGE.time()
 	def _create_weekly_recap(self) -> None:
 		gists = self._db.get_gists_of_last_week()
+		if len(gists) == 0:
+			self._logger.info("No gists created in last 7d. Skipping recap.")
+			return
 		recap = self._ai.generate_weeky_recap(gists)
 		self._db.insert_weekly_recap(recap)
 		self._logger.info("Weekly recap created")
