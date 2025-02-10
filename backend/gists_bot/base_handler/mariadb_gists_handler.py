@@ -188,20 +188,20 @@ class MariaDbGistsHandler(MariaDbHandler):
         self._connection.commit()
         self._connection.autocommit = True
     
-    def get_last_daily_recap_created(self) -> datetime:
+    def get_last_daily_recap_created(self) -> datetime | None:
         return self._get_last_recap_created("daily")
     
-    def get_last_weekly_recap_created(self) -> datetime:
+    def get_last_weekly_recap_created(self) -> datetime | None:
         return self._get_last_recap_created("weekly")
     
-    def _get_last_recap_created(self, recap_type: str) -> datetime:
+    def _get_last_recap_created(self, recap_type: str) -> datetime | None:
         query = f"SELECT created FROM recaps_{recap_type} ORDER BY id DESC LIMIT 1"
         try:
             with self._connection.cursor() as cur:
                 cur.execute(query)
                 result = cur.fetchone()
                 if result is None:
-                    return datetime.now(timezone.utc) - timedelta(days=365)
+                    return None
                 return result[0].replace(tzinfo=timezone.utc)
         except mariadb.Error as e:
             self._logger.error(
