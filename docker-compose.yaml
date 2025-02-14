@@ -42,7 +42,7 @@ services:
       - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
-      # - APP_MODE=dev  # NOTE: remove this for production use
+      - APP_MODE=dev  # NOTE: remove this for production use
     networks:
       - database
       - chromadb

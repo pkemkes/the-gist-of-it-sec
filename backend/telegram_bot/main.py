@@ -29,12 +29,12 @@ async def process_chats(db: MariaDbChatHandler, telegram_handler: TelegramHandle
     distinct_gist_ids = set(chat.gist_id_last_sent for chat in registered_chats)
     gists = { gist_id: db.get_next_gists(gist_id) for gist_id in distinct_gist_ids }
     for chat in registered_chats:
-        gists = gists[chat.gist_id_last_sent]
-        if len(gists) == 0:
+        gists_to_send = gists[chat.gist_id_last_sent]
+        if len(gists_to_send) == 0:
             continue
-        for gist in gists:
+        for gist in gists_to_send:
             await telegram_handler.send_gist_async(gist)
-        db.set_last_sent_gist(chat.id, gists[-1].id)
+        db.set_last_sent_gist(chat.id, gists_to_send[-1].id)
     PROCESS_CHATS_GAUGE.set(time() - start)
 
 
