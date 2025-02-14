@@ -19,10 +19,10 @@ export const BottomBar = () => {
         minHeight: "2.5rem",
       }}
     >
-      <OptionalIconButton urlEnvVar={ import.meta.env.VITE_METRICS_URL }>
+      <OptionalIconButton tooltip="Metrics dashboard" urlEnvVar={ import.meta.env.VITE_METRICS_URL }>
         <MultilineChartIcon />
       </OptionalIconButton>
-      <OptionalIconButton urlEnvVar={ import.meta.env.VITE_TELEGRAM_URL }>
+      <OptionalIconButton tooltip="Telegram bot" urlEnvVar={ import.meta.env.VITE_TELEGRAM_URL }>
         <TelegramIcon />
       </OptionalIconButton>
       <OptionalTextButton

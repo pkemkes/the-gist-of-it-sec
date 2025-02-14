@@ -103,6 +103,7 @@ services:
       VITE_BACKEND_URL: http://localhost:8080/  # NOTE: Change this to your base URL
       # NOTE: either remove or update the following three variables
       VITE_TELEGRAM_URL: https://url-to-your-telegram-bot.this-is-not-a-real-url/ 
+      VITE_METRICS_URL: https://url-to-your-metrics-dashboard.this-is-not-a-real-url/ 
       VITE_PRIVACY_URL: https://url-to-your-privacy-notice.this-is-not-a-real-url/
       VITE_IMPRINT_URL: https://url-to-your-imprint.this-is-not-a-real-url/
     ports:
