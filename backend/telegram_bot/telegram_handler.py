@@ -93,9 +93,7 @@ class TelegramHandler:
             f"More details: {self.escape(self._gist_url + str(gist.id))}"
         )
 
-    async def send_gist_async(self, gist: Gist) -> None:
-        registered_chats = self._db.get_registered_chats()
-        gist = self.build_gist_message(gist)
-        for chat in registered_chats:
-            await self.send_message_async(self.application.bot, chat.id, gist, "MarkdownV2")
-        self._logger.info(f"Sent entry: {gist.title}")
+    async def send_gist_async(self, gist: Gist, chat_id: int) -> None:
+        gist_message = self.build_gist_message(gist)
+        await self.send_message_async(self.application.bot, chat_id, gist_message, "MarkdownV2")
+        self._logger.info(f"Sent entry {gist.reference} to chat with id {chat_id}")
