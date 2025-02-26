@@ -11,7 +11,7 @@ public static class Program
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
-                services.AddHostedService<HelloWorldService>();
+                services.AddHostedService<GistService>();
             })
             .ConfigureLogging(logging =>
             {
@@ -19,7 +19,7 @@ public static class Program
                 logging.AddConsole();
             })
             .Build();
-        
+
         await host.RunAsync();
     }
 }

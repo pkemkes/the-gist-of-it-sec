@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"
+     version="2.0" xml:base="https://www.test-news-site.com"
+>
+  <channel>
+    <title>Test RSS Feed</title>
+    <link>https://www.test-news-site.com</link>
+    <language>en</language>
+    <atom:link href="https://www.test-news-site.com/test_rss_2.xml" rel="self"
+               type="application/rss+xml"/>
+    <item>
+      <title><![CDATA[First news article]]></title>
+      <link><![CDATA[https://www.test-news-site.com/first-news-article]]></link>
+      <description><![CDATA[ First description ]]></description>
+      <pubDate>Mon, 24 Feb 2025 15:00:00 GMT</pubDate>
+      <dc:creator>Test Author 1</dc:creator>
+      <guid isPermaLink="false"><![CDATA[https://www.test-news-site.com/first-news-article]]></guid>
+      <category><![CDATA[ Test Category 1 ]]></category>
+      <category>Test Category 2</category>
+    </item>
+    <item>
+      <title><![CDATA[ Second news article ]]></title>
+      <link><![CDATA[ https://www.test-news-site.com/second-news-article ]]></link>
+      <description><![CDATA[Second description]]></description>
+      <pubDate><![CDATA[Tue, 25 Feb 2025 16:00:00 GMT]]></pubDate>
+      <dc:creator><![CDATA[ Test Author 2 ]]></dc:creator>
+      <guid isPermaLink="false">https://www.test-news-site.com/second-news-article</guid>
+      <category>Test Category 1</category>
+    </item>
+    <item>
+      <title>Last news article</title>
+      <link>https://www.test-news-site.com/last-news-article</link>
+      <description>Third description</description>
+      <pubDate>Fri, 28 Feb 2025 17:00:00 GMT</pubDate>
+      <dc:creator>Test Author 3</dc:creator>
+      <guid isPermaLink="false"><![CDATA[ https://www.test-news-site.com/last-news-article ]]></guid>
+      <category><![CDATA[Test Category 2]]></category>
+    </item>
+  </channel>
+</rss>

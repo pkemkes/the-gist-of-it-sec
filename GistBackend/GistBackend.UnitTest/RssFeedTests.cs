@@ -1,7 +1,7 @@
 ﻿namespace GistBackend.UnitTest;
 
-public class UnitTest1
-{
+public class RssFeedTests {
+
     [Fact]
     public void Test1()
     {

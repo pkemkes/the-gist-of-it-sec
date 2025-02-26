@@ -50,3 +50,5 @@ obj/
 
 # Rider and JetBrains files
 .idea/
+
+*.DotSettings.user
