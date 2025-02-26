@@ -1,6 +1,6 @@
 using System.ServiceModel.Syndication;
 
-namespace GistBackend;
+namespace GistBackend.Utils;
 
 public static class SyndicationItemExtensions {
     public static string ExtractAuthor(this SyndicationItem item)

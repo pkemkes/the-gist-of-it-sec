@@ -1,5 +1,6 @@
 ﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using GistBackend.Types;
 
 namespace GistBackend.IntegrationTest;
 

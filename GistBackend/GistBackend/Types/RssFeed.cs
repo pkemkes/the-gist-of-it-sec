@@ -1,7 +1,8 @@
 using System.ServiceModel.Syndication;
 using System.Xml;
+using GistBackend.Utils;
 
-namespace GistBackend;
+namespace GistBackend.Types;
 
 public record RssFeed(string RssUrl) {
     public IEnumerable<string>? AllowedCategories { get; init; }

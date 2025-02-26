@@ -1,4 +1,4 @@
-namespace GistBackend;
+namespace GistBackend.Types;
 
 public record RssEntry(
     string Reference,

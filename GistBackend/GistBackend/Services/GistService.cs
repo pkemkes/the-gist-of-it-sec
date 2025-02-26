@@ -1,9 +1,16 @@
+using GistBackend.Definitions;
+using GistBackend.Handler;
+using GistBackend.Types;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace GistBackend;
+namespace GistBackend.Services;
 
-public class GistService(ILogger<GistService> logger) : BackgroundService {
+public class GistService(
+    IMariaDbHandler mariaDbHandler,
+    IOpenAIHandler openAIHandler,
+    ILogger<GistService> logger
+) : BackgroundService {
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         while (!ct.IsCancellationRequested)
@@ -25,14 +32,16 @@ public class GistService(ILogger<GistService> logger) : BackgroundService {
 
     private async Task ProcessEntriesAsync(IEnumerable<RssEntry> entries, CancellationToken ct)
     {
-        foreach (var entry in entries)
-        {
-            await ProcessEntryAsync(entry, ct);
-        }
+        foreach (var entry in entries) await ProcessEntryAsync(entry, ct);
     }
 
-    private Task ProcessEntryAsync(RssEntry entry, CancellationToken ct)
+    private async Task ProcessEntryAsync(RssEntry entry, CancellationToken ct)
     {
-        return Task.Delay(100, ct);
+        var updated = await mariaDbHandler.GetGistUpdatedByReferenceIfExistsAsync(entry.Reference, ct);
+        if (updated == entry.Updated) return; // Current version already exists in database
+        var olderVersionExists = updated is not null;
+        var aiResponse = await openAIHandler.ProcessEntryAsync(entry, ct);
+        var gist = new Gist(entry, aiResponse);
+        await mariaDbHandler.UpsertGistAsync(gist, olderVersionExists, ct);
     }
 }

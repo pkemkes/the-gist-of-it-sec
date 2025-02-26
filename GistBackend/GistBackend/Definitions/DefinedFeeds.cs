@@ -1,4 +1,6 @@
-namespace GistBackend;
+using GistBackend.Types;
+
+namespace GistBackend.Definitions;
 
 public static class DefinedFeeds {
     public static List<RssFeed> Definitions = [

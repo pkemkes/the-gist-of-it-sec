@@ -1,4 +1,6 @@
-namespace GistBackend;
+using GistBackend.Types;
+
+namespace GistBackend.Utils;
 
 public static class EnumerableExtensions {
     public static IEnumerable<RssEntry> FilterForAllowedCategories(this IEnumerable<RssEntry> collection,
