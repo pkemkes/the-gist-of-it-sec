@@ -34,9 +34,9 @@ public class RssFeedTests : IAsyncLifetime {
         Assert.Equal("First news article", entries[0].Title);
         Assert.Equal("Second news article", entries[1].Title);
         Assert.Equal("Last news article", entries[2].Title);
-        Assert.Equal(new Uri("https://www.test-news-site.com/first-news-article"), entries[0].Url);
-        Assert.Equal(new Uri("https://www.test-news-site.com/second-news-article"), entries[1].Url);
-        Assert.Equal(new Uri("https://www.test-news-site.com/last-news-article"), entries[2].Url);
+        Assert.Equal("https://www.test-news-site.com/first-news-article", entries[0].Url);
+        Assert.Equal("https://www.test-news-site.com/second-news-article", entries[1].Url);
+        Assert.Equal("https://www.test-news-site.com/last-news-article", entries[2].Url);
         Assert.Equal(DateTimeOffset.Parse("Mon, 24 Feb 2025 15:00:00 GMT"), entries[0].Published);
         Assert.Equal(DateTimeOffset.Parse("Tue, 25 Feb 2025 16:00:00 GMT"), entries[1].Published);
         Assert.Equal(DateTimeOffset.Parse("Fri, 28 Feb 2025 17:00:00 GMT"), entries[2].Published);
@@ -72,9 +72,9 @@ public class RssFeedTests : IAsyncLifetime {
         Assert.Equal("First news article", entries[0].Title);
         Assert.Equal("Second news article", entries[1].Title);
         Assert.Equal("Last news article", entries[2].Title);
-        Assert.Equal(new Uri("https://www.test-news-site.com/first-news-article"), entries[0].Url);
-        Assert.Equal(new Uri("https://www.test-news-site.com/second-news-article"), entries[1].Url);
-        Assert.Equal(new Uri("https://www.test-news-site.com/last-news-article"), entries[2].Url);
+        Assert.Equal("https://www.test-news-site.com/first-news-article", entries[0].Url);
+        Assert.Equal("https://www.test-news-site.com/second-news-article", entries[1].Url);
+        Assert.Equal("https://www.test-news-site.com/last-news-article", entries[2].Url);
         Assert.Equal(DateTimeOffset.Parse("2025-02-25T16:38:43-05:00"), entries[0].Published);
         Assert.Equal(DateTimeOffset.Parse("2025-02-24T12:11:07-05:00"), entries[1].Published);
         Assert.Equal(DateTimeOffset.Parse("2025-02-24T06:37:02-05:00"), entries[2].Published);

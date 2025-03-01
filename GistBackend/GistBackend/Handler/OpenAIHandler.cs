@@ -10,7 +10,7 @@ public class OpenAIHandler {
     public Task<AIResponse> ProcessEntryAsync(RssEntry entry, CancellationToken ct) =>
         Task.FromResult(new AIResponse(
             "fancy summary",
-            [ "first tag", "second tag", "third tag" ],
+            "first tag;;second tag;;third tag",
             "fancy search query"
         ));
 }

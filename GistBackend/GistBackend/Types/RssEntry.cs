@@ -5,9 +5,9 @@ public record RssEntry(
     int FeedId,
     string Author,
     string Title,
-    DateTimeOffset Published,
-    DateTimeOffset Updated,
-    Uri Url,
+    DateTime Published,
+    DateTime Updated,
+    string Url,
     IEnumerable<string> Categories,
     Func<string, string> ExtractText
 ) {

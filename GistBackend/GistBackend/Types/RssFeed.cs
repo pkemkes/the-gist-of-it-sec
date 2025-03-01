@@ -29,6 +29,13 @@ public record RssFeed(string RssUrl) {
         Entries = feed.Items.Select(SyndicationItemToRssEntry).FilterForAllowedCategories(AllowedCategories);
     }
 
+    public RssFeedInfo ToRssFeedInfo()
+    {
+        if (Title is null) throw new ArgumentNullException($"{nameof(Title)} is null, need to parse feed first");
+        if (Language is null) throw new ArgumentNullException($"{nameof(Language)} is null, need to parse feed first");
+        return new RssFeedInfo(Title, RssUrl, Language) { Id = Id };
+    }
+
     private RssEntry SyndicationItemToRssEntry(SyndicationItem item)
     {
         if (Id is null) throw new Exception("Feed ID was not set");
@@ -38,9 +45,9 @@ public record RssFeed(string RssUrl) {
             Id.Value,
             item.ExtractAuthor(),
             item.Title.Text.Trim(),
-            item.PublishDate,
+            item.PublishDate.UtcDateTime,
             item.ExtractUpdated(),
-            item.ExtractLink(),
+            item.ExtractUrl(),
             item.ExtractCategories(),
             ExtractText
         );

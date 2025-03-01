@@ -5,14 +5,15 @@ public record Gist(
     int FeedId,
     string Author,
     string Title,
-    DateTimeOffset Published,
-    DateTimeOffset Updated,
+    DateTime Published,
+    DateTime Updated,
     string Url,
     string Summary,
-    IEnumerable<string> Tags,
-    string SearchQuery
+    string Tags,
+    string SearchQuery,
+    int? Id = null
 ) {
-    public int? Id { get; set; }
+    public int? Id { get; set; } = Id;
 
     public Gist(
         RssEntry entry,
@@ -24,7 +25,7 @@ public record Gist(
         entry.Title,
         entry.Published,
         entry.Updated,
-        entry.Url.ToString(),
+        entry.Url,
         aiResponse.Summary,
         aiResponse.Tags,
         aiResponse.SearchQuery

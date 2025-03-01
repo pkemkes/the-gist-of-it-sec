@@ -12,10 +12,12 @@ public static class SyndicationItemExtensions {
             .FirstOrDefault()?.Trim() ?? "";
     }
 
-    public static DateTimeOffset ExtractUpdated(this SyndicationItem item) =>
-        item.LastUpdatedTime > DateTimeOffset.UnixEpoch ? item.LastUpdatedTime : item.PublishDate;
+    public static DateTime ExtractUpdated(this SyndicationItem item) =>
+        item.LastUpdatedTime > DateTimeOffset.UnixEpoch
+            ? item.LastUpdatedTime.UtcDateTime
+            : item.PublishDate.UtcDateTime;
 
-    public static Uri ExtractLink(this SyndicationItem item) => item.Links.First().Uri;
+    public static string ExtractUrl(this SyndicationItem item) => item.Links.First().Uri.AbsoluteUri;
 
     public static IEnumerable<string> ExtractCategories(this SyndicationItem item) =>
         item.Categories.Select(category => category.Name.Trim());
