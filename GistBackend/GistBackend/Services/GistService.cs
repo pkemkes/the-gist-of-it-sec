@@ -12,7 +12,7 @@ public class GistService(
     IOpenAIHandler openAIHandler,
     IChromaDbHandler chromaDbHandler,
     IGoogleSearchHandler googleSearchHandler,
-    ILogger<GistService> logger
+    ILogger<GistService>? logger = null
 ) : BackgroundService {
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
@@ -31,45 +31,71 @@ public class GistService(
     private async Task ProcessFeedAsync(RssFeed feed, CancellationToken ct)
     {
         await feed.ParseFeedAsync(ct);
-
-
+        await EnsureCurrentFeedInfoInDbAsync(feed, ct);
         foreach (var entry in feed.Entries.OrderBy(entry => entry.Updated)) await ProcessEntryAsync(entry, ct);
     }
 
     private async Task EnsureCurrentFeedInfoInDbAsync(RssFeed feed, CancellationToken ct)
     {
         var existingFeedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
+        var parsedFeedInfo = feed.ToRssFeedInfo();
+
         if (existingFeedInfo is null)
         {
-            // insert feed
-            return;
+            await mariaDbHandler.InsertFeedInfoAsync(parsedFeedInfo, ct);
         }
-
-        var parsedFeedInfo = feed.ToRssFeedInfo() with { Id = existingFeedInfo.Id };
-        if (parsedFeedInfo != existingFeedInfo)
+        else if (parsedFeedInfo with { Id = existingFeedInfo.Id } != existingFeedInfo)
         {
-            // update feed
+            await mariaDbHandler.UpdateFeedInfoAsync(parsedFeedInfo, ct);
         }
     }
 
     private async Task ProcessEntryAsync(RssEntry entry, CancellationToken ct)
     {
         var existingGist = await mariaDbHandler.GetGistByReferenceAsync(entry.Reference, ct);
-        // Skip if current version already exists in database
-        if (existingGist is not null && existingGist.Updated == entry.Updated) return;
+        var currentVersionAlreadyExists = existingGist is not null && existingGist.Updated == entry.Updated;
+        if (currentVersionAlreadyExists) return;
 
-        var olderVersionExists = existingGist is not null;
         var aiResponse = await openAIHandler.ProcessEntryAsync(entry, ct);
         var gist = new Gist(entry, aiResponse);
-        await UpsertGistAsync(gist, olderVersionExists, ct);
-        await chromaDbHandler.UpsertEntryAsync(entry, ct);
-        var searchResults = await googleSearchHandler.GetSearchResultsAsync(gist.SearchQuery, ct);
 
+        await chromaDbHandler.InsertEntryAsync(entry, ct);
+        logger?.LogInformation(LogEvents.DocumentInserted,
+            "Documented with reference {Reference} inserted into ChromaDB", entry.Reference);
+
+        if (existingGist is null)  // no older version exists
+        {
+            await InsertDataIntoDatabaseAsync(gist, ct);
+        }
+        else
+        {
+            await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);
+        }
     }
 
-    private Task UpsertGistAsync(Gist gist, bool olderVersionExists, CancellationToken ct) => olderVersionExists
-        ? mariaDbHandler.UpdateGistAsync(gist, ct)
-        : mariaDbHandler.InsertGistAsync(gist, ct);
+    private async Task InsertDataIntoDatabaseAsync(Gist gist, CancellationToken ct)
+    {
+        var gistId = await mariaDbHandler.InsertGistAsync(gist, ct);
+        logger?.LogInformation(LogEvents.GistInserted, "Gist with referenced {Reference} inserted at ID {Id}",
+            gist.Reference, gistId);
+
+        var searchResults = await googleSearchHandler.GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
+        await mariaDbHandler.InsertSearchResultsAsync(searchResults, ct);
+        logger?.LogInformation(LogEvents.SearchResultsInserted, "Search Results inserted for gist with ID {GistId}",
+            gistId);
+    }
+
+    private async Task UpdateDataInDatabaseAsync(Gist gist, int gistId, CancellationToken ct)
+    {
+        await mariaDbHandler.UpdateGistAsync(gist, ct);
+        logger?.LogInformation(LogEvents.GistUpdated, "Gist with referenced {Reference} updated at ID {Id}",
+            gist.Reference, gistId);
+
+        var searchResults = await googleSearchHandler.GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
+        await mariaDbHandler.UpdateSearchResultsAsync(searchResults, ct);
+        logger?.LogInformation(LogEvents.SearchResultsUpdated, "Search Results updated for gist with ID {GistId}",
+            gistId);
+    }
 
     private async Task DelayUntilNextExecutionAsync(DateTimeOffset startTime, CancellationToken ct)
     {
@@ -80,7 +106,7 @@ public class GistService(
         }
         else
         {
-            logger.LogWarning(LogEvents.GistServiceDelayExceeded,
+            logger?.LogWarning(LogEvents.GistServiceDelayExceeded,
                 "Processing entries took longer than delay timeframe");
         }
     }

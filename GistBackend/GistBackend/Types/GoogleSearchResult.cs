@@ -10,5 +10,5 @@ public record GoogleSearchResult(
     string ImageUrl,
     int? Id = null
 ) {
-    public int? Id = Id;
+    public int? Id { get; set; } = Id;
 }

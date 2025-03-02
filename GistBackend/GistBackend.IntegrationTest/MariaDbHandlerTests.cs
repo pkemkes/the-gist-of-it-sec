@@ -20,7 +20,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     private MariaDbHandler CreateHandler() => new(_handlerOptions, null);
 
     [Fact]
-    public async Task InsertFeedInfoAsync_FeedInfoDidNotExist_FeedInfoIsInsertedInDb()
+    public async Task InsertFeedInfoAsync_FeedInfoDoesNotExist_FeedInfoIsInsertedInDb()
     {
         var handler = CreateHandler();
         var feedInfoToInsert = CreateTestFeedInfo();
@@ -31,7 +31,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     }
 
     [Fact]
-    public async Task InsertFeedInfoAsync_FeedInfoAlreadyExists_ThrowsMySqlException()
+    public async Task InsertFeedInfoAsync_FeedInfoExistsAlready_ThrowsMySqlException()
     {
         var handler = CreateHandler();
         var feedInfoToInsert = CreateTestFeedInfo();
@@ -88,7 +88,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     }
 
     [Fact]
-    public async Task GetFeedInfoByRssUrlAsync_OnlyOneFeedInfoInDb_CorrectFeedInfo()
+    public async Task GetFeedInfoByRssUrlAsync_OnlyOneFeedInfoExists_CorrectFeedInfo()
     {
         var handler = CreateHandler();
         var expectedFeedInfo = CreateTestFeedInfo();
@@ -100,7 +100,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     }
 
     [Fact]
-    public async Task GetFeedInfoByRssUrlAsync_MultipleFeedInfosInDb_CorrectFeedInfo()
+    public async Task GetFeedInfoByRssUrlAsync_MultipleFeedInfosExist_CorrectFeedInfo()
     {
         var handler = CreateHandler();
         await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
@@ -116,7 +116,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     }
 
     [Fact]
-    public async Task InsertGistAsync_GistDidNotExist_GistIsInsertedInDb()
+    public async Task InsertGistAsync_GistDoesNotExist_GistIsInsertedInDb()
     {
         var handler = CreateHandler();
         var feedInfo = CreateTestFeedInfo();
@@ -129,7 +129,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     }
 
     [Fact]
-    public async Task InsertGistAsync_GistAlreadyExists_ThrowsMySqlException()
+    public async Task InsertGistAsync_GistExistsAlready_ThrowsMySqlException()
     {
         var handler = CreateHandler();
         var feedInfo = CreateTestFeedInfo();
@@ -178,7 +178,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     }
 
     [Fact]
-    public async Task GetGistByReferenceAsync_OnlyOneGistInDb_CorrectGist()
+    public async Task GetGistByReferenceAsync_OnlyOneGistExists_CorrectGist()
     {
         var handler = CreateHandler();
         var feedInfo = CreateTestFeedInfo();
@@ -192,7 +192,7 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
     }
 
     [Fact]
-    public async Task GetGistByReferenceAsync_MultipleGistsInDb_CorrectGist()
+    public async Task GetGistByReferenceAsync_MultipleGistsExist_CorrectGist()
     {
         var handler = CreateHandler();
         var feedInfo = CreateTestFeedInfo();
@@ -208,6 +208,68 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
 
         Assert.Equal(expectedGist with { Id = gistId }, actualGist);
     }
+
+    [Fact]
+    public async Task InsertSearchResultsAsync_NoSearchResultsExist_SearchResultsInserted()
+    {
+        var handler = CreateHandler();
+        var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
+        var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
+        var searchResultsToInsert = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+
+        await handler.InsertSearchResultsAsync(searchResultsToInsert, CancellationToken.None);
+
+        await Asserter.AssertSearchResultsForGistIdInDbAsync(gistId, searchResultsToInsert);
+    }
+
+    [Fact]
+    public async Task InsertSearchResultsAsync_SearchResultsForSameGistExist_SearchResultsInsertedAdditionally()
+    {
+        var handler = CreateHandler();
+        var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
+        var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
+        var existingSearchResults = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        await handler.InsertSearchResultsAsync(existingSearchResults, CancellationToken.None);
+        var searchResultsToInsert = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+
+        await handler.InsertSearchResultsAsync(searchResultsToInsert, CancellationToken.None);
+
+        var expectedSearchResults = existingSearchResults.Concat(searchResultsToInsert);
+        await Asserter.AssertSearchResultsForGistIdInDbAsync(gistId, expectedSearchResults);
+    }
+
+    [Fact]
+    public async Task UpdateSearchResultsAsync_SearchResultsForSameGistExist_OnlyUpdatedSearchResultsInDb()
+    {
+        var handler = CreateHandler();
+        var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
+        var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
+        var existingSearchResults = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        await handler.InsertSearchResultsAsync(existingSearchResults, CancellationToken.None);
+        var searchResultsToUpdate = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+
+        await handler.InsertSearchResultsAsync(searchResultsToUpdate, CancellationToken.None);
+
+        await Asserter.AssertSearchResultsForGistIdInDbAsync(gistId, searchResultsToUpdate);
+    }
+
+    [Fact]
+    public async Task UpdateSearchResultAsync_NoSearchResultsExist_ThrowsDatabaseOperationException()
+    {
+        var handler = CreateHandler();
+        var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
+        var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
+        var searchResultsToUpdate = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+
+        await Assert.ThrowsAsync<DatabaseOperationException>(() =>
+            handler.UpdateSearchResultsAsync(searchResultsToUpdate, CancellationToken.None));
+    }
+
+    private RssFeedInfo CreateTestFeedInfo() => new(
+        _random.NextString(),
+        _random.NextString(),
+        _random.NextString()
+    );
 
     private Gist CreateTestGist(int feedId) => new(
         _random.NextString(),
@@ -222,7 +284,11 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
         _random.NextString()
     );
 
-    private RssFeedInfo CreateTestFeedInfo() => new(
+    private GoogleSearchResult CreateTestSearchResult(int gistId) => new(
+        gistId,
+        _random.NextString(),
+        _random.NextString(),
+        _random.NextString(),
         _random.NextString(),
         _random.NextString(),
         _random.NextString()
