@@ -8,10 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ChromaDB.Client" Version="1.0.1-ci-13369893450" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="OpenAI" Version="2.2.0-beta.2" />
     <PackageReference Include="System.ServiceModel.Syndication" Version="9.0.2" />
   </ItemGroup>
 

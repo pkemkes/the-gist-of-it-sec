@@ -12,6 +12,7 @@ public static class Program
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
+
                 services.AddHostedService<GistService>();
             })
             .ConfigureLogging(logging =>

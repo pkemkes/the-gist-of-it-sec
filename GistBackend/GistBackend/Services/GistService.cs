@@ -1,5 +1,6 @@
 using GistBackend.Definitions;
 using GistBackend.Handler;
+using GistBackend.Handler.ChromaDbHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace GistBackend.Services;
 
 public class GistService(
+    IRssEntryHandler rssEntryHandler,
     IMariaDbHandler mariaDbHandler,
     IOpenAIHandler openAIHandler,
     IChromaDbHandler chromaDbHandler,
@@ -57,9 +59,10 @@ public class GistService(
         if (currentVersionAlreadyExists) return;
 
         var aiResponse = await openAIHandler.ProcessEntryAsync(entry, ct);
+        var testContent = await rssEntryHandler.FetchTextContentAsync(entry, ct);
         var gist = new Gist(entry, aiResponse);
 
-        await chromaDbHandler.InsertEntryAsync(entry, ct);
+        await chromaDbHandler.InsertEntryAsync(entry, testContent, ct);
         logger?.LogInformation(LogEvents.DocumentInserted,
             "Documented with reference {Reference} inserted into ChromaDB", entry.Reference);
 
