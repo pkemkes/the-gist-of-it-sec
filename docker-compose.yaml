@@ -140,9 +140,7 @@ services:
         max-size: 1g
     environment:
       - IS_PERSISTENT=TRUE
-      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.token_authn.TokenAuthenticationServerProvider
       - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
       - PERSIST_DIRECTORY=/chroma/chroma
     volumes:
       - chromadb-data:/chroma/chroma

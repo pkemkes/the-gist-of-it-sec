@@ -10,8 +10,11 @@ namespace GistBackend.Handler.ChromaDbHandler;
 public record ChromaDbHandlerOptions(
     string Server,
     string ServerAuthnCredentials,
-    int Port = 8000,
-    string AuthTokenTransportHeader = "X-Chroma-Token"
+    uint Port = 8000,
+    string GistsTenantName = "the_gist_of_it_sec",
+    string GistsDatabaseName = "the_gist_of_it_sec",
+    string GistsCollectionName = "gist_text_contents",
+    string CredentialsHeaderName = "X-Chroma-Token"
 );
 
 public interface IChromaDbHandler {
@@ -21,27 +24,31 @@ public interface IChromaDbHandler {
 public class ChromaDbHandler(
     IOpenAIHandler openAIHandler,
     HttpClient httpClient,
-    IOptions<ChromaDbHandlerOptions> options) : IChromaDbHandler {
-    private const string GistsTenantName = "the_gist_of_it_set";
-    private const string GistsDatabaseName = "the_gist_of_it_set";
-    private const string GistsCollectionName = "gist_text_contents";
+    IOptions<ChromaDbHandlerOptions> options) : IChromaDbHandler
+{
     private readonly Uri _chromaDbUri = new($"http://{options.Value.Server}:{options.Value.Port}/");
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
+        { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public async Task InsertEntryAsync(RssEntry entry, string entryText, CancellationToken ct)
     {
         var collectionId = await GetOrCreateCollectionAsync(ct);
 
-        var content = CreateStringContent(new {
-            ids = new[] { entry.Reference },
-            metadatas = new Metadata[] { new(entry.Reference, entry.FeedId) },
-            embeddings = await openAIHandler.GenerateEmbeddingsAsync(entryText, ct)
-        });
+        // var content = CreateStringContent(new {
+        //     ids = new[] { entry.Reference },
+        //     metadatas = new Metadata[] { new(entry.Reference, entry.FeedId) },
+        //     embeddings = new[] { await openAIHandler.GenerateEmbeddingsAsync(entryText, ct) }
+        // });
+        var content = CreateStringContent(new Document(
+            [entry.Reference],
+            [await openAIHandler.GenerateEmbeddingsAsync(entryText, ct)],
+            [new Metadata(entry.Reference, entry.FeedId)]
+        ));
         var response = await SendPostRequestAsync(
-            $"/api/v2/tenants/{GistsTenantName}/databases/{GistsDatabaseName}/collections/{collectionId}/add",
+            $"/api/v2/tenants/{options.Value.GistsTenantName}/databases/{options.Value.GistsDatabaseName}/collections/{collectionId}/add",
             content, ct);
 
-        if (response.StatusCode != HttpStatusCode.OK)
+        if (response.StatusCode != HttpStatusCode.Created)
         {
             throw await CreateDatabaseOperationExceptionAsync("Could not add document", response, ct);
         }
@@ -50,12 +57,13 @@ public class ChromaDbHandler(
     private async Task<string> GetOrCreateCollectionAsync(CancellationToken ct)
     {
         await CreateDatabaseIfNotExistsAsync(ct);
-        var existingCollectionId = await GetCollectionIdAsync(GistsCollectionName, ct);
+        var existingCollectionId = await GetCollectionIdAsync(options.Value.GistsCollectionName, ct);
         if (existingCollectionId is not null) return existingCollectionId;
 
-        var requestContent = CreateStringContent(new { name = GistsCollectionName });
+        var requestContent = CreateStringContent(new { name = options.Value.GistsCollectionName });
         var response = await SendPostRequestAsync(
-            $"/api/v2/tenants/{GistsTenantName}/databases/{GistsDatabaseName}/collections", requestContent, ct);
+            $"/api/v2/tenants/{options.Value.GistsTenantName}/databases/{options.Value.GistsDatabaseName}/collections",
+            requestContent, ct);
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
@@ -67,7 +75,7 @@ public class ChromaDbHandler(
     private async Task<string?> GetCollectionIdAsync(string collectionName, CancellationToken ct)
     {
         var response = await SendGetRequestAsync(
-            $"api/v2/tenants/{GistsTenantName}/databases/{GistsDatabaseName}/collections/{collectionName}", ct);
+            $"api/v2/tenants/{options.Value.GistsTenantName}/databases/{options.Value.GistsDatabaseName}/collections/{collectionName}", ct);
         return response.StatusCode == HttpStatusCode.NotFound ? null : await ExtractCollectionIdAsync(response, ct);
     }
 
@@ -87,8 +95,9 @@ public class ChromaDbHandler(
     {
         await CreateTenantIfNotExistsAsync(ct);
         if (await DatabaseExistsAsync(ct)) return;
-        var content = CreateStringContent(new { name = GistsDatabaseName });
-        var response = await SendPostRequestAsync($"/api/v2/tenants/{GistsTenantName}/databases", content, ct);
+        var content = CreateStringContent(new { name = options.Value.GistsDatabaseName });
+        var response = await SendPostRequestAsync($"/api/v2/tenants/{options.Value.GistsTenantName}/databases",
+            content, ct);
         if (response.StatusCode != HttpStatusCode.OK)
         {
             throw await CreateDatabaseOperationExceptionAsync("Could not create database", response, ct);
@@ -97,14 +106,15 @@ public class ChromaDbHandler(
 
     private async Task<bool> DatabaseExistsAsync(CancellationToken ct)
     {
-        var response = await SendGetRequestAsync($"api/v2/tenants/{GistsTenantName}/databases/{GistsDatabaseName}", ct);
+        var response = await SendGetRequestAsync(
+            $"api/v2/tenants/{options.Value.GistsTenantName}/databases/{options.Value.GistsDatabaseName}", ct);
         return response.StatusCode == HttpStatusCode.OK;
     }
 
     private async Task CreateTenantIfNotExistsAsync(CancellationToken ct)
     {
         if (await TenantExistsAsync(ct)) return;
-        var content = new StringContent(JsonSerializer.Serialize(new { name = GistsTenantName }), Encoding.UTF8);
+        var content = CreateStringContent(new { name = options.Value.GistsTenantName });
         var response = await SendPostRequestAsync("/api/v2/tenants", content, ct);
         if (response.StatusCode != HttpStatusCode.OK)
         {
@@ -114,7 +124,7 @@ public class ChromaDbHandler(
 
     private async Task<bool> TenantExistsAsync(CancellationToken ct)
     {
-        var response = await SendGetRequestAsync($"api/v2/tenants/{GistsTenantName}", ct);
+        var response = await SendGetRequestAsync($"api/v2/tenants/{options.Value.GistsTenantName}", ct);
         return response.StatusCode == HttpStatusCode.OK;
     }
 
@@ -132,13 +142,13 @@ public class ChromaDbHandler(
         return await httpClient.SendAsync(request, ct);
     }
 
-    private static StringContent CreateStringContent(object objectToSerialize) =>
-        new(JsonSerializer.Serialize(objectToSerialize), Encoding.UTF8);
+    private StringContent CreateStringContent(object objectToSerialize) =>
+        new(JsonSerializer.Serialize(objectToSerialize, _jsonSerializerOptions), Encoding.UTF8, "application/json");
 
     private HttpRequestMessage CreateHttpRequestMessage(HttpMethod method, Uri uri, HttpContent? content = null)
     {
         var request = new HttpRequestMessage(method, uri);
-        request.Headers.Add(options.Value.AuthTokenTransportHeader, options.Value.ServerAuthnCredentials);
+        request.Headers.Add(options.Value.CredentialsHeaderName, options.Value.ServerAuthnCredentials);
         request.Content = content;
         return request;
     }

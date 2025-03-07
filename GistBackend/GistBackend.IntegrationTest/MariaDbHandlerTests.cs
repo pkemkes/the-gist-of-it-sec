@@ -10,14 +10,14 @@ namespace GistBackend.IntegrationTest;
 public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDbFixture> {
     private readonly Random _random = new();
 
-    private readonly IOptions<MariaDbHandlerOptions> _handlerOptions = Options.Create(new MariaDbHandlerOptions(
-        fixture.Hostname, MariaDbFixture.GistServiceDbUsername, MariaDbFixture.GistServiceDbPassword,
+    private readonly MariaDbHandlerOptions _handlerOptions = new (
+        fixture.Hostname,
+        MariaDbFixture.GistServiceDbUsername,
+        MariaDbFixture.GistServiceDbPassword,
         fixture.ExposedPort
-    ));
+    );
 
     private MariaDbAsserter Asserter => new(_handlerOptions);
-
-    private MariaDbHandler CreateHandler() => new(_handlerOptions, null);
 
     [Fact]
     public async Task InsertFeedInfoAsync_FeedInfoDoesNotExist_FeedInfoIsInsertedInDb()
@@ -264,6 +264,8 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
         await Assert.ThrowsAsync<DatabaseOperationException>(() =>
             handler.UpdateSearchResultsAsync(searchResultsToUpdate, CancellationToken.None));
     }
+
+    private MariaDbHandler CreateHandler() => new(Options.Create(_handlerOptions), null);
 
     private RssFeedInfo CreateTestFeedInfo() => new(
         _random.NextString(),

@@ -1,18 +1,17 @@
 using Dapper;
 using GistBackend.Handler;
 using GistBackend.Types;
-using Microsoft.Extensions.Options;
 using MySqlConnector;
 
 namespace GistBackend.IntegrationTest.Utils;
 
-public class MariaDbAsserter(IOptions<MariaDbHandlerOptions> options) {
+public class MariaDbAsserter(MariaDbHandlerOptions options) {
     private readonly string _connectionString = new MySqlConnectionStringBuilder {
-        Server = options.Value.Server,
-        Port = options.Value.Port,
-        Database = options.Value.Database,
-        UserID = options.Value.User,
-        Password = options.Value.Password
+        Server = options.Server,
+        Port = options.Port,
+        Database = options.Database,
+        UserID = options.User,
+        Password = options.Password
     }.ConnectionString;
 
     private MySqlConnection GetConnection() => new(_connectionString);
