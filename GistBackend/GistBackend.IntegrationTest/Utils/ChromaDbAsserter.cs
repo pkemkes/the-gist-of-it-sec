@@ -10,18 +10,13 @@ public class ChromaDbAsserter(ChromaDbHandlerOptions options)
     private readonly HttpClient _httpClient = new();
     private readonly Uri _chromaDbUri = new($"http://{options.Server}:{options.Port}/");
     private readonly JsonSerializerOptions _jsonSerializerOptions = new()
-        { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
-    public async Task AssertEmbeddingsInDbAsync(string reference, float[] expectedEmbeddings)
+    public async Task AssertDocumentInDbAsync(Document expectedDocument)
     {
         var collectionId = await GetCollectionIdAsync();
-        var document = await GetDocumentAsync(collectionId, reference);
-        Assert.Single(document.Ids);
-        Assert.Equal(reference, document.Ids.Single());
-        Assert.Single(document.Metadatas);
-        Assert.Equal(reference, document.Metadatas.Single().Reference);
-        Assert.Single(document.Embeddings);
-        Assert.Equivalent(expectedEmbeddings, document.Embeddings.Single());
+        var actualDocument = await GetDocumentAsync(collectionId, expectedDocument.Ids.Single());
+        Assert.Equivalent(expectedDocument, actualDocument);
     }
 
     private async Task<Document> GetDocumentAsync(string collectionId, string reference)

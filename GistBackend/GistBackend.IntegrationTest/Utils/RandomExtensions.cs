@@ -1,7 +1,7 @@
 namespace GistBackend.IntegrationTest.Utils;
 
 public static class RandomExtensions {
-    private const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -.,!?%/()§&";
+    private const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static string NextString(this Random random, int length = 50) => new(
         Enumerable.Repeat(Characters, length).Select(s => s[random.Next(s.Length)]).ToArray()

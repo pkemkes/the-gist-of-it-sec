@@ -3,12 +3,12 @@ using GistBackend.Types;
 namespace GistBackend.Handler;
 
 public interface IOpenAIHandler {
-    public Task<float[]> GenerateEmbeddingsAsync(string text, CancellationToken ct);
+    public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct);
     public Task<AIResponse> ProcessEntryAsync(RssEntry entry, CancellationToken ct);
 }
 
 public class OpenAIHandler(EmbeddingsClientHandler embeddingsClientHandler) : IOpenAIHandler {
-    public async Task<float[]> GenerateEmbeddingsAsync(string text, CancellationToken ct)
+    public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct)
     {
         var result = await embeddingsClientHandler.Client.GenerateEmbeddingsAsync([text], cancellationToken: ct);
         if (result.Value.Count != 1)

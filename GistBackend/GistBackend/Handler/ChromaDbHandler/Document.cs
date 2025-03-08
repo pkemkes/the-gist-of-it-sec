@@ -2,6 +2,6 @@ namespace GistBackend.Handler.ChromaDbHandler;
 
 public record Document(
     string[] Ids,
-    float[][] Embeddings,
-    Metadata[] Metadatas
+    Metadata[] Metadatas,
+    float[][]? Embeddings = null
 );
