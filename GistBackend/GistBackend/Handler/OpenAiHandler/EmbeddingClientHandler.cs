@@ -3,15 +3,16 @@ using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Embeddings;
 
-namespace GistBackend.Handler;
+namespace GistBackend.Handler.OpenAiHandler;
 
-public record EmbeddingsClientHandlerOptions(
+public record EmbeddingClientHandlerOptions(
     string ApiKey,
     string Model = "text-embedding-3-small",
     string? ProjectId = null
 );
 
-public abstract class EmbeddingsClientHandler(IOptions<EmbeddingsClientHandlerOptions> options) {
+public abstract class EmbeddingClientHandler(IOptions<EmbeddingClientHandlerOptions> options)
+{
     public readonly EmbeddingClient Client = options.Value.ProjectId is not null
         ? new EmbeddingClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey),
             new OpenAIClientOptions { ProjectId = options.Value.ProjectId })

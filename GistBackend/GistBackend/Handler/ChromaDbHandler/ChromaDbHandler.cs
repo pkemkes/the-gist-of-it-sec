@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using GistBackend.Exceptions;
+using GistBackend.Handler.OpenAiHandler;
 using GistBackend.Types;
 using Microsoft.Extensions.Options;
 
@@ -18,7 +19,7 @@ public record ChromaDbHandlerOptions(
 );
 
 public interface IChromaDbHandler {
-    public Task InsertEntryAsync(RssEntry entry, string entryText, CancellationToken ct);
+    public Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
     public Task DisableEntryAsync(RssEntry entry, CancellationToken ct);
     public Task EnableEntryAsync(RssEntry entry, CancellationToken ct);
 }
@@ -92,7 +93,7 @@ public class ChromaDbHandler(
             new SimilarDocument(queryResponse.Metadatas.First()[i].Reference, queryResponse.Distances.First()[i]))
             .ToArray();
 
-    public async Task InsertEntryAsync(RssEntry entry, string entryText, CancellationToken ct)
+    public async Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct)
     {
         ValidateReference(entry.Reference);
         var collectionId = await GetOrCreateCollectionAsync(ct);
@@ -104,7 +105,7 @@ public class ChromaDbHandler(
         var content = CreateStringContent(new Document(
             [entry.Reference],
             [new Metadata(entry.Reference, entry.FeedId)],
-            [await openAIHandler.GenerateEmbeddingAsync(entryText, ct)]
+            [await openAIHandler.GenerateEmbeddingAsync(text, ct)]
         ));
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/add", content, ct);

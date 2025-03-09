@@ -1,6 +1,7 @@
 using GistBackend.Exceptions;
 using GistBackend.Handler;
 using GistBackend.Handler.ChromaDbHandler;
+using GistBackend.Handler.OpenAiHandler;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
 using Microsoft.Extensions.Options;
