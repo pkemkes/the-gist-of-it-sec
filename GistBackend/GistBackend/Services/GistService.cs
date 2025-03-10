@@ -43,10 +43,7 @@ public class GistService(
         var existingFeedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
         var parsedFeedInfo = feed.ToRssFeedInfo();
 
-        if (existingFeedInfo is null)
-        {
-            await mariaDbHandler.InsertFeedInfoAsync(parsedFeedInfo, ct);
-        }
+        if (existingFeedInfo is null) await mariaDbHandler.InsertFeedInfoAsync(parsedFeedInfo, ct);
         else if (parsedFeedInfo with { Id = existingFeedInfo.Id } != existingFeedInfo)
         {
             await mariaDbHandler.UpdateFeedInfoAsync(parsedFeedInfo, ct);
@@ -59,22 +56,16 @@ public class GistService(
         var currentVersionAlreadyExists = existingGist is not null && existingGist.Updated == entry.Updated;
         if (currentVersionAlreadyExists) return;
 
-        var aiResponse = await openAIHandler.GenerateSummaryTagsAndQueryAsync(entry, ct);
         var text = await rssEntryHandler.FetchTextContentAsync(entry, ct);
+        var aiResponse = await openAIHandler.GenerateSummaryTagsAndQueryAsync(entry.Title, text, ct);
         var gist = new Gist(entry, aiResponse);
 
         await chromaDbHandler.InsertEntryAsync(entry, text, ct);
         logger?.LogInformation(LogEvents.DocumentInserted,
             "Documented with reference {Reference} inserted into ChromaDB", entry.Reference);
 
-        if (existingGist is null)  // no older version exists
-        {
-            await InsertDataIntoDatabaseAsync(gist, ct);
-        }
-        else
-        {
-            await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);
-        }
+        if (existingGist is null) await InsertDataIntoDatabaseAsync(gist, ct);
+        else await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);
     }
 
     private async Task InsertDataIntoDatabaseAsync(Gist gist, CancellationToken ct)

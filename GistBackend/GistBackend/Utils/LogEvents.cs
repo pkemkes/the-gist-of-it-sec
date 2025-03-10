@@ -9,4 +9,5 @@ public static class LogEvents {
     public static readonly EventId SearchResultsInserted = new(300, nameof(SearchResultsInserted));
     public static readonly EventId SearchResultsUpdated = new(300, nameof(SearchResultsUpdated));
     public static readonly EventId DocumentInserted = new(400, nameof(DocumentInserted));
+    public static readonly EventId AIResponseJsonParsingError = new(500, nameof(AIResponseJsonParsingError));
 }

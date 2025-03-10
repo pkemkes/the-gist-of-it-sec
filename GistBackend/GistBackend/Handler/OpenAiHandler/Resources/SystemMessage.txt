@@ -7,15 +7,4 @@ Allowed tags: {tags}
 Lastly create a single Google search query that can be used to further investigate the topic of the ARTICLE. Focus with the search query on finding more information from different sources for the information in that article. Remember, the current date and time is {now}.
 Make sure to create the search_query such that it returns results from multiple sources, so for example never use the "site" keyword.
 
-Put the summary, the selected tags and the search query in a JSON object with the following structure:
-{
-    "summary": "<your summary here>",
-    "tags": [
-        "<first tag>",
-        "<second tag>",
-        ...
-    ],
-    "search_query": "<your Google search query here>"
-}
-
-Remember to escape special characters that would break the JSON format. For example escape the double quote like this: \"
+Your response needs to adhere to the given response structure.

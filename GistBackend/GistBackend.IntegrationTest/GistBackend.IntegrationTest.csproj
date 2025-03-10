@@ -19,10 +19,6 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="testData/" />
-  </ItemGroup>
   
   <ItemGroup>
     <None Update="testData/**/*">

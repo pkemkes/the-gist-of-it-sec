@@ -18,7 +18,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Update="Handler/OpenAiHandler/messages/**/*">
+    <None Update="Handler/OpenAiHandler/Resources/**/*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

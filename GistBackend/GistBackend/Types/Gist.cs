@@ -27,7 +27,7 @@ public record Gist(
         entry.Updated,
         entry.Url,
         aiResponse.Summary,
-        aiResponse.Tags,
+        string.Join(";;", aiResponse.Tags),
         aiResponse.SearchQuery
     )
     {
