@@ -1,6 +1,7 @@
 using GistBackend.Definitions;
 using GistBackend.Handler;
 using GistBackend.Handler.ChromaDbHandler;
+using GistBackend.Handler.GoogleSearchHandler;
 using GistBackend.Handler.OpenAiHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
@@ -52,6 +53,8 @@ public class GistService(
 
     private async Task ProcessEntryAsync(RssEntry entry, CancellationToken ct)
     {
+        using var loggingScope = logger?.BeginScope("Processing entry with reference {Reference}", entry.Reference);
+
         var existingGist = await mariaDbHandler.GetGistByReferenceAsync(entry.Reference, ct);
         var currentVersionAlreadyExists = existingGist is not null && existingGist.Updated == entry.Updated;
         if (currentVersionAlreadyExists) return;
@@ -71,10 +74,11 @@ public class GistService(
     private async Task InsertDataIntoDatabaseAsync(Gist gist, CancellationToken ct)
     {
         var gistId = await mariaDbHandler.InsertGistAsync(gist, ct);
-        logger?.LogInformation(LogEvents.GistInserted, "Gist with referenced {Reference} inserted at ID {Id}",
-            gist.Reference, gistId);
+        using var loggingScope = logger?.BeginScope("Processing gist with ID {GistId}", gistId);
+        logger?.LogInformation(LogEvents.GistInserted, "Gist inserted");
 
-        var searchResults = await googleSearchHandler.GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
+        var searchResults = await GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
+        if (searchResults is null) return;
         await mariaDbHandler.InsertSearchResultsAsync(searchResults, ct);
         logger?.LogInformation(LogEvents.SearchResultsInserted, "Search Results inserted for gist with ID {GistId}",
             gistId);
@@ -86,10 +90,20 @@ public class GistService(
         logger?.LogInformation(LogEvents.GistUpdated, "Gist with referenced {Reference} updated at ID {Id}",
             gist.Reference, gistId);
 
-        var searchResults = await googleSearchHandler.GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
+        var searchResults = await GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
+        if (searchResults is null) return;
         await mariaDbHandler.UpdateSearchResultsAsync(searchResults, ct);
         logger?.LogInformation(LogEvents.SearchResultsUpdated, "Search Results updated for gist with ID {GistId}",
             gistId);
+    }
+
+    private async Task<List<GoogleSearchResult>?> GetSearchResultsAsync(string searchQuery, int gistId, CancellationToken ct)
+    {
+        var searchResults = await googleSearchHandler.GetSearchResultsAsync(searchQuery, gistId, ct);
+        if (searchResults is not null && searchResults.Count != 0) return searchResults;
+
+        logger?.LogWarning(LogEvents.NoSearchResults, "No search results found for gist");
+        return null;
     }
 
     private async Task DelayUntilNextExecutionAsync(DateTimeOffset startTime, CancellationToken ct)
