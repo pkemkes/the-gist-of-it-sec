@@ -4,7 +4,6 @@ using GistBackend.Handler.OpenAiHandler;
 using GistBackend.Types;
 using NSubstitute;
 using OpenAI.Chat;
-using JsonException = Newtonsoft.Json.JsonException;
 
 namespace GistBackend.UnitTest;
 

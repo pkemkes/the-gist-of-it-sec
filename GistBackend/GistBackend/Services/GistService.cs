@@ -57,7 +57,11 @@ public class GistService(
 
         var existingGist = await mariaDbHandler.GetGistByReferenceAsync(entry.Reference, ct);
         var currentVersionAlreadyExists = existingGist is not null && existingGist.Updated == entry.Updated;
-        if (currentVersionAlreadyExists) return;
+        if (currentVersionAlreadyExists)
+        {
+            await EnsureSearchResultInDbAsync(existingGist!, ct);
+            return;
+        }
 
         var text = await rssEntryHandler.FetchTextContentAsync(entry, ct);
         var aiResponse = await openAIHandler.GenerateSummaryTagsAndQueryAsync(entry.Title, text, ct);
@@ -71,13 +75,25 @@ public class GistService(
         else await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);
     }
 
+    private async Task EnsureSearchResultInDbAsync(Gist gist, CancellationToken ct)
+    {
+        var searchResults = await mariaDbHandler.GetSearchResultsByGistIdAsync(gist.Id!.Value, ct);
+        if (searchResults.Length != 0) return;
+        await FetchAndInsertSearchResultAsync(gist.SearchQuery, gist.Id!.Value, ct);
+    }
+
     private async Task InsertDataIntoDatabaseAsync(Gist gist, CancellationToken ct)
     {
         var gistId = await mariaDbHandler.InsertGistAsync(gist, ct);
         using var loggingScope = logger?.BeginScope("Processing gist with ID {GistId}", gistId);
         logger?.LogInformation(LogEvents.GistInserted, "Gist inserted");
 
-        var searchResults = await GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
+        await FetchAndInsertSearchResultAsync(gist.SearchQuery, gistId, ct);
+    }
+
+    private async Task FetchAndInsertSearchResultAsync(string searchQuery, int gistId, CancellationToken ct)
+    {
+        var searchResults = await GetSearchResultsAsync(searchQuery, gistId, ct);
         if (searchResults is null) return;
         await mariaDbHandler.InsertSearchResultsAsync(searchResults, ct);
         logger?.LogInformation(LogEvents.SearchResultsInserted, "Search Results inserted for gist with ID {GistId}",
