@@ -1,4 +1,4 @@
-using GistBackend.Definitions;
+using System.Diagnostics;
 using GistBackend.Handler;
 using GistBackend.Handler.ChromaDbHandler;
 using GistBackend.Handler.GoogleSearchHandler;
@@ -7,36 +7,51 @@ using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Prometheus;
 
 namespace GistBackend.Services;
 
 public class GistService(
+    IRssFeedHandler rssFeedHandler,
     IRssEntryHandler rssEntryHandler,
     IMariaDbHandler mariaDbHandler,
     IOpenAIHandler openAIHandler,
     IChromaDbHandler chromaDbHandler,
     IGoogleSearchHandler googleSearchHandler,
     ILogger<GistService>? logger = null
-) : BackgroundService {
+) : BackgroundService
+{
+    private static readonly Gauge ProcessFeedsGauge =
+        Metrics.CreateGauge("process_feeds_seconds", "Time spent to process all feeds");
+    private static readonly Summary ProcessEntrySummary =
+        Metrics.CreateSummary("process_entry_seconds", "Time spent to process an entry", "feed_title");
+    private static readonly Summary GetSearchResultsSummary =
+        Metrics.CreateSummary("google_search_results_seconds", "Time spent to get search results");
+    private static readonly Summary SummarizeEntrySummary =
+        Metrics.CreateSummary("summarize_entry_seconds", "Time spent to summarize an entry");
+
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         while (!ct.IsCancellationRequested)
         {
             var startTime = DateTimeOffset.UtcNow;
-            await ProcessFeedsAsync(ct);
+            using (new SelfReportingStopwatch(elapsed => ProcessFeedsGauge.Set(elapsed)))
+            {
+                await ProcessFeedsAsync(ct);
+            }
             await DelayUntilNextExecutionAsync(startTime, ct);
         }
     }
 
     private Task ProcessFeedsAsync(CancellationToken ct) => Task.WhenAll(
-        DefinedFeeds.Definitions.Select(feed => ProcessFeedAsync(feed, ct))
+        rssFeedHandler.Definitions.Select(feed => ProcessFeedAsync(feed, ct))
     );
 
     private async Task ProcessFeedAsync(RssFeed feed, CancellationToken ct)
     {
-        await feed.ParseFeedAsync(ct);
+        await rssFeedHandler.ParseFeedAsync(feed, ct);
         await EnsureCurrentFeedInfoInDbAsync(feed, ct);
-        foreach (var entry in feed.Entries.OrderBy(entry => entry.Updated)) await ProcessEntryAsync(entry, ct);
+        foreach (var entry in feed.Entries.OrderBy(entry => entry.Updated)) await ProcessEntryAsync(entry, feed, ct);
     }
 
     private async Task EnsureCurrentFeedInfoInDbAsync(RssFeed feed, CancellationToken ct)
@@ -51,8 +66,9 @@ public class GistService(
         }
     }
 
-    private async Task ProcessEntryAsync(RssEntry entry, CancellationToken ct)
+    private async Task ProcessEntryAsync(RssEntry entry, RssFeed feed, CancellationToken ct)
     {
+        var stopwatch = Stopwatch.StartNew();
         using var loggingScope = logger?.BeginScope("Processing entry with reference {Reference}", entry.Reference);
 
         var existingGist = await mariaDbHandler.GetGistByReferenceAsync(entry.Reference, ct);
@@ -64,7 +80,7 @@ public class GistService(
         }
 
         var text = await rssEntryHandler.FetchTextContentAsync(entry, ct);
-        var aiResponse = await openAIHandler.GenerateSummaryTagsAndQueryAsync(entry.Title, text, ct);
+        var aiResponse = await GenerateAIResponse(entry.Title, text, ct);
         var gist = new Gist(entry, aiResponse);
 
         await chromaDbHandler.InsertEntryAsync(entry, text, ct);
@@ -73,13 +89,23 @@ public class GistService(
 
         if (existingGist is null) await InsertDataIntoDatabaseAsync(gist, ct);
         else await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);
+        stopwatch.Stop();
+        ProcessEntrySummary.WithLabels(feed.Title!).Observe(stopwatch.Elapsed.Seconds);
     }
 
     private async Task EnsureSearchResultInDbAsync(Gist gist, CancellationToken ct)
     {
         var searchResults = await mariaDbHandler.GetSearchResultsByGistIdAsync(gist.Id!.Value, ct);
-        if (searchResults.Length != 0) return;
+        if (searchResults.Count != 0) return;
         await FetchAndInsertSearchResultAsync(gist.SearchQuery, gist.Id!.Value, ct);
+    }
+
+    private async Task<AIResponse> GenerateAIResponse(string entryTitle, string text, CancellationToken ct)
+    {
+        using (new SelfReportingStopwatch(elapsed => SummarizeEntrySummary.Observe(elapsed)))
+        {
+            return await openAIHandler.GenerateSummaryTagsAndQueryAsync(entryTitle, text, ct);
+        }
     }
 
     private async Task InsertDataIntoDatabaseAsync(Gist gist, CancellationToken ct)
@@ -115,8 +141,11 @@ public class GistService(
 
     private async Task<List<GoogleSearchResult>?> GetSearchResultsAsync(string searchQuery, int gistId, CancellationToken ct)
     {
-        var searchResults = await googleSearchHandler.GetSearchResultsAsync(searchQuery, gistId, ct);
-        if (searchResults is not null && searchResults.Count != 0) return searchResults;
+        using (new SelfReportingStopwatch(elapsed => GetSearchResultsSummary.Observe(elapsed)))
+        {
+            var searchResults = await googleSearchHandler.GetSearchResultsAsync(searchQuery, gistId, ct);
+            if (searchResults is not null && searchResults.Count != 0) return searchResults;
+        }
 
         logger?.LogWarning(LogEvents.NoSearchResults, "No search results found for gist");
         return null;

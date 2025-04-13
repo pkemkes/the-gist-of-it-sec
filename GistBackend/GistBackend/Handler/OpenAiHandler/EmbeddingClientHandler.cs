@@ -16,7 +16,7 @@ public interface IEmbeddingClientHandler
     public Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken ct);
 }
 
-public class EmbeddingClientHandler(IOptions<EmbeddingClientHandlerOptions> options)
+public class EmbeddingClientHandler(IOptions<EmbeddingClientHandlerOptions> options) : IEmbeddingClientHandler
 {
     private readonly EmbeddingClient _client = options.Value.ProjectId is not null
         ? new EmbeddingClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey),

@@ -4,26 +4,18 @@ using GistBackend.Utils;
 
 namespace GistBackend.Types;
 
-public record RssFeed(string RssUrl) {
-    public IEnumerable<string>? AllowedCategories { get; init; }
+public record RssFeed(string RssUrl, Func<string, string> ExtractText, IEnumerable<string>? AllowedCategories = null) {
     public int? Id { get; set; }
     public string? Title { get; set; }
     public string? Language { get; set; }
-    public Func<string, string>? ExtractText { get; init; }
-    public IEnumerable<RssEntry> Entries { get; private set; } = [];
+    public IEnumerable<RssEntry> Entries { get; set; } = [];
 
-    private async Task<SyndicationFeed> LoadFeedAsync(CancellationToken ct)
+    public async Task ParseFeedAsync(HttpClient httpClient, CancellationToken ct)
     {
-        using var httpClient = new HttpClient();
         var response = await httpClient.GetStringAsync(RssUrl, ct);
         using var stringReader = new StringReader(response);
         using var xmlReader = XmlReader.Create(stringReader);
-        return SyndicationFeed.Load(xmlReader);
-    }
-
-    public async Task ParseFeedAsync(CancellationToken ct)
-    {
-        var feed = await LoadFeedAsync(ct);
+        var feed = SyndicationFeed.Load(xmlReader);
         Title = feed.Title.Text;
         Language = feed.Language;
         Entries = feed.Items.Select(SyndicationItemToRssEntry).FilterForAllowedCategories(AllowedCategories);

@@ -20,12 +20,11 @@ public class RssFeedTests : IAsyncLifetime {
     public async Task ParseFeedAsync_Rss2FeedXML_FeedIsCorrectlyParsed()
     {
         var rssFeedUrl = $"{GetBaseUrl()}/test_rss_2.xml";
-        var rssFeed = new RssFeed(rssFeedUrl) {
-            ExtractText = content => content,
+        var rssFeed = new RssFeed(rssFeedUrl, content => content) {
             Id = 0
         };
 
-        await rssFeed.ParseFeedAsync(CancellationToken.None);
+        await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
 
         Assert.Equal("Test RSS Feed", rssFeed.Title);
         Assert.Equal("en", rssFeed.Language);
@@ -58,12 +57,11 @@ public class RssFeedTests : IAsyncLifetime {
     public async Task ParseFeedAsync_AtomFeedXML_FeedIsCorrectlyParsed()
     {
         var rssFeedUrl = $"{GetBaseUrl()}/test_atom.xml";
-        var rssFeed = new RssFeed(rssFeedUrl) {
-            ExtractText = content => content,
+        var rssFeed = new RssFeed(rssFeedUrl, content => content) {
             Id = 0
         };
 
-        await rssFeed.ParseFeedAsync(CancellationToken.None);
+        await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
 
         Assert.Equal("Test RSS Feed", rssFeed.Title);
         Assert.Equal("en-US", rssFeed.Language);
@@ -99,13 +97,11 @@ public class RssFeedTests : IAsyncLifetime {
         string rssFeedPath)
     {
         var rssFeedUrl = $"{GetBaseUrl()}/{rssFeedPath}";
-        var rssFeed = new RssFeed(rssFeedUrl) {
-            ExtractText = content => content,
-            Id = 0,
-            AllowedCategories = [ "Test Category 1" ]
+        var rssFeed = new RssFeed(rssFeedUrl, content => content, [ "Test Category 1" ]) {
+            Id = 0
         };
 
-        await rssFeed.ParseFeedAsync(CancellationToken.None);
+        await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
 
         Assert.Equal(2, rssFeed.Entries.Count());
         Assert.DoesNotContain("https://www.test-news-site.com/last-news-article",

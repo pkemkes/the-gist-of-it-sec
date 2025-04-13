@@ -51,7 +51,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         IEnumerable<GoogleSearchResult> expectedSearchResults)
     {
         const string query = """
-            SELECT GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl, ImageUrl, Id
+            SELECT GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl, Id
                 FROM SearchResults WHERE GistId = @GistId
         """;
         var command = new CommandDefinition(query, new { GistId = gistId });

@@ -16,6 +16,7 @@ public interface IGoogleSearchHandler {
 public class GoogleSearchHandler(ICustomSearchApiHandler customSearchApiHandler, ILogger<GoogleSearchHandler>? logger)
     : IGoogleSearchHandler
 {
+
     public async Task<List<GoogleSearchResult>?> GetSearchResultsAsync(string searchQuery, int gistId,
         CancellationToken ct)
     {

@@ -23,7 +23,7 @@ public interface IMariaDbHandler {
     public Task<Gist?> GetGistByReferenceAsync(string reference, CancellationToken ct);
     public Task<int> InsertGistAsync(Gist gist, CancellationToken ct);
     public Task UpdateGistAsync(Gist gist, CancellationToken ct);
-    public Task<GoogleSearchResult[]> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct);
+    public Task<List<GoogleSearchResult>> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct);
     public Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct);
     public Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct);
 }
@@ -144,17 +144,17 @@ public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<Mar
         }
     }
 
-    public async Task<GoogleSearchResult[]> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct)
+    public async Task<List<GoogleSearchResult>> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct)
     {
         const string query = """
-            SELECT Title, Snippet, Url, DisplayUrl, ThumbnailUrl, ImageUrl, GistId FROM SearchResults
+            SELECT Title, Snippet, Url, DisplayUrl, ThumbnailUrl, GistId FROM SearchResults
                 WHERE GistId = @GistId;
         """;
         var command = new CommandDefinition(query, new { GistId = gistId }, cancellationToken: ct);
 
         await using var connection = await GetOpenConnectionAsync(ct);
 
-        return (await connection.QueryAsync<GoogleSearchResult>(command)).ToArray();
+        return (await connection.QueryAsync<GoogleSearchResult>(command)).ToList();
     }
 
     public async Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct)
@@ -186,8 +186,8 @@ public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<Mar
     {
         const string query = """
             INSERT INTO SearchResults
-                (GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl, ImageUrl)
-                VALUES (@GistId, @Title, @Snippet, @Url, @DisplayUrl, @ThumbnailUrl, @ImageUrl)
+                (GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl)
+                VALUES (@GistId, @Title, @Snippet, @Url, @DisplayUrl, @ThumbnailUrl)
         """;
         var command = new CommandDefinition(query, searchResult, transaction, cancellationToken: ct);
         await connection.ExecuteAsync(command);

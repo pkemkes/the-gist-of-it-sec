@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS SearchResults (
     Url MEDIUMTEXT NOT NULL,
     DisplayUrl TEXT NOT NULL,
     ThumbnailUrl MEDIUMTEXT,
-    ImageUrl MEDIUMTEXT,
     FOREIGN KEY (GistId) REFERENCES Gists(Id)
 );
 
