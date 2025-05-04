@@ -17,7 +17,7 @@ public record Gist(
 
     public Gist(
         RssEntry entry,
-        AIResponse aiResponse
+        SummaryAIResponse summaryAIResponse
     ) : this(
         entry.Reference,
         entry.FeedId,
@@ -26,9 +26,9 @@ public record Gist(
         entry.Published,
         entry.Updated,
         entry.Url,
-        aiResponse.Summary,
-        string.Join(";;", aiResponse.Tags),
-        aiResponse.SearchQuery
+        summaryAIResponse.Summary,
+        string.Join(";;", summaryAIResponse.Tags),
+        summaryAIResponse.SearchQuery
     )
     {
     }

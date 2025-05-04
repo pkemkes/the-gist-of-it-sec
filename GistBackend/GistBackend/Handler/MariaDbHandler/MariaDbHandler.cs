@@ -1,20 +1,13 @@
+using System.Text.Json;
 using Dapper;
 using GistBackend.Exceptions;
 using GistBackend.Types;
+using GistBackend.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 
-namespace GistBackend.Handler;
-
-public record MariaDbHandlerOptions(
-    string Server,
-    string User,
-    string Password,
-    uint Port = 3306
-) {
-    public readonly string Database = "TheGistOfItSec";
-};
+namespace GistBackend.Handler.MariaDbHandler;
 
 public interface IMariaDbHandler {
     public Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(string rssUrl, CancellationToken ct);
@@ -26,9 +19,19 @@ public interface IMariaDbHandler {
     public Task<List<GoogleSearchResult>> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct);
     public Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct);
     public Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct);
+    public Task<bool> DailyRecapExistsAsync(CancellationToken ct);
+    public Task<bool> WeeklyRecapExistsAsync(CancellationToken ct);
+    public Task<List<Gist>> GetGistsOfLastDayAsync(CancellationToken ct);
+    public Task<List<Gist>> GetGistsOfLastWeekAsync(CancellationToken ct);
+    public Task InsertDailyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct);
+    public Task InsertWeeklyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct);
 }
 
-public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<MariaDbHandler>? logger) : IMariaDbHandler {
+public class MariaDbHandler(
+    IOptions<MariaDbHandlerOptions> options,
+    IDateTimeHandler dateTimeHandler,
+    ILogger<MariaDbHandler>? logger) : IMariaDbHandler
+{
     private readonly string _connectionString = new MySqlConnectionStringBuilder {
         Server = options.Value.Server,
         Port = options.Value.Port,
@@ -42,12 +45,19 @@ public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<Mar
         const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds WHERE RssUrl = @RssUrl";
         var command = new CommandDefinition(query, new { RssUrl = rssUrl }, cancellationToken: ct);
 
-        await using var connection = await GetOpenConnectionAsync(ct);
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var feedInfos = (await connection.QueryAsync<RssFeedInfo>(command)).ToArray();
+            if (feedInfos.Length > 1) throw new DatabaseOperationException("Found multiple feeds in database");
 
-        var feedInfos = (await connection.QueryAsync<RssFeedInfo>(command)).ToArray();
-        if (feedInfos.Length > 1) throw new Exception("Found multiple feeds in database");
-
-        return feedInfos.FirstOrDefault();
+            return feedInfos.FirstOrDefault();
+        }
+        catch (Exception e) when (e is MySqlException or DatabaseOperationException)
+        {
+            logger?.LogError(e, "Getting feedInfo by rssUrl failed");
+            throw;
+        }
     }
 
     public async Task<int> InsertFeedInfoAsync(RssFeedInfo feedInfo, CancellationToken ct)
@@ -97,12 +107,19 @@ public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<Mar
         """;
         var command = new CommandDefinition(query, new { Reference = reference }, cancellationToken: ct);
 
-        await using var connection = await GetOpenConnectionAsync(ct);
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var gists = (await connection.QueryAsync<Gist>(command)).ToArray();
+            if (gists.Length > 1) throw new DatabaseOperationException("Found multiple gists in database");
 
-        var gists = (await connection.QueryAsync<Gist>(command)).ToArray();
-        if (gists.Length > 1) throw new Exception("Found multiple gists in database");
-
-        return gists.FirstOrDefault();
+            return gists.FirstOrDefault();
+        }
+        catch (Exception e) when (e is MySqlException or DatabaseOperationException)
+        {
+            logger?.LogError(e, "Getting gist by reference failed");
+            throw;
+        }
     }
 
     public async Task<int> InsertGistAsync(Gist gist, CancellationToken ct)
@@ -117,8 +134,16 @@ public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<Mar
         """;
         var command = new CommandDefinition(query, gist, cancellationToken: ct);
 
-        await using var connection = await GetOpenConnectionAsync(ct);
-        return await connection.ExecuteScalarAsync<int>(command);
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return await connection.ExecuteScalarAsync<int>(command);
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(e, "Inserting Gist failed");
+            throw;
+        }
     }
 
     public async Task UpdateGistAsync(Gist gist, CancellationToken ct)
@@ -152,9 +177,16 @@ public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<Mar
         """;
         var command = new CommandDefinition(query, new { GistId = gistId }, cancellationToken: ct);
 
-        await using var connection = await GetOpenConnectionAsync(ct);
-
-        return (await connection.QueryAsync<GoogleSearchResult>(command)).ToList();
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return (await connection.QueryAsync<GoogleSearchResult>(command)).ToList();
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(e, "Getting search results failed");
+            throw;
+        }
     }
 
     public async Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct)
@@ -202,6 +234,91 @@ public class MariaDbHandler(IOptions<MariaDbHandlerOptions> options, ILogger<Mar
         if (rowsAffected == 0)
         {
             throw new DatabaseOperationException("Did not delete any search results");
+        }
+    }
+
+    public Task<bool> DailyRecapExistsAsync(CancellationToken ct) => RecapExistsAsync(RecapType.Daily, ct);
+
+    public Task<bool> WeeklyRecapExistsAsync(CancellationToken ct) => RecapExistsAsync(RecapType.Weekly, ct);
+
+    private async Task<bool> RecapExistsAsync(RecapType recapType, CancellationToken ct)
+    {
+        var query = $"SELECT COUNT(id) FROM Recaps{recapType.ToTypeString()}" +
+            " WHERE Created >= @EarliestCreated AND Created <= @Now";
+        var now = dateTimeHandler.GetUtcNow();
+        // We always want to check whether the last recap was created in the last 24 hours
+        // because we want to create new recaps every day, even if it is the weekly one.
+        var command = new CommandDefinition(query, new { Now = now, EarliestCreated = now.AddDays(-1) },
+            cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var recapCount = await connection.QuerySingleAsync<int>(command);
+            return recapCount switch {
+                0 => false,
+                1 => true,
+                _ => throw new DatabaseOperationException("Found multiple recaps in database")
+            };
+        }
+        catch (Exception e) when (e is MySqlException or DatabaseOperationException)
+        {
+            logger?.LogError(e, "Checked if the {RecapType} recap exists failed", recapType.ToTypeString());
+            throw;
+        }
+    }
+
+    public Task<List<Gist>> GetGistsOfLastDayAsync(CancellationToken ct) => GetGistsOfLastDaysAsync(1, ct);
+
+    public Task<List<Gist>> GetGistsOfLastWeekAsync(CancellationToken ct) => GetGistsOfLastDaysAsync(7, ct);
+
+    private async Task<List<Gist>> GetGistsOfLastDaysAsync(int days, CancellationToken ct)
+    {
+        const string query = """
+            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
+            FROM Gists WHERE updated >= @EarliestUpdated AND updated <= @Now
+        """;
+        var now = dateTimeHandler.GetUtcNow();
+        var earliestUpdated = now.AddDays(-days);
+        var command = new CommandDefinition(query, new { Now = now, EarliestUpdated = earliestUpdated },
+            cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return (await connection.QueryAsync<Gist>(command)).ToList();
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(e, "Getting the gists of the last {Days} days failed", days);
+            throw;
+        }
+    }
+
+    public Task InsertDailyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct) =>
+        InsertRecapAsync(RecapType.Daily, recap, ct);
+
+    public Task InsertWeeklyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct) =>
+        InsertRecapAsync(RecapType.Weekly, recap, ct);
+
+    private async Task InsertRecapAsync(RecapType recapType, IEnumerable<CategoryRecap> recap, CancellationToken ct)
+    {
+        var query = $"INSERT INTO Recaps{recapType.ToTypeString()} (created, recap) VALUES (@Created, @Recap)";
+        var serializedRecap = new SerializedRecap(
+            dateTimeHandler.GetUtcNow(),
+            JsonSerializer.Serialize(recap, SerializerDefaults.JsonOptions)
+        );
+        var command = new CommandDefinition(query, serializedRecap, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            await connection.ExecuteAsync(command);
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(e, "Inserting {RecapType} recap failed", recapType.ToTypeString());
+            throw;
         }
     }
 

@@ -28,6 +28,18 @@
     <None Update="Handler/OpenAiHandler/Resources/**/*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Handler\OpenAiHandler\Resources\Summary\ResponseSchema.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Handler\OpenAiHandler\Resources\Summary\SystemMessage.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Handler\OpenAiHandler\Resources\Summary\Tags.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Handler\OpenAiHandler\Resources\Summary\UserMessage.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

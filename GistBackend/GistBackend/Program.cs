@@ -1,12 +1,14 @@
 ﻿using GistBackend.Handler;
 using GistBackend.Handler.ChromaDbHandler;
 using GistBackend.Handler.GoogleSearchHandler;
+using GistBackend.Handler.MariaDbHandler;
 using GistBackend.Handler.OpenAiHandler;
 using GistBackend.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Prometheus;
 using Serilog;
 
@@ -16,6 +18,9 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        const string gistMariaDbHandlerOptionsName = $"Gist{nameof(MariaDbHandlerOptions)}";
+        const string recapMariaDbHandlerOptionsName = $"Recap{nameof(MariaDbHandlerOptions)}";
+
         var host = Host.CreateDefaultBuilder(args)
             .UseSerilog((_, _, configuration) => {
                 configuration
@@ -23,8 +28,10 @@ public static class Program
                     .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter());
             })
             .ConfigureServices((context, services) => {
-                services.Configure<MariaDbHandlerOptions>(
-                    context.Configuration.GetSection("MariaDbHandlerOptions"));
+                services.Configure<MariaDbHandlerOptions>(gistMariaDbHandlerOptionsName,
+                    context.Configuration.GetSection(gistMariaDbHandlerOptionsName));
+                services.Configure<MariaDbHandlerOptions>(recapMariaDbHandlerOptionsName,
+                    context.Configuration.GetSection(recapMariaDbHandlerOptionsName));
                 services.Configure<EmbeddingClientHandlerOptions>(
                     context.Configuration.GetSection("EmbeddingClientHandlerOptions"));
                 services.Configure<ChatClientHandlerOptions>(
@@ -44,7 +51,22 @@ public static class Program
                 services.AddTransient<IChromaDbHandler, ChromaDbHandler>();
                 services.AddTransient<ICustomSearchApiHandler, CustomSearchApiHandler>();
                 services.AddTransient<IGoogleSearchHandler, GoogleSearchHandler>();
-                services.AddHostedService<GistService>();
+
+                services.AddHostedService(provider =>
+                {
+                    var options = provider.GetRequiredService<IOptionsSnapshot<MariaDbHandlerOptions>>()
+                        .Get(gistMariaDbHandlerOptionsName);
+                    var gistService = ActivatorUtilities.CreateInstance<GistService>(provider, options);
+                    return gistService;
+                });
+
+                services.AddHostedService(provider =>
+                {
+                    var options = provider.GetRequiredService<IOptionsSnapshot<MariaDbHandlerOptions>>()
+                        .Get(recapMariaDbHandlerOptionsName);
+                    var recapService = ActivatorUtilities.CreateInstance<RecapService>(provider, options);
+                    return recapService;
+                });
             })
             .ConfigureWebHostDefaults(webBuilder => {
                 webBuilder.Configure(app =>

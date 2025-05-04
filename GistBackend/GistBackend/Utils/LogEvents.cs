@@ -10,7 +10,8 @@ public static class LogEvents {
     public static readonly EventId SearchResultsUpdated = new(301, nameof(SearchResultsUpdated));
     public static readonly EventId NoSearchResults = new(302, nameof(NoSearchResults));
     public static readonly EventId DocumentInserted = new(400, nameof(DocumentInserted));
-    public static readonly EventId AIResponseJsonParsingError = new(500, nameof(AIResponseJsonParsingError));
+    public static readonly EventId SummaryAIResponseJsonParsingError = new(500, nameof(SummaryAIResponseJsonParsingError));
+    public static readonly EventId RecapAIResponseJsonParsingError = new(501, nameof(RecapAIResponseJsonParsingError));
     public static readonly EventId GoogleApiQuotaExceeded = new(600, nameof(GoogleApiQuotaExceeded));
     public static readonly EventId UnexpectedGoogleApiException = new(600, nameof(UnexpectedGoogleApiException));
 }

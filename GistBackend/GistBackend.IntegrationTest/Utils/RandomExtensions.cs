@@ -14,7 +14,7 @@ public static class RandomExtensions {
     {
         min ??= DateTime.UnixEpoch;
         max ??= DateTime.UnixEpoch.AddYears(100);
-        var maxSeconds = (max - min).Value.Seconds;
+        var maxSeconds = (int)(max - min).Value.TotalSeconds;
         return min.Value.AddSeconds(random.Next(maxSeconds));
     }
 }

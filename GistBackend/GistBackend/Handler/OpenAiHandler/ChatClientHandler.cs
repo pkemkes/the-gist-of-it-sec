@@ -6,12 +6,6 @@ using OpenAI.Chat;
 
 namespace GistBackend.Handler.OpenAiHandler;
 
-public record ChatClientHandlerOptions(
-    string ApiKey,
-    string Model = "gpt-4o-mini",
-    string? ProjectId = null
-);
-
 public interface IChatClientHandler
 {
     public Task<string> CompleteChatAsync(IEnumerable<ChatMessage> messages, ChatCompletionOptions options,

@@ -5,11 +5,6 @@ using Microsoft.Extensions.Options;
 
 namespace GistBackend.Handler.GoogleSearchHandler;
 
-public record CustomSearchApiHandlerOptions(
-    string ApiKey,
-    string EngineId
-);
-
 public interface ICustomSearchApiHandler
 {
     public Task<Search?> ExecuteSearchAsync(string searchQuery, CancellationToken ct);

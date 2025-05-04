@@ -1,6 +1,6 @@
 namespace GistBackend.Types;
 
-public record AIResponse(
+public record SummaryAIResponse(
     string Summary,
     IEnumerable<string> Tags,
     string SearchQuery

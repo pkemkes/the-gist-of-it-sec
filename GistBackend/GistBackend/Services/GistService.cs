@@ -2,6 +2,7 @@ using System.Diagnostics;
 using GistBackend.Handler;
 using GistBackend.Handler.ChromaDbHandler;
 using GistBackend.Handler.GoogleSearchHandler;
+using GistBackend.Handler.MariaDbHandler;
 using GistBackend.Handler.OpenAiHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
@@ -34,12 +35,12 @@ public class GistService(
     {
         while (!ct.IsCancellationRequested)
         {
-            var startTime = DateTimeOffset.UtcNow;
+            var startTime = DateTime.UtcNow;
             using (new SelfReportingStopwatch(elapsed => ProcessFeedsGauge.Set(elapsed)))
             {
                 await ProcessFeedsAsync(ct);
             }
-            await DelayUntilNextExecutionAsync(startTime, ct);
+            await ServiceUtils.DelayUntilNextExecutionAsync(startTime, logger, ct);
         }
     }
 
@@ -100,7 +101,7 @@ public class GistService(
         await FetchAndInsertSearchResultAsync(gist.SearchQuery, gist.Id!.Value, ct);
     }
 
-    private async Task<AIResponse> GenerateAIResponse(string entryTitle, string text, CancellationToken ct)
+    private async Task<SummaryAIResponse> GenerateAIResponse(string entryTitle, string text, CancellationToken ct)
     {
         using (new SelfReportingStopwatch(elapsed => SummarizeEntrySummary.Observe(elapsed)))
         {
@@ -149,19 +150,5 @@ public class GistService(
 
         logger?.LogWarning(LogEvents.NoSearchResults, "No search results found for gist");
         return null;
-    }
-
-    private async Task DelayUntilNextExecutionAsync(DateTimeOffset startTime, CancellationToken ct)
-    {
-        var delay = startTime.AddMinutes(5) - DateTimeOffset.UtcNow;
-        if (delay > TimeSpan.Zero)
-        {
-            await Task.Delay(delay, ct);
-        }
-        else
-        {
-            logger?.LogWarning(LogEvents.GistServiceDelayExceeded,
-                "Processing entries took longer than delay timeframe");
-        }
     }
 }

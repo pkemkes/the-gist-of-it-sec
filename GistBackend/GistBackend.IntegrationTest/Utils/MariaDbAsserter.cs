@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Dapper;
 using GistBackend.Handler;
 using GistBackend.Types;
+using GistBackend.Utils;
 using MySqlConnector;
 
 namespace GistBackend.IntegrationTest.Utils;
@@ -63,6 +65,22 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         foreach (var searchResult in expectedSearchResults.Concat(searchResultsInDb)) searchResult.Id = null;
 
         Assert.Equivalent(expectedSearchResults, searchResultsInDb);
+    }
+
+    public async Task AssertRecapIsInDbAsync(List<CategoryRecap> expectedRecap, DateTime expectedCreated,
+        RecapType recapType)
+    {
+        var query = $"SELECT Created, Recap, Id FROM Recaps{recapType.ToTypeString()} WHERE Created = @Created";
+        var command = new CommandDefinition(query, new { Created = expectedCreated });
+
+        await using var connection = await GetOpenConnectionAsync();
+        var recapsInDb = (await connection.QueryAsync<SerializedRecap>(command)).ToList();
+
+        Assert.Single(recapsInDb);
+        var actualRecap = recapsInDb.Single();
+        var deserializedActualRecap =
+            JsonSerializer.Deserialize<List<CategoryRecap>>(actualRecap.Recap, SerializerDefaults.JsonOptions);
+        Assert.Equal(expectedRecap, deserializedActualRecap);
     }
 
     private async Task<MySqlConnection> GetOpenConnectionAsync()

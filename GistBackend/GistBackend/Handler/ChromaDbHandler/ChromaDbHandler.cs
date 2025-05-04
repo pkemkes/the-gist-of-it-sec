@@ -4,19 +4,10 @@ using System.Text.Json;
 using GistBackend.Exceptions;
 using GistBackend.Handler.OpenAiHandler;
 using GistBackend.Types;
+using GistBackend.Utils;
 using Microsoft.Extensions.Options;
 
 namespace GistBackend.Handler.ChromaDbHandler;
-
-public record ChromaDbHandlerOptions(
-    string Server,
-    string ServerAuthnCredentials,
-    uint Port = 8000,
-    string GistsTenantName = "the_gist_of_it_sec",
-    string GistsDatabaseName = "the_gist_of_it_sec",
-    string GistsCollectionName = "gist_text_contents",
-    string CredentialsHeaderName = "X-Chroma-Token"
-);
 
 public interface IChromaDbHandler {
     public Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
@@ -33,8 +24,7 @@ public class ChromaDbHandler(
     private readonly string _tenantName = options.Value.GistsTenantName;
     private readonly string _databaseName = options.Value.GistsDatabaseName;
     private readonly string _collectionName = options.Value.GistsCollectionName;
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
-        { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+    private static readonly string[] IncludeOnGet = ["metadatas", "distances"];
 
     public async Task<SimilarDocument[]> GetReferenceAndScoreOfSimilarEntriesAsync(string reference, CancellationToken ct,
         int nResults = 6, IEnumerable<int>? disabledFeedIds = null)
@@ -51,7 +41,7 @@ public class ChromaDbHandler(
             QueryEmbeddings = new[] {document.Embeddings!.Single()},
             NResults = nResults,
             Where = GenerateWhere(disabledFeedIds),
-            Include = new[] { "metadatas", "distances" }
+            Include = IncludeOnGet
         });
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/query", content, ct);
@@ -61,8 +51,8 @@ public class ChromaDbHandler(
         }
 
         var responseContent = await response.Content.ReadAsStreamAsync(ct);
-        var responseContentString = await response.Content.ReadAsStringAsync(ct);
-        var queryResponse = await JsonSerializer.DeserializeAsync<QueryResponse>(responseContent, _jsonSerializerOptions, ct);
+        var queryResponse =
+            await JsonSerializer.DeserializeAsync<QueryResponse>(responseContent, SerializerDefaults.JsonOptions, ct);
         if (queryResponse is null) throw new DatabaseOperationException("Could not get similar entries");
         return ExtractReferencesAndScores(queryResponse);
     }
@@ -154,7 +144,8 @@ public class ChromaDbHandler(
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/get", content, ct);
         var responseContent = await response.Content.ReadAsStreamAsync(ct);
-        var document = await JsonSerializer.DeserializeAsync<Document>(responseContent, _jsonSerializerOptions, ct);
+        var document =
+            await JsonSerializer.DeserializeAsync<Document>(responseContent, SerializerDefaults.JsonOptions, ct);
         if (document is null || (includeEmbeddings && document.Embeddings is null))
         {
             throw await CreateDatabaseOperationExceptionAsync("Could not get entry", response, ct);
@@ -191,7 +182,7 @@ public class ChromaDbHandler(
     {
         var content = await response.Content.ReadAsStreamAsync(ct);
         var collection =
-            await JsonSerializer.DeserializeAsync<Collection>(content, _jsonSerializerOptions, ct);
+            await JsonSerializer.DeserializeAsync<Collection>(content, SerializerDefaults.JsonOptions, ct);
         if (collection is null)
         {
             throw await CreateDatabaseOperationExceptionAsync("Could not extract collection ID", response, ct);
@@ -248,8 +239,9 @@ public class ChromaDbHandler(
         return await httpClient.SendAsync(request, ct);
     }
 
-    private StringContent CreateStringContent(object objectToSerialize) =>
-        new(JsonSerializer.Serialize(objectToSerialize, _jsonSerializerOptions), Encoding.UTF8, "application/json");
+    private static StringContent CreateStringContent(object objectToSerialize) =>
+        new(JsonSerializer.Serialize(objectToSerialize, SerializerDefaults.JsonOptions), Encoding.UTF8,
+            "application/json");
 
     private HttpRequestMessage CreateHttpRequestMessage(HttpMethod method, Uri uri, HttpContent? content = null)
     {

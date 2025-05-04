@@ -1,0 +1,26 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "heading": {
+        "type": "string"
+      },
+      "recap": {
+        "type": "string"
+      },
+      "related": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "required": [
+    "heading",
+    "recap",
+    "related"
+  ],
+  "additionalProperties": false
+}
