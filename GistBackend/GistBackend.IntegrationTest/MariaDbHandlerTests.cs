@@ -471,6 +471,101 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
         await RecapAsserter.AssertRecapIsInDbAsync(recapToInsert, testCreated, RecapType.Weekly);
     }
 
+    [Fact]
+    public async Task GetAllGistsAsync_NoGistsExist_EmptyList()
+    {
+        var handler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+
+        var actual = await handler.GetAllGistsAsync([feedInfoId], CancellationToken.None);
+
+        Assert.Empty(actual);
+    }
+
+    [Fact]
+    public async Task GetAllGistsAsync_GistsExist_ListWithAllGists()
+    {
+        var handler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var otherFeedInfo = CreateTestFeedInfo();
+        var otherFeedId = await handler.InsertFeedInfoAsync(otherFeedInfo, CancellationToken.None);
+        var expected = new List<Gist> {
+            CreateTestGist(feedId),
+            CreateTestGist(feedId),
+            CreateTestGist(otherFeedId)
+        };
+        await Task.WhenAll(expected.Select(gist => handler.InsertGistAsync(gist, CancellationToken.None)));
+
+        var actual = await handler.GetAllGistsAsync([feedId, otherFeedId], CancellationToken.None);
+
+        actual.ForEach(gist => gist.Id = null);
+        Assert.Equivalent(expected, actual);
+    }
+
+    [Fact]
+    public async Task EnsureCorrectDisabledStateForGistAsync_GistIsEnabledAndShouldBeDisabled_FalseAndGistIsDisabled()
+    {
+        var handler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var gistToInsert = CreateTestGist(feedId);
+        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
+
+        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+
+        await GistAsserter.AssertGistIsDisabledAsync(gistId);
+        Assert.False(actual);
+    }
+
+    [Fact]
+    public async Task EnsureCorrectDisabledStateForGistAsync_GistIsDisabledAndShouldBeDisabled_TrueAndGistIsDisabled()
+    {
+        var handler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var gistToInsert = CreateTestGist(feedInfoId);
+        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
+        await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+
+        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+
+        await GistAsserter.AssertGistIsDisabledAsync(gistId);
+        Assert.True(actual);
+    }
+
+    [Fact]
+    public async Task EnsureCorrectDisabledStateForGistAsync_GistIsEnabledAndShouldBeEnabled_TrueAndGistIsEnabled()
+    {
+        var handler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var gistToInsert = CreateTestGist(feedInfoId);
+        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
+
+        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, false, CancellationToken.None);
+
+        await GistAsserter.AssertGistIsEnabledAsync(gistId);
+        Assert.True(actual);
+    }
+
+    [Fact]
+    public async Task EnsureCorrectDisabledStateForGistAsync_GistIsDisabledAndShouldBeEnabled_FalseAndGistIsEnabled()
+    {
+        var handler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var gistToInsert = CreateTestGist(feedInfoId);
+        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
+        await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+
+        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, false, CancellationToken.None);
+
+        await GistAsserter.AssertGistIsEnabledAsync(gistId);
+        Assert.False(actual);
+    }
+
     private MariaDbHandler CreateGistHandler() =>
         new(Options.Create(_gistHandlerOptions), new DateTimeHandler(), null);
 

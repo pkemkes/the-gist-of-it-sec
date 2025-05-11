@@ -16,6 +16,11 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         { "very different test text", Enumerable.Repeat(0.9f, 100).ToArray() },
         { "very similar test text", Enumerable.Repeat(0.100000001f, 100).ToArray() },
     };
+    private static readonly SummaryAIResponse TestSummaryAIResponse = new(
+        "test summary",
+        ["test tag 1", "test tag 2", "test tag 3"],
+        "test search query"
+    );
 
     private readonly ChromaDbHandlerOptions _handlerOptions = new(
         fixture.Hostname,
@@ -74,125 +79,112 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
     }
 
     [Fact]
-    public async Task DisableEntryAsync_EntryIsInDbAndEnabled_EntryIsDisabled()
+    public async Task EnsureGistHasCorrectMetadataAsync_EntryIsInDbAndEnabledAndShouldBeDisabled_FalseAndEntryIsDisabled()
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        var gist = new Gist(entry, TestSummaryAIResponse);
 
-        await handler.DisableEntryAsync(entry, CancellationToken.None);
+        var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
         var expectedDocument = new Document([entry.Reference], [new Metadata(entry.Reference, entry.FeedId, true)])
             { Embeddings = [embedding] };
         await Asserter.AssertDocumentInDbAsync(expectedDocument);
+        Assert.False(actual);
     }
 
     [Fact]
-    public async Task DisableEntryAsync_EntryIsInDbAndDisabled_EntryIsDisabled()
+    public async Task EnsureGistHasCorrectMetadataAsync_EntryIsInDbAndDisabledAndShouldBeDisabled_TrueAndEntryIsDisabled()
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.InsertEntryAsync(entry, text, CancellationToken.None);
-        await handler.DisableEntryAsync(entry, CancellationToken.None);
+        var gist = new Gist(entry, TestSummaryAIResponse);
+        await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
-        await handler.DisableEntryAsync(entry, CancellationToken.None);
+        var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
         var expectedDocument = new Document([entry.Reference], [new Metadata(entry.Reference, entry.FeedId, true)])
             { Embeddings = [embedding] };
         await Asserter.AssertDocumentInDbAsync(expectedDocument);
+        Assert.True(actual);
     }
 
     [Fact]
-    public async Task DisableEntryAsync_EntryDoesNotExist_ThrowsDatabaseOperationException()
-    {
-        var handler = CreateChromaDbHandler();
-        var entry = CreateTestEntry();
-
-        await Assert.ThrowsAsync<DatabaseOperationException>(() =>
-            handler.DisableEntryAsync(entry, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task DisableEntryAsync_ReferenceIsEmptyString_ThrowsArgumentException()
-    {
-        var handler = CreateChromaDbHandler();
-        var entry = CreateTestEntry() with { Reference = "" };
-
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            handler.DisableEntryAsync(entry, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task DisableEntryAsync_ReferenceIsTooLong_ThrowsArgumentException()
-    {
-        var handler = CreateChromaDbHandler();
-        var entry = CreateTestEntry() with { Reference = new string('A', 1000000) };
-
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            handler.DisableEntryAsync(entry, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task EnableEntryAsync_EntryIsInDbAndDisabled_EntryIsEnabled()
+    public async Task EnsureGistHasCorrectMetadataAsync_EntryIsInDbAndDisabledAndShouldBeEnabled_FalseAndEntryIsEnabled()
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.InsertEntryAsync(entry, text, CancellationToken.None);
-        await handler.DisableEntryAsync(entry, CancellationToken.None);
+        var gist = new Gist(entry, TestSummaryAIResponse);
+        await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
-        await handler.EnableEntryAsync(entry, CancellationToken.None);
+        var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, false, CancellationToken.None);
 
         var expectedDocument = new Document([entry.Reference], [new Metadata(entry.Reference, entry.FeedId)])
             { Embeddings = [embedding] };
         await Asserter.AssertDocumentInDbAsync(expectedDocument);
+        Assert.False(actual);
     }
 
     [Fact]
-    public async Task EnableEntryAsync_EntryIsInDbAndEnabled_EntryIsEnabled()
+    public async Task EnsureGistHasCorrectMetadataAsync_EntryIsInDbAndEnabledAndShouldBeEnabled_TrueAndEntryIsEnabled()
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        var gist = new Gist(entry, TestSummaryAIResponse);
 
-        await handler.EnableEntryAsync(entry, CancellationToken.None);
+        var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, false, CancellationToken.None);
 
         var expectedDocument = new Document([entry.Reference], [new Metadata(entry.Reference, entry.FeedId)])
             { Embeddings = [embedding] };
         await Asserter.AssertDocumentInDbAsync(expectedDocument);
+        Assert.True(actual);
     }
 
-    [Fact]
-    public async Task EnableEntryAsync_EntryDoesNotExist_ThrowsDatabaseOperationException()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task EnsureGistHasCorrectMetadataAsync_EntryDoesNotExist_ThrowsDatabaseOperationException(bool disabled)
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
+        var gist = new Gist(entry, TestSummaryAIResponse);
 
         await Assert.ThrowsAsync<DatabaseOperationException>(() =>
-            handler.EnableEntryAsync(entry, CancellationToken.None));
+            handler.EnsureGistHasCorrectMetadataAsync(gist, disabled, CancellationToken.None));
     }
 
-    [Fact]
-    public async Task EnableEntryAsync_ReferenceIsEmptyString_ThrowsArgumentException()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task EnsureGistHasCorrectMetadataAsync_ReferenceIsEmptyString_ThrowsArgumentException(bool disabled)
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry() with { Reference = "" };
+        var gist = new Gist(entry, TestSummaryAIResponse);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            handler.EnableEntryAsync(entry, CancellationToken.None));
+            handler.EnsureGistHasCorrectMetadataAsync(gist, disabled, CancellationToken.None));
     }
 
-    [Fact]
-    public async Task EnableEntryAsync_ReferenceIsTooLong_ThrowsArgumentException()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task EnsureGistHasCorrectMetadataAsync_ReferenceIsTooLong_ThrowsArgumentException(bool disabled)
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry() with { Reference = new string('A', 1000000) };
+        var gist = new Gist(entry, TestSummaryAIResponse);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            handler.EnableEntryAsync(entry, CancellationToken.None));
+            handler.EnsureGistHasCorrectMetadataAsync(gist, disabled, CancellationToken.None));
     }
 
     [Fact]
@@ -270,7 +262,8 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         {
             await handler.InsertEntryAsync(entry, text, CancellationToken.None);
         }
-        await handler.DisableEntryAsync(entries.Last(), CancellationToken.None);
+        var disabledGist = new Gist(entries.Last(), TestSummaryAIResponse);
+        await handler.EnsureGistHasCorrectMetadataAsync(disabledGist, true, CancellationToken.None);
 
         var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
             CancellationToken.None);
@@ -287,7 +280,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var options = collectionName is null
             ? _handlerOptions
             : _handlerOptions with { GistsCollectionName = collectionName };
-        return new ChromaDbHandler(CreateOpenAIHandlerMock(), new HttpClient(), Options.Create(options));
+        return new ChromaDbHandler(CreateOpenAIHandlerMock(), new HttpClient(), Options.Create(options), null);
     }
 
     private static IOpenAIHandler CreateOpenAIHandlerMock()

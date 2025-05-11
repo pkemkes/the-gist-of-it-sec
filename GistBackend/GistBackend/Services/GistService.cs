@@ -9,6 +9,7 @@ using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Services;
 
@@ -40,7 +41,7 @@ public class GistService(
             {
                 await ProcessFeedsAsync(ct);
             }
-            await ServiceUtils.DelayUntilNextExecutionAsync(startTime, logger, ct);
+            await ServiceUtils.DelayUntilNextExecutionAsync(startTime, 5, logger, ct);
         }
     }
 
@@ -85,8 +86,6 @@ public class GistService(
         var gist = new Gist(entry, aiResponse);
 
         await chromaDbHandler.InsertEntryAsync(entry, text, ct);
-        logger?.LogInformation(LogEvents.DocumentInserted,
-            "Documented with reference {Reference} inserted into ChromaDB", entry.Reference);
 
         if (existingGist is null) await InsertDataIntoDatabaseAsync(gist, ct);
         else await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);
@@ -113,7 +112,7 @@ public class GistService(
     {
         var gistId = await mariaDbHandler.InsertGistAsync(gist, ct);
         using var loggingScope = logger?.BeginScope("Processing gist with ID {GistId}", gistId);
-        logger?.LogInformation(LogEvents.GistInserted, "Gist inserted");
+        logger?.LogInformation(GistInserted, "Gist inserted");
 
         await FetchAndInsertSearchResultAsync(gist.SearchQuery, gistId, ct);
     }
@@ -123,21 +122,19 @@ public class GistService(
         var searchResults = await GetSearchResultsAsync(searchQuery, gistId, ct);
         if (searchResults is null) return;
         await mariaDbHandler.InsertSearchResultsAsync(searchResults, ct);
-        logger?.LogInformation(LogEvents.SearchResultsInserted, "Search Results inserted for gist with ID {GistId}",
-            gistId);
+        logger?.LogInformation(SearchResultsInserted, "Search Results inserted for gist with ID {GistId}", gistId);
     }
 
     private async Task UpdateDataInDatabaseAsync(Gist gist, int gistId, CancellationToken ct)
     {
         await mariaDbHandler.UpdateGistAsync(gist, ct);
-        logger?.LogInformation(LogEvents.GistUpdated, "Gist with referenced {Reference} updated at ID {Id}",
+        logger?.LogInformation(GistUpdated, "Gist with referenced {Reference} updated at ID {Id}",
             gist.Reference, gistId);
 
         var searchResults = await GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
         if (searchResults is null) return;
         await mariaDbHandler.UpdateSearchResultsAsync(searchResults, ct);
-        logger?.LogInformation(LogEvents.SearchResultsUpdated, "Search Results updated for gist with ID {GistId}",
-            gistId);
+        logger?.LogInformation(SearchResultsUpdated, "Search Results updated for gist with ID {GistId}", gistId);
     }
 
     private async Task<List<GoogleSearchResult>?> GetSearchResultsAsync(string searchQuery, int gistId, CancellationToken ct)
@@ -148,7 +145,7 @@ public class GistService(
             if (searchResults is not null && searchResults.Count != 0) return searchResults;
         }
 
-        logger?.LogWarning(LogEvents.NoSearchResults, "No search results found for gist");
+        logger?.LogWarning(NoSearchResults, "No search results found for gist");
         return null;
     }
 }

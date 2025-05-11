@@ -3,12 +3,12 @@ using GistBackend.Exceptions;
 using GistBackend.Handler.GoogleSearchHandler;
 using GistBackend.Types;
 using GistBackend.UnitTest.Utils;
-using GistBackend.Utils;
 using Google;
 using Google.Apis.CustomSearchAPI.v1.Data;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.UnitTest;
 
@@ -89,7 +89,7 @@ public class GoogleSearchHandlerTests
         var actual = await handler.GetSearchResultsAsync(TestSearchQuery, 1337, CancellationToken.None);
 
         Assert.Null(actual);
-        logAsserter.AssertCorrectErrorLog(LogEvents.GoogleApiQuotaExceeded, exception);
+        logAsserter.AssertCorrectErrorLog(GoogleApiQuotaExceeded, exception);
     }
 
     [Fact]
@@ -106,6 +106,6 @@ public class GoogleSearchHandlerTests
         await Assert.ThrowsAsync<ExternalServiceException>(() =>
             handler.GetSearchResultsAsync(TestSearchQuery, 1337, CancellationToken.None));
 
-        logAsserter.AssertCorrectErrorLog(LogEvents.UnexpectedGoogleApiException);
+        logAsserter.AssertCorrectErrorLog(UnexpectedGoogleApiException);
     }
 }

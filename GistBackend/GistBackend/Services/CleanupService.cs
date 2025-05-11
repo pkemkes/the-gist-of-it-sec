@@ -1,0 +1,101 @@
+using GistBackend.Exceptions;
+using GistBackend.Handler;
+using GistBackend.Handler.ChromaDbHandler;
+using GistBackend.Handler.MariaDbHandler;
+using GistBackend.Types;
+using GistBackend.Utils;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Prometheus;
+
+namespace GistBackend.Services;
+
+public class CleanupService(
+    IRssFeedHandler rssFeedHandler,
+    IGistDebouncer gistDebouncer,
+    IMariaDbHandler mariaDbHandler,
+    IChromaDbHandler chromaDbHandler,
+    IHttpClientFactory httpClientFactory,
+    IOptions<CleanupServiceOptions> options,
+    ILogger<CleanupService>? logger)
+    : BackgroundService
+{
+    private static readonly Gauge CleanupGistsGauge =
+        Metrics.CreateGauge("cleanup_gists_seconds", "Time spent to cleanup gists");
+    private static readonly Summary CheckGistSummary =
+        Metrics.CreateSummary("check_gist_seconds", "Time spent to check a gist", "feed_title");
+    private static readonly Gauge GistsCheckedGauge =
+        Metrics.CreateGauge("gists_checked", "Number of gists checked in one run");
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(Program.RetryingHttpClientName);
+    private Dictionary<int, RssFeed> _feedsByFeedId = new();
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            var startTime = DateTime.UtcNow;
+            _feedsByFeedId = new Dictionary<int, RssFeed>();
+            using (new SelfReportingStopwatch(elapsed => CleanupGistsGauge.Set(elapsed)))
+            {
+                await ParseFeedsAsync(ct);
+                await CleanupGistsAsync(ct);
+            }
+            await ServiceUtils.DelayUntilNextExecutionAsync(startTime, 10, logger, ct);
+        }
+    }
+
+    private Task ParseFeedsAsync(CancellationToken ct) =>
+        Task.WhenAll(rssFeedHandler.Definitions.Select(feed => ParseAndStoreFeedAsync(feed, ct)));
+
+    private async Task ParseAndStoreFeedAsync(RssFeed feed, CancellationToken ct)
+    {
+        await rssFeedHandler.ParseFeedAsync(feed, ct);
+        var feedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
+        if (feedInfo is null)
+        {
+            throw new UnexpectedStateException($"Could not find feed with Url {feed.RssUrl} in db");
+        }
+        _feedsByFeedId.Add(feedInfo.Id!.Value, feed);
+    }
+
+    private async Task CleanupGistsAsync(CancellationToken ct)
+    {
+        var allGists = await mariaDbHandler.GetAllGistsAsync(_feedsByFeedId.Keys.ToList(), ct);
+        GistsCheckedGauge.Set(allGists.Count - gistDebouncer.GetDebouncedGistsCount());
+        await Task.WhenAll(allGists.Select(gist => CheckGistAsync(gist, ct)));
+    }
+
+    private async Task CheckGistAsync(Gist gist, CancellationToken ct)
+    {
+        if (gistDebouncer.IsDebounced(gist.Id!.Value)) return;
+        var shouldBeDisabled = await GistShouldBeDisabledAsync(gist, ct);
+        var wasAlreadyCorrect = (await Task.WhenAll(
+                mariaDbHandler.EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, shouldBeDisabled, ct),
+                chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct)))
+            .All(wasAlreadyCorrect => wasAlreadyCorrect);
+        if (!wasAlreadyCorrect) gistDebouncer.ResetDebounceState(gist.Id!.Value);
+    }
+
+    private async Task<bool> GistShouldBeDisabledAsync(Gist gist, CancellationToken ct)
+    {
+        if (options.Value.DomainsToIgnore.Any(domain => gist.Url.StartsWith(domain))) return false;
+        var feedTitle = _feedsByFeedId[gist.FeedId].Title!;
+        using (new SelfReportingStopwatch(elapsed => CheckGistSummary.WithLabels(feedTitle).Observe(elapsed)))
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, gist.Url);
+            var response = await _httpClient.SendAsync(request, ct);
+
+            if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500) return true;
+            if (WasRedirectedAndNotPresentInFeedAnymore(gist, response)) return true;
+            return false;
+        }
+    }
+
+    private bool WasRedirectedAndNotPresentInFeedAnymore(Gist gist, HttpResponseMessage response)
+    {
+        var wasRedirected = gist.Url != response.RequestMessage?.RequestUri?.ToString();
+        var isPresentInFeed = _feedsByFeedId[gist.FeedId].Entries.Any(entry => entry.Url == gist.Url);
+        return wasRedirected && !isPresentInFeed;
+    }
+}

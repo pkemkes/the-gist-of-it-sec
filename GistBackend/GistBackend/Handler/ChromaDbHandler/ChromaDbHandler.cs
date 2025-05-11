@@ -1,24 +1,27 @@
 using System.Net;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Text.Json;
 using GistBackend.Exceptions;
 using GistBackend.Handler.OpenAiHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Handler.ChromaDbHandler;
 
 public interface IChromaDbHandler {
-    public Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
-    public Task DisableEntryAsync(RssEntry entry, CancellationToken ct);
-    public Task EnableEntryAsync(RssEntry entry, CancellationToken ct);
+    Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
+    Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct);
 }
 
 public class ChromaDbHandler(
     IOpenAIHandler openAIHandler,
     HttpClient httpClient,
-    IOptions<ChromaDbHandlerOptions> options) : IChromaDbHandler
+    IOptions<ChromaDbHandlerOptions> options,
+    ILogger<ChromaDbHandler>? logger) : IChromaDbHandler
 {
     private readonly Uri _chromaDbUri = new($"http://{options.Value.Server}:{options.Value.Port}/");
     private readonly string _tenantName = options.Value.GistsTenantName;
@@ -36,7 +39,7 @@ public class ChromaDbHandler(
             throw new DatabaseOperationException("Entry does not exist in database");
         }
 
-        var document = await GetDocumentByReferenceAsync(reference, collectionId, true, ct);
+        var document = await GetDocumentByReferenceAsync(reference, collectionId, true, false, ct);
         var content = CreateStringContent(new {
             QueryEmbeddings = new[] {document.Embeddings!.Single()},
             NResults = nResults,
@@ -92,11 +95,9 @@ public class ChromaDbHandler(
             throw new DatabaseOperationException("Entry already exists in database");
         }
 
-        var content = CreateStringContent(new Document(
-            [entry.Reference],
-            [new Metadata(entry.Reference, entry.FeedId)],
-            [await openAIHandler.GenerateEmbeddingAsync(text, ct)]
-        ));
+        var metadata = new Metadata(entry.Reference, entry.FeedId);
+        var embedding = await openAIHandler.GenerateEmbeddingAsync(text, ct);
+        var content = CreateStringContent(new Document([entry.Reference], [metadata], [embedding]));
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/add", content, ct);
 
@@ -104,13 +105,29 @@ public class ChromaDbHandler(
         {
             throw await CreateDatabaseOperationExceptionAsync("Could not insert entry", response, ct);
         }
+        logger?.LogInformation(DocumentInserted,
+            "Inserted document with metadata {Metadata} for entry with reference {Reference}",
+            metadata, entry.Reference);
     }
 
-    public Task DisableEntryAsync(RssEntry entry, CancellationToken ct) =>
-        UpdateMetadataAsync(entry.Reference, new Metadata(entry.Reference, entry.FeedId, true), ct);
-
-    public Task EnableEntryAsync(RssEntry entry, CancellationToken ct) =>
-        UpdateMetadataAsync(entry.Reference, new Metadata(entry.Reference, entry.FeedId), ct);
+    public async Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct)
+    {
+        ValidateReference(gist.Reference);
+        var collectionId = await GetOrCreateCollectionAsync(ct);
+        var document = await GetDocumentByReferenceAsync(gist.Reference, collectionId, false, true, ct);
+        var oldMetadata = document.Metadatas.FirstOrDefault();
+        if (oldMetadata is null)
+        {
+            throw new DatabaseOperationException($"Entry with reference {gist.Reference} does not exist in ChromaDb");
+        }
+        if (oldMetadata.Disabled == disabled && oldMetadata.FeedId == gist.FeedId) return true;
+        var newMetaData = new Metadata(gist.Reference, gist.FeedId, disabled);
+        await UpdateMetadataAsync(gist.Reference, newMetaData, ct);
+        logger?.LogInformation(ChangedMetadataOfGistInChromaDb,
+            "Changed metadata from {OldMetadata} to {NewMetadata} for gist with reference {GistReference}",
+            oldMetadata, newMetaData, gist.Reference);
+        return false;
+    }
 
     private async Task UpdateMetadataAsync(string reference, Metadata metadata, CancellationToken ct)
     {
@@ -132,14 +149,16 @@ public class ChromaDbHandler(
 
     private async Task<bool> EntryExistsByReferenceAsync(string reference, string collectionId, CancellationToken ct)
     {
-        var document = await GetDocumentByReferenceAsync(reference, collectionId, false, ct);
+        var document = await GetDocumentByReferenceAsync(reference, collectionId, false, false, ct);
         return document.Ids.Length != 0;
     }
 
     private async Task<Document> GetDocumentByReferenceAsync(string reference, string collectionId,
-        bool includeEmbeddings, CancellationToken ct)
+        bool includeEmbeddings, bool includeMetadata, CancellationToken ct)
     {
-        var include = includeEmbeddings ? ["embeddings"] : Array.Empty<string>();
+        var include = new List<string>();
+        if (includeEmbeddings) include.Add("embeddings");
+        if (includeMetadata) include.Add("metadatas");
         var content = CreateStringContent(new { Ids = new[] { reference }, Include = include });
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/get", content, ct);
@@ -178,7 +197,7 @@ public class ChromaDbHandler(
         return response.StatusCode == HttpStatusCode.NotFound ? null : await ExtractCollectionIdAsync(response, ct);
     }
 
-    private async Task<string> ExtractCollectionIdAsync(HttpResponseMessage response, CancellationToken ct)
+    private static async Task<string> ExtractCollectionIdAsync(HttpResponseMessage response, CancellationToken ct)
     {
         var content = await response.Content.ReadAsStreamAsync(ct);
         var collection =

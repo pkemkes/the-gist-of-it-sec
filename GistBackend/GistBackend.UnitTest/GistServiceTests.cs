@@ -28,16 +28,16 @@ public class GistServiceTests
         await Task.Delay(TimeSpan.FromSeconds(2));
 
         await mariaDbHandlerMock.Received(1)
-            .InsertFeedInfoAsync(_testRssFeeds.First().ToRssFeedInfo(), Arg.Any<CancellationToken>());
+            .InsertFeedInfoAsync(TestRssFeeds.First().ToRssFeedInfo(), Arg.Any<CancellationToken>());
         await mariaDbHandlerMock.Received(1)
-            .InsertFeedInfoAsync(_testRssFeeds.Last().ToRssFeedInfo(), Arg.Any<CancellationToken>());
+            .InsertFeedInfoAsync(TestRssFeeds.Last().ToRssFeedInfo(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task StartAsync_DifferentFeedInfoExistsInDb_FeedInfoIsUpdated()
     {
-        var oldFeed = _testRssFeeds.First();
-        var newFeed = _testRssFeeds.Last() with { Id = oldFeed.Id };
+        var oldFeed = TestRssFeeds.First();
+        var newFeed = TestRssFeeds.Last() with { Id = oldFeed.Id };
         var rssFeedHandlerMock = Substitute.For<IRssFeedHandler>();
         rssFeedHandlerMock.Definitions.Returns([ newFeed ]);
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
@@ -76,7 +76,7 @@ public class GistServiceTests
     {
         var rssFeedHandlerMock = Substitute.For<IRssFeedHandler>();
         var reversedEntries = TestRssEntries.OrderBy(entry => entry.Updated).Reverse();
-        var rssFeeds = new List<RssFeed> { _testRssFeeds.First() with { Entries = reversedEntries } };
+        var rssFeeds = new List<RssFeed> { TestRssFeeds.First() with { Entries = reversedEntries } };
         rssFeedHandlerMock.Definitions.Returns(rssFeeds);
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
         var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock);
@@ -221,22 +221,6 @@ public class GistServiceTests
             .UpdateSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
     }
 
-    private readonly List<RssFeed> _testRssFeeds = [
-        new("test url", content => content) {
-            Id = 1,
-            Title = "test title",
-            Language = "test language",
-            Entries = TestRssEntries
-        },
-        new("another test url", content => content) {
-            Id = 2,
-            Title = "another test title",
-            Language = "another test language"
-        }
-    ];
-
-    private static readonly List<string> TestTexts = [ "test text", "another test text" ];
-
     private static readonly List<List<GoogleSearchResult>> TestSearchResults = TestGists.Select((gist, i) =>
         new List<GoogleSearchResult> { new(
             gist.Id!.Value,
@@ -249,7 +233,7 @@ public class GistServiceTests
         ) }
     ).ToList();
 
-    private GistService CreateGistService(
+    private static GistService CreateGistService(
         IRssFeedHandler? rssFeedHandlerMock = null,
         IRssEntryHandler? rssEntryHandlerMock = null,
         IMariaDbHandler? mariaDbHandlerMock = null,
@@ -262,7 +246,7 @@ public class GistServiceTests
         if (rssFeedHandlerMock is null)
         {
             rssFeedHandlerMock = Substitute.For<IRssFeedHandler>();
-            rssFeedHandlerMock.Definitions.Returns(_testRssFeeds);
+            rssFeedHandlerMock.Definitions.Returns(TestRssFeeds);
         }
         if (rssEntryHandlerMock is null)
         {

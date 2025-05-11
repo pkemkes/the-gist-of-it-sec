@@ -83,6 +83,21 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         Assert.Equal(expectedRecap, deserializedActualRecap);
     }
 
+    public Task AssertGistIsEnabledAsync(int gistId) => AssertGistDisabledStateIsAsExpectedAsync(gistId, false);
+
+    public Task AssertGistIsDisabledAsync(int gistId) => AssertGistDisabledStateIsAsExpectedAsync(gistId, true);
+
+    private async Task AssertGistDisabledStateIsAsExpectedAsync(int gistId, bool expected)
+    {
+        const string query = "SELECT Disabled FROM Gists WHERE Id = @Id";
+        var command = new CommandDefinition(query, new { Id = gistId });
+
+        await using var connection = await GetOpenConnectionAsync();
+        var actual = await connection.QuerySingleAsync<bool>(command);
+
+        Assert.Equal(expected, actual);
+    }
+
     private async Task<MySqlConnection> GetOpenConnectionAsync()
     {
         var connection = GetConnection();

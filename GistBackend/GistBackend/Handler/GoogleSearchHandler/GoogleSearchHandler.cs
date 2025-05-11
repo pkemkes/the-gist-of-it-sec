@@ -1,10 +1,10 @@
 using System.Net;
 using GistBackend.Exceptions;
 using GistBackend.Types;
-using GistBackend.Utils;
 using Google;
 using Google.Apis.CustomSearchAPI.v1.Data;
 using Microsoft.Extensions.Logging;
+using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Handler.GoogleSearchHandler;
 
@@ -45,12 +45,12 @@ public class GoogleSearchHandler(ICustomSearchApiHandler customSearchApiHandler,
         {
             if (ex.HttpStatusCode == HttpStatusCode.TooManyRequests)
             {
-                logger?.LogError(LogEvents.GoogleApiQuotaExceeded, ex, "Google API rate limit exceeded");
+                logger?.LogError(GoogleApiQuotaExceeded, ex, "Google API rate limit exceeded");
                 return null;
             }
 
             const string message = "Unexpected Google API exception";
-            logger?.LogError(LogEvents.UnexpectedGoogleApiException, ex, message);
+            logger?.LogError(UnexpectedGoogleApiException, ex, message);
             throw new ExternalServiceException(message, ex);
         }
     }

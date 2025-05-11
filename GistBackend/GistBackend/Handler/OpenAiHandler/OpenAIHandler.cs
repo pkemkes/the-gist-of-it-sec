@@ -7,6 +7,7 @@ using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
+using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Handler.OpenAiHandler;
 
@@ -47,7 +48,7 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         catch (JsonException e)
         {
             const string errorMessage = "Error when parsing the summary AI response JSON";
-            logger?.LogError(LogEvents.SummaryAIResponseJsonParsingError, e, errorMessage);
+            logger?.LogError(SummaryAIResponseJsonParsingError, e, errorMessage);
             throw new ExternalServiceException(errorMessage, e);
         }
     }
@@ -130,7 +131,7 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         catch (JsonException e)
         {
             const string errorMessage = "Error when parsing the recap AI response JSON";
-            logger?.LogError(LogEvents.RecapAIResponseJsonParsingError, e, errorMessage);
+            logger?.LogError(RecapAIResponseJsonParsingError, e, errorMessage);
             throw new ExternalServiceException(errorMessage, e);
         }
     }
