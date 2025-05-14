@@ -34,4 +34,5 @@ public static class LogEvents {
     public static readonly EventId GettingAllGistsFailed = new(802, nameof(GettingAllGistsFailed));
     public static readonly EventId EnsuringCorrectDisabledFailed = new(803, nameof(EnsuringCorrectDisabledFailed));
     public static readonly EventId GettingDisabledStateFailed = new(804, nameof(GettingDisabledStateFailed));
+    public static readonly EventId GettingPreviousGistsFailed = new(900, nameof(GettingPreviousGistsFailed));
 }

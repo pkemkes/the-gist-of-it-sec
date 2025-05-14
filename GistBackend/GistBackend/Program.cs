@@ -68,6 +68,8 @@ public static class Program
                 services.AddTransient<IGoogleSearchHandler, GoogleSearchHandler>();
                 services.AddTransient<IGistDebouncer, GistDebouncer>();
 
+                services.AddControllers();
+
                 services.AddHostedService(provider =>
                 {
                     var options = provider.GetRequiredService<IOptionsSnapshot<MariaDbHandlerOptions>>()
@@ -95,6 +97,7 @@ public static class Program
                     app.UseRouting();
                     app.UseEndpoints(endpoints =>
                     {
+                        endpoints.MapControllers();
                         endpoints.MapMetrics();
                     });
                 });

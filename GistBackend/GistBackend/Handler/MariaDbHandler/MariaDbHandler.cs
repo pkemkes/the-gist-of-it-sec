@@ -28,6 +28,8 @@ public interface IMariaDbHandler {
     Task InsertWeeklyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct);
     Task<List<Gist>> GetAllGistsAsync(IEnumerable<int> feedIds, CancellationToken ct);
     Task<bool> EnsureCorrectDisabledStateForGistAsync(int gistId, bool disabled, CancellationToken ct);
+    Task<List<Gist>> GetPreviousGistsAsync(int take, int? lastGistId, IEnumerable<string> tags, string? searchQuery,
+        IEnumerable<int> disabledFeeds, CancellationToken ct);
 }
 
 public class MariaDbHandler(
@@ -381,6 +383,87 @@ public class MariaDbHandler(
             throw;
         }
     }
+
+    public async Task<List<Gist>> GetPreviousGistsAsync(int take, int? lastGistId, IEnumerable<string> tags,
+        string? searchQuery, IEnumerable<int> disabledFeeds, CancellationToken ct)
+    {
+        var parameters = new DynamicParameters();
+        var constraints = new List<string> { "Disabled IS FALSE" };
+
+        AddLastGistIdConstraint(constraints, parameters, lastGistId);
+        AddSearchQueryConstraint(parameters, constraints, searchQuery);
+        AddTagsConstraint(parameters, constraints, tags);
+        AddDisabledFeedsConstraint(parameters, constraints, disabledFeeds);
+        parameters.Add("Take", take);
+
+        var constraintsTemplate = string.Join(" AND ", constraints);
+
+        var query = $"""
+            SELECT * FROM gists
+            WHERE {constraintsTemplate}
+            ORDER BY id DESC LIMIT @Take
+        """;
+
+        var command = new CommandDefinition(query, parameters, cancellationToken: ct);
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return (await connection.QueryAsync<Gist>(command)).ToList();
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(GettingPreviousGistsFailed, e, "Getting previous gists failed");
+            throw;
+        }
+    }
+
+    private static void AddLastGistIdConstraint(List<string> constraints, DynamicParameters parameters, int? lastGistId)
+    {
+        constraints.Add("Id < @LastGistId");
+        parameters.Add("LastGistId", lastGistId ?? int.MaxValue);
+    }
+
+    private static void AddSearchQueryConstraint(DynamicParameters parameters, List<string> constraints, string? searchQuery)
+    {
+        var parsedSearchQuery = ParseSearchQuery(searchQuery);
+        for (var i = 0; i < parsedSearchQuery.Count; i++)
+        {
+            parameters.Add($"SearchQuery{i}", parsedSearchQuery[i]);
+            constraints.Add($"(LOWER(Title) LIKE @SearchQuery{i} OR LOWER(Summary) LIKE @SearchQuery{i})");
+        }
+    }
+
+    private static void AddTagsConstraint(DynamicParameters parameters, List<string> constraints, IEnumerable<string> tags)
+    {
+        var parsedTags = ParseTags(tags);
+        for (var i = 0; i < parsedTags.Count; i++)
+        {
+            parameters.Add($"Tags{i}", parsedTags[i]);
+            constraints.Add($"Tags REGEXP @Tags{i}");
+        }
+    }
+
+    private static void AddDisabledFeedsConstraint(DynamicParameters parameters, List<string> constraints,
+        IEnumerable<int> disabledFeeds)
+    {
+        parameters.Add("DisabledFeeds", disabledFeeds);
+        constraints.Add("FeedId NOT IN @DisabledFeeds");
+    }
+
+
+    private static List<string> ParseSearchQuery(string? searchQuery) => string.IsNullOrWhiteSpace(searchQuery)
+        ? []
+        : searchQuery
+            .Split(' ')
+            .Where(word => !string.IsNullOrWhiteSpace(word))
+            .Select(word => word.Trim().ToLowerInvariant())
+            .Select(word => $"%{word}%")
+            .ToList();
+
+    private static List<string> ParseTags(IEnumerable<string> tags) => tags
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .Select(tag => $@"\b{tag}\b")
+        .ToList();
 
     private async Task<MySqlConnection> GetOpenConnectionAsync(CancellationToken ct)
     {
