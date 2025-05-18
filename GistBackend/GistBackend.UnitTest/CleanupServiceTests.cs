@@ -6,10 +6,8 @@ using GistBackend.Handler.MariaDbHandler;
 using GistBackend.Services;
 using GistBackend.Types;
 using GistBackend.Utils;
-using Google.Apis.Http;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using NSubstitute.ReceivedExtensions;
 using static GistBackend.UnitTest.Utils.TestData;
 using IHttpClientFactory = System.Net.Http.IHttpClientFactory;
 

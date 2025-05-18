@@ -6,10 +6,11 @@ namespace GistBackend.IntegrationTest.Utils;
 
 public static class MariaDbHandlerTestExtensions
 {
-    public static async Task<List<Gist>> InsertTestGistsAsync(this IMariaDbHandler handler, int count)
+    public static async Task<List<Gist>> InsertTestGistsAsync(this IMariaDbHandler handler, int count,
+        int? feedId = null)
     {
-        var testFeedId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
-        var gists = Enumerable.Range(0, count).Select(_ => CreateTestGist(testFeedId)).ToList();
+        feedId ??= await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
+        var gists = Enumerable.Range(0, count).Select(_ => CreateTestGist(feedId.Value)).ToList();
         foreach (var gist in gists) gist.Id = await handler.InsertGistAsync(gist, CancellationToken.None);
         gists.Reverse();  // Expecting gists to be queried in descending order by Id
         return gists;

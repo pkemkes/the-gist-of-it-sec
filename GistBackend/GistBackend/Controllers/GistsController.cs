@@ -1,13 +1,16 @@
 using GistBackend.Handler.MariaDbHandler;
-using GistBackend.Types;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace GistBackend.Controllers;
 
+public static class RoutingConstants
+{
+    public const string GistsRoute = "/api/v1/gists";
+}
+
 [ApiController]
-[Route("api/gists")]
+[Route(RoutingConstants.GistsRoute)]
 public class GistsController(IMariaDbHandler mariaDbHandler, ILogger<GistsController>? logger) : ControllerBase
 {
     [HttpGet]

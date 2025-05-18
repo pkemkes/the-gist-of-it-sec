@@ -1,5 +1,3 @@
-using GistBackend.Handler.OpenAiHandler;
-using GistBackend.Utils;
 using Google.Apis.CustomSearchAPI.v1;
 using Google.Apis.CustomSearchAPI.v1.Data;
 using Google.Apis.Services;

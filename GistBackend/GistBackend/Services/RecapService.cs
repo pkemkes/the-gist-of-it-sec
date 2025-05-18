@@ -5,7 +5,6 @@ using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
-using Serilog;
 using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Services;
