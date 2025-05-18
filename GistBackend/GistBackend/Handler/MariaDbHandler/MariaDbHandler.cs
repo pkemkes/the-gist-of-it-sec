@@ -399,7 +399,7 @@ public class MariaDbHandler(
         var constraintsTemplate = string.Join(" AND ", constraints);
 
         var query = $"""
-            SELECT * FROM gists
+            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id FROM Gists
             WHERE {constraintsTemplate}
             ORDER BY id DESC LIMIT @Take
         """;

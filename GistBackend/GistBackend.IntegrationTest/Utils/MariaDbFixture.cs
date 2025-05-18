@@ -43,4 +43,5 @@ public class MariaDbFixture : IAsyncLifetime {
     }
 
     public async Task DisposeAsync() => await _container.StopAsync();
+    public void Dispose() => _container.StopAsync().GetAwaiter().GetResult();
 }

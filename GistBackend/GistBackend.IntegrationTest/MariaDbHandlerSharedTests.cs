@@ -6,10 +6,11 @@ using GistBackend.Types;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 using NSubstitute;
+using static GistBackend.IntegrationTest.Utils.TestData;
 
 namespace GistBackend.IntegrationTest;
 
-public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDbFixture> {
+public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<MariaDbFixture> {
     private readonly Random _random = new();
 
     private readonly MariaDbHandlerOptions _gistHandlerOptions = new (
@@ -571,40 +572,4 @@ public class MariaDbHandlerTests(MariaDbFixture fixture) : IClassFixture<MariaDb
 
     private MariaDbHandler CreateRecapHandler(IDateTimeHandler? dateTimeHandler = null) =>
         new(Options.Create(_recapHandlerOptions), dateTimeHandler ?? new DateTimeHandler(), null);
-
-    private RssFeedInfo CreateTestFeedInfo() => new(
-        _random.NextString(),
-        _random.NextString(),
-        _random.NextString()
-    );
-
-    private Gist CreateTestGist(int feedId) => new(
-        _random.NextString(),
-        feedId,
-        _random.NextString(),
-        _random.NextString(),
-        _random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
-        _random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
-        _random.NextString(),
-        _random.NextString(),
-        string.Join(";;", _random.NextArrayOfStrings()),
-        _random.NextString()
-    );
-
-    private GoogleSearchResult CreateTestSearchResult(int gistId) => new(
-        gistId,
-        _random.NextString(),
-        _random.NextString(),
-        _random.NextString(),
-        _random.NextString(),
-        _random.NextString()
-    );
-
-    private List<CategoryRecap> CreateTestRecap() => Enumerable.Range(0, 5).Select(_ =>
-        new CategoryRecap(
-            _random.NextString(),
-            _random.NextString(),
-            Enumerable.Range(0, 3).Select(_ => _random.Next(10000))
-        )
-    ).ToList();
 }
