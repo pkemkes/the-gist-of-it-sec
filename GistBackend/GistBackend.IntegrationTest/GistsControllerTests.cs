@@ -127,4 +127,24 @@ public class GistsControllerTests : IDisposable
         Assert.Single(gists);
         Assert.Equal(gists.Single(), gistToFind);
     }
+
+    [Fact]
+    public async Task GetHealth_AllHealthyButNoGistsInDb_ReturnsOk()
+    {
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/health");
+
+        actual.EnsureSuccessStatusCode();
+        Assert.Equal(System.Net.HttpStatusCode.OK, actual.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetHealth_AllHealthyAndSomeGistsInDb_ReturnsOk()
+    {
+        await _dbHandler.InsertTestGistsAsync(5);
+
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/health");
+
+        actual.EnsureSuccessStatusCode();
+        Assert.Equal(System.Net.HttpStatusCode.OK, actual.StatusCode);
+    }
 }

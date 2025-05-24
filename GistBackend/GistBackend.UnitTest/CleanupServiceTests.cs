@@ -19,7 +19,7 @@ public class CleanupServiceTests
     public async Task StartAsync_NoGistsInFeeds_NothingCleanedUp()
     {
         var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock();
-        mariaDbHandlerMock.GetAllGistsAsync(Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+        mariaDbHandlerMock.GetAllGistsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<List<Gist>>([]));
         var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
         var gistDebouncerMock = Substitute.For<IGistDebouncer>();
@@ -145,7 +145,7 @@ public class CleanupServiceTests
     {
         var testGist = TestGists.First() with { Url = "different url" };
         var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock();
-        mariaDbHandlerMock.GetAllGistsAsync(Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+        mariaDbHandlerMock.GetAllGistsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<Gist> { testGist }));
         var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
         var httpClientFactoryMock = CreateHttpClientFactoryMock(HttpStatusCode.OK, "another different url");
@@ -250,13 +250,9 @@ public class CleanupServiceTests
 
     private static IMariaDbHandler CreateDefaultMariaDbHandlerMock()
     {
-        var testFeedIds = TestRssFeeds.Select(feed => feed.Id).ToList();
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
         mariaDbHandlerMock
-            .GetAllGistsAsync(
-                Arg.Is<List<int>>(feedIds =>
-                    feedIds.Count == testFeedIds.Count && feedIds.All(feedId => testFeedIds.Contains(feedId))),
-                Arg.Any<CancellationToken>())
+            .GetAllGistsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(TestGists));
         TestRssFeeds.ForEach(feed =>
             mariaDbHandlerMock.GetFeedInfoByRssUrlAsync(feed.RssUrl, Arg.Any<CancellationToken>())

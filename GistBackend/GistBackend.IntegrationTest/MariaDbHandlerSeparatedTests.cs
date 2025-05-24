@@ -41,6 +41,30 @@ public class MariaDbHandlerSeparatedTests : IDisposable
         Assert.Empty(gists);
     }
 
+    [Fact]
+    public async Task GetAllGistsAsync_NoGistsExist_EmptyList()
+    {
+        var handler = CreateGistHandler();
+
+        var actual = await handler.GetAllGistsAsync(CancellationToken.None);
+
+        Assert.Empty(actual);
+    }
+
+    [Fact]
+    public async Task GetAllGistsAsync_GistsExistInOneFeed_ListWithAllGists()
+    {
+        var handler = CreateGistHandler();
+        var expected = (await handler.InsertTestGistsAsync(10))
+            .Concat(await handler.InsertTestGistsAsync(10))
+            .Concat(await handler.InsertTestGistsAsync(10))
+            .ToList();
+
+        var actual = await handler.GetAllGistsAsync(CancellationToken.None);
+
+        Assert.Equivalent(expected, actual);
+    }
+
     [Theory]
     [InlineData(3)]
     [InlineData(5)]

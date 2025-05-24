@@ -14,6 +14,8 @@ namespace GistBackend.Handler.ChromaDbHandler;
 public interface IChromaDbHandler {
     Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
     Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct);
+    Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(
+        string reference, int nResults, IEnumerable<int>? disabledFeedIds, CancellationToken ct);
 }
 
 public class ChromaDbHandler(
@@ -28,8 +30,8 @@ public class ChromaDbHandler(
     private readonly string _collectionName = options.Value.GistsCollectionName;
     private static readonly string[] IncludeOnGet = ["metadatas", "distances"];
 
-    public async Task<SimilarDocument[]> GetReferenceAndScoreOfSimilarEntriesAsync(string reference, CancellationToken ct,
-        int nResults = 6, IEnumerable<int>? disabledFeedIds = null)
+    public async Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(string reference,
+        int nResults, IEnumerable<int>? disabledFeedIds, CancellationToken ct)
     {
         ValidateReference(reference);
         var collectionId = await GetOrCreateCollectionAsync(ct);
@@ -80,10 +82,10 @@ public class ChromaDbHandler(
         };
     }
 
-    private static SimilarDocument[] ExtractReferencesAndScores(QueryResponse queryResponse) =>
+    private static List<SimilarDocument> ExtractReferencesAndScores(QueryResponse queryResponse) =>
         Enumerable.Range(0, queryResponse.Ids.First().Length).Select(i =>
             new SimilarDocument(queryResponse.Metadatas.First()[i].Reference, queryResponse.Distances.First()[i]))
-            .ToArray();
+            .ToList();
 
     public async Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct)
     {

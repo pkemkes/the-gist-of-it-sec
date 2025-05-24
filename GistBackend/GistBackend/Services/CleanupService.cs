@@ -61,7 +61,7 @@ public class CleanupService(
 
     private async Task CleanupGistsAsync(CancellationToken ct)
     {
-        var allGists = await mariaDbHandler.GetAllGistsAsync(_feedsByFeedId.Keys.ToList(), ct);
+        var allGists = await mariaDbHandler.GetAllGistsAsync(ct);
         GistsCheckedGauge.Set(allGists.Count - gistDebouncer.GetDebouncedGistsCount());
         await Task.WhenAll(allGists.Select(gist => CheckGistAsync(gist, ct)));
     }

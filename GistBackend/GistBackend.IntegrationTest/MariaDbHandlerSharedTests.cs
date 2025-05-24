@@ -192,32 +192,22 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
     public async Task GetGistByReferenceAsync_OnlyOneGistExists_CorrectGist()
     {
         var handler = CreateGistHandler();
-        var feedInfo = CreateTestFeedInfo();
-        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
-        var expectedGist = CreateTestGist(feedInfoId);
-        var gistId = await handler.InsertGistAsync(expectedGist, CancellationToken.None);
+        var expected = (await handler.InsertTestGistsAsync(1)).Single();
 
-        var actualGist = await handler.GetGistByReferenceAsync(expectedGist.Reference, CancellationToken.None);
+        var actual = await handler.GetGistByReferenceAsync(expected.Reference, CancellationToken.None);
 
-        Assert.Equal(expectedGist with { Id = gistId }, actualGist);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public async Task GetGistByReferenceAsync_MultipleGistsExist_CorrectGist()
     {
         var handler = CreateGistHandler();
-        var feedInfo = CreateTestFeedInfo();
-        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
-        await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
-        await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
-        var expectedGist = CreateTestGist(feedInfoId);
-        var gistId = await handler.InsertGistAsync(expectedGist, CancellationToken.None);
-        await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
-        await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
+        var expected = (await handler.InsertTestGistsAsync(5))[2];
 
-        var actualGist = await handler.GetGistByReferenceAsync(expectedGist.Reference, CancellationToken.None);
+        var actual = await handler.GetGistByReferenceAsync(expected.Reference, CancellationToken.None);
 
-        Assert.Equal(expectedGist with { Id = gistId }, actualGist);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
@@ -473,46 +463,10 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
     }
 
     [Fact]
-    public async Task GetAllGistsAsync_NoGistsExist_EmptyList()
-    {
-        var handler = CreateGistHandler();
-        var feedInfo = CreateTestFeedInfo();
-        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
-
-        var actual = await handler.GetAllGistsAsync([feedInfoId], CancellationToken.None);
-
-        Assert.Empty(actual);
-    }
-
-    [Fact]
-    public async Task GetAllGistsAsync_GistsExist_ListWithAllGists()
-    {
-        var handler = CreateGistHandler();
-        var feedInfo = CreateTestFeedInfo();
-        var feedId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
-        var otherFeedInfo = CreateTestFeedInfo();
-        var otherFeedId = await handler.InsertFeedInfoAsync(otherFeedInfo, CancellationToken.None);
-        var expected = new List<Gist> {
-            CreateTestGist(feedId),
-            CreateTestGist(feedId),
-            CreateTestGist(otherFeedId)
-        };
-        await Task.WhenAll(expected.Select(gist => handler.InsertGistAsync(gist, CancellationToken.None)));
-
-        var actual = await handler.GetAllGistsAsync([feedId, otherFeedId], CancellationToken.None);
-
-        actual.ForEach(gist => gist.Id = null);
-        Assert.Equivalent(expected, actual);
-    }
-
-    [Fact]
     public async Task EnsureCorrectDisabledStateForGistAsync_GistIsEnabledAndShouldBeDisabled_FalseAndGistIsDisabled()
     {
         var handler = CreateGistHandler();
-        var feedInfo = CreateTestFeedInfo();
-        var feedId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
-        var gistToInsert = CreateTestGist(feedId);
-        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
+        var gistId = (await handler.InsertTestGistsAsync(1)).Single().Id!.Value;
 
         var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
 
@@ -524,10 +478,7 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
     public async Task EnsureCorrectDisabledStateForGistAsync_GistIsDisabledAndShouldBeDisabled_TrueAndGistIsDisabled()
     {
         var handler = CreateGistHandler();
-        var feedInfo = CreateTestFeedInfo();
-        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
-        var gistToInsert = CreateTestGist(feedInfoId);
-        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
+        var gistId = (await handler.InsertTestGistsAsync(1)).Single().Id!.Value;
         await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
 
         var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
@@ -565,6 +516,27 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
 
         await GistAsserter.AssertGistIsEnabledAsync(gistId);
         Assert.False(actual);
+    }
+
+    [Fact]
+    public async Task GetGistByIdAsync_GistExists_CorrectGist()
+    {
+        var handler = CreateGistHandler();
+        var expectedGist = (await handler.InsertTestGistsAsync(1)).Single();
+
+        var actualGist = await handler.GetGistByIdAsync(expectedGist.Id!.Value, CancellationToken.None);
+
+        Assert.Equal(expectedGist, actualGist);
+    }
+
+    [Fact]
+    public async Task GetGistByIdAsync_GistDoesNotExist_Null()
+    {
+        var handler = CreateGistHandler();
+
+        var actual = await handler.GetGistByIdAsync(1234566789, CancellationToken.None);
+
+        Assert.Null(actual);
     }
 
     private MariaDbHandler CreateGistHandler() =>

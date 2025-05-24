@@ -199,10 +199,10 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         }
 
         var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
-            CancellationToken.None, nResults);
+            nResults, null, CancellationToken.None);
 
-        Assert.True(actual.Length < nResults);
-        Assert.Equal(entries.Length, actual.Length);
+        Assert.True(actual.Count < nResults);
+        Assert.Equal(entries.Length, actual.Count);
         Assert.Equivalent(entries.Select(entry => entry.Reference), actual.Select(doc => doc.Reference));
     }
 
@@ -218,9 +218,9 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         }
 
         var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
-            CancellationToken.None, nResults);
+            nResults, null, CancellationToken.None);
 
-        Assert.Equal(nResults, actual.Length);
+        Assert.Equal(nResults, actual.Count);
         foreach (var similarDocument in actual)
         {
             Assert.Contains(similarDocument.Reference, entries.Select(entry => entry.Reference));
@@ -244,9 +244,9 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         }
 
         var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
-            CancellationToken.None, disabledFeedIds: [ disabledFeedId ]);
+            6, [ disabledFeedId ], CancellationToken.None);
 
-        Assert.Equal(2, actual.Length);
+        Assert.Equal(2, actual.Count);
         Assert.Equivalent(
             entries.Where(entry => entry.FeedId == enabledFeedId).Select(entry => entry.Reference),
             actual.Select(entry => entry.Reference)
@@ -265,10 +265,11 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var disabledGist = new Gist(entries.Last(), TestSummaryAIResponse);
         await handler.EnsureGistHasCorrectMetadataAsync(disabledGist, true, CancellationToken.None);
 
-        var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
-            CancellationToken.None);
+        var actual =
+            await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference, 6, null,
+                CancellationToken.None);
 
-        Assert.Equal(2, actual.Length);
+        Assert.Equal(2, actual.Count);
         Assert.Equivalent(
             entries.SkipLast(1).Select(entry => entry.Reference),
             actual.Select(entry => entry.Reference)

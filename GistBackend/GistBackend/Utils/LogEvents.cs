@@ -13,6 +13,7 @@ public static class LogEvents {
     public static readonly EventId GettingGistByReferenceFailed = new(205, nameof(GettingGistByReferenceFailed));
     public static readonly EventId InsertingGistFailed = new(206, nameof(InsertingGistFailed));
     public static readonly EventId UpdatingGistFailed = new(207, nameof(UpdatingGistFailed));
+    public static readonly EventId DatabaseOperationRetry = new(208, nameof(DatabaseOperationRetry));
     public static readonly EventId SearchResultsInserted = new(300, nameof(SearchResultsInserted));
     public static readonly EventId SearchResultsUpdated = new(301, nameof(SearchResultsUpdated));
     public static readonly EventId NoSearchResults = new(302, nameof(NoSearchResults));
@@ -35,4 +36,5 @@ public static class LogEvents {
     public static readonly EventId EnsuringCorrectDisabledFailed = new(803, nameof(EnsuringCorrectDisabledFailed));
     public static readonly EventId GettingDisabledStateFailed = new(804, nameof(GettingDisabledStateFailed));
     public static readonly EventId GettingPreviousGistsFailed = new(900, nameof(GettingPreviousGistsFailed));
+    public static readonly EventId ErrorInHttpRequest = new(1000, nameof(ErrorInHttpRequest));
 }

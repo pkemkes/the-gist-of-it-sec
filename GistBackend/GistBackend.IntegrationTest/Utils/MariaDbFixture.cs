@@ -19,7 +19,6 @@ public class MariaDbFixture : IAsyncLifetime {
     public MariaDbFixture()
     {
         _image = new ImageFromDockerfileBuilder()
-            .WithName("the-gist-of-it-sec-database-test")
             .WithDockerfileDirectory("../../../../../database")
             .WithCleanUp(true)
             .Build();
