@@ -31,7 +31,8 @@ public class MariaDbFixture : IAsyncLifetime {
             .WithEnvironment("DB_GISTSERVICE_PASSWORD", GistServiceDbPassword)
             .WithEnvironment("DB_RECAPSERVICE_USERNAME", RecapServiceDbUsername)
             .WithEnvironment("DB_RECAPSERVICE_PASSWORD", RecapServiceDbPassword)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(3306))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(3306)
+                .UntilCommandIsCompleted("mariadb -uroot -proot_pass -e 'SELECT 1'"))
             .Build();
     }
 

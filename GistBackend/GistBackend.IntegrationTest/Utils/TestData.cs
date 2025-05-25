@@ -41,4 +41,22 @@ public static class TestData
             Enumerable.Range(0, 3).Select(_ => Random.Next(10000))
         )
     ).ToList();
+
+    public static readonly Dictionary<string, float[]> TestTextsAndEmbeddings = new() {
+        { "test text", Enumerable.Repeat(0.1f, 100).ToArray() },
+        { "very different test text", Enumerable.Repeat(0.9f, 100).ToArray() },
+        { "very similar test text", Enumerable.Repeat(0.100000001f, 100).ToArray() },
+    };
+
+    public static RssEntry CreateTestEntry() => new(
+        Random.NextString(),
+        Random.Next(),
+        Random.NextString(),
+        Random.NextString(),
+        Random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
+        Random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
+        Random.NextString(),
+        [Random.NextString(), Random.NextString(), Random.NextString()],
+        text => text
+    );
 }

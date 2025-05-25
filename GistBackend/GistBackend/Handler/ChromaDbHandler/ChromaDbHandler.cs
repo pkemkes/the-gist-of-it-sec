@@ -15,7 +15,7 @@ public interface IChromaDbHandler {
     Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
     Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct);
     Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(
-        string reference, int nResults, IEnumerable<int>? disabledFeedIds, CancellationToken ct);
+        string reference, int nResults, IEnumerable<int> disabledFeedIds, CancellationToken ct);
 }
 
 public class ChromaDbHandler(
@@ -31,7 +31,7 @@ public class ChromaDbHandler(
     private static readonly string[] IncludeOnGet = ["metadatas", "distances"];
 
     public async Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(string reference,
-        int nResults, IEnumerable<int>? disabledFeedIds, CancellationToken ct)
+        int nResults, IEnumerable<int> disabledFeedIds, CancellationToken ct)
     {
         ValidateReference(reference);
         var collectionId = await GetOrCreateCollectionAsync(ct);
@@ -43,7 +43,7 @@ public class ChromaDbHandler(
         var document = await GetDocumentByReferenceAsync(reference, collectionId, true, false, ct);
         var content = CreateStringContent(new {
             QueryEmbeddings = new[] {document.Embeddings!.Single()},
-            NResults = nResults,
+            NResults = nResults+1, // +1 to exclude the original entry
             Where = GenerateWhere(disabledFeedIds),
             Include = IncludeOnGet
         });
@@ -58,21 +58,25 @@ public class ChromaDbHandler(
         var queryResponse =
             await JsonSerializer.DeserializeAsync<QueryResponse>(responseContent, SerializerDefaults.JsonOptions, ct);
         if (queryResponse is null) throw new DatabaseOperationException("Could not get similar entries");
-        return ExtractReferencesAndScores(queryResponse);
+        var referencesAndScores = ExtractReferencesAndScores(queryResponse);
+
+        // Exclude the original entry from the results
+        return referencesAndScores.Where(referenceAndScore => referenceAndScore.Reference != reference).ToList();
     }
 
-    private static Dictionary<string, object> GenerateWhere(IEnumerable<int>? disabledFeedIds)
+    private static Dictionary<string, object> GenerateWhere(IEnumerable<int> disabledFeedIds)
     {
         var whereNotDisabled = new Dictionary<string, object> {
             { "disabled", new Dictionary<string, object> { { "$ne", true } } }
         };
-        if (disabledFeedIds is null)
+        var disabledFeedIdsArray = disabledFeedIds.ToArray();
+        if (disabledFeedIdsArray.Length == 0)
         {
             return whereNotDisabled;
         }
 
         var whereNotInDisabledFeeds = new Dictionary<string, object> {
-            { "feed_id", new Dictionary<string, object> { { "$nin", disabledFeedIds.ToArray() } } }
+            { "feed_id", new Dictionary<string, object> { { "$nin", disabledFeedIdsArray } } }
         };
         return new Dictionary<string, object> {
             { "$and", new[] {

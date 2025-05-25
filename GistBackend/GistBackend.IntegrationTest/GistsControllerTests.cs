@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using GistBackend.Controllers;
 using GistBackend.Handler;
+using GistBackend.Handler.ChromaDbHandler;
 using GistBackend.Handler.MariaDbHandler;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
@@ -17,10 +18,12 @@ namespace GistBackend.IntegrationTest;
 
 public class GistsControllerTests : IDisposable
 {
-    private readonly MariaDbFixture _fixture;
+    private readonly MariaDbFixture _mariaDbFixture;
+    private readonly MariaDbHandler _mariaDbHandler;
+    private readonly ChromaDbFixture _chromaDbFixture;
+    private readonly IChromaDbHandler _chromaDbHandler;
     private readonly WebApplicationFactory<StartUp> _factory;
     private readonly HttpClient _client;
-    private readonly MariaDbHandler _dbHandler;
     private readonly Random _random = new();
 
     private readonly JsonSerializerOptions _jsonSerializerOptions = new() {
@@ -29,15 +32,27 @@ public class GistsControllerTests : IDisposable
 
     public GistsControllerTests()
     {
-        _fixture = new MariaDbFixture();
-        _fixture.InitializeAsync().GetAwaiter().GetResult();
+        _mariaDbFixture = new MariaDbFixture();
+        _mariaDbFixture.InitializeAsync().GetAwaiter().GetResult();
 
-        var dbOptions = new MariaDbHandlerOptions(
-            _fixture.Hostname,
+        var mariaDbHandlerOptions = new MariaDbHandlerOptions(
+            _mariaDbFixture.Hostname,
             MariaDbFixture.GistServiceDbUsername,
             MariaDbFixture.GistServiceDbPassword,
-            _fixture.ExposedPort
+            _mariaDbFixture.ExposedPort
         );
+        _mariaDbHandler = new MariaDbHandler(Options.Create(mariaDbHandlerOptions), new DateTimeHandler(), null);
+
+        _chromaDbFixture = new ChromaDbFixture();
+        _chromaDbFixture.InitializeAsync().GetAwaiter().GetResult();
+
+        var chromeDbHandlerOptions = new ChromaDbHandlerOptions(
+            _chromaDbFixture.Hostname,
+            ChromaDbFixture.GistServiceServerAuthnCredentials,
+            _chromaDbFixture.ExposedPort
+        );
+        _chromaDbHandler = new ChromaDbHandler(OpenAiHandlerUtils.CreateOpenAIHandlerMock(), new HttpClient(),
+            Options.Create(chromeDbHandlerOptions), null);
 
         _factory = new WebApplicationFactory<StartUp>()
             .WithWebHostBuilder(builder =>
@@ -45,8 +60,9 @@ public class GistsControllerTests : IDisposable
                 builder.ConfigureTestServices(services =>
                 {
                     // Remove existing IMariaDbHandler registration
-                    var dbHandlerDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IMariaDbHandler));
-                    if (dbHandlerDescriptor != null) services.Remove(dbHandlerDescriptor);
+                    var mariaDbHandlerDescriptor =
+                        services.SingleOrDefault(d => d.ServiceType == typeof(IMariaDbHandler));
+                    if (mariaDbHandlerDescriptor != null) services.Remove(mariaDbHandlerDescriptor);
 
                     // Remove any hosted services that use IOptionsSnapshot<MariaDbHandlerOptions>
                     var hostedServiceDescriptors = services.Where(d =>
@@ -56,25 +72,32 @@ public class GistsControllerTests : IDisposable
                         services.Remove(d);
                     }
 
-                    // Register test db handler
-                    services.AddTransient<IMariaDbHandler>(sp =>
-                        new MariaDbHandler(Options.Create(dbOptions), new DateTimeHandler(), null));
+                    // Register test mariaDbHandler
+                    services.AddTransient<IMariaDbHandler>(_ => _mariaDbHandler);
+
+                    // Remove existing IChromaDbHandler registration
+                    var chromaDbHandlerDescriptor =
+                        services.SingleOrDefault(d => d.ServiceType == typeof(IChromaDbHandler));
+                    if (chromaDbHandlerDescriptor != null) services.Remove(chromaDbHandlerDescriptor);
+
+                    // Register test chromaDbHandler
+                    services.AddTransient<IChromaDbHandler>(_ => _chromaDbHandler);
                 });
             });
 
         _client = _factory.CreateClient();
-        _dbHandler = new MariaDbHandler(Options.Create(dbOptions), new DateTimeHandler(), null);
     }
 
     public void Dispose()
     {
         _client.Dispose();
         _factory.Dispose();
-        _fixture.Dispose();
+        _mariaDbFixture.Dispose();
+        _chromaDbFixture.Dispose();
     }
 
     [Fact]
-    public async Task GetGists_NoGists_ReturnsEmptyArray()
+    public async Task GetGists_NoGists_EmptyArray()
     {
         var actual = await _client.GetAsync(RoutingConstants.GistsRoute);
 
@@ -85,9 +108,9 @@ public class GistsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetGists_WithGists_ReturnsGists()
+    public async Task GetGists_WithGists_Gists()
     {
-        var expectedGists = await _dbHandler.InsertTestGistsAsync(5);
+        var expectedGists = await _mariaDbHandler.InsertTestGistsAsync(5);
 
         var actual = await _client.GetAsync(RoutingConstants.GistsRoute);
 
@@ -98,38 +121,39 @@ public class GistsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetGists_QueryWithParameters_ReturnsCorrectGists()
+    public async Task GetGists_QueryWithParameters_CorrectGists()
     {
         var searchWords = new[] { "word1", "word2" };
         var tags = new[] { "tag1", "tag2" };
-        var gistsOfEnabledFeed = await _dbHandler.InsertTestGistsAsync(4);
+        var gistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(4);
         var enabledFeedId = gistsOfEnabledFeed.First().FeedId;
         var gistToFind = CreateTestGist(enabledFeedId) with {
             Title = $"This is a {searchWords.First()} title",
             Summary = $"This is a {searchWords.Last()} summary",
             Tags = string.Join(";;", tags.Concat(_random.NextArrayOfStrings(3)))
         };
-        gistToFind.Id = await _dbHandler.InsertGistAsync(gistToFind, CancellationToken.None);
-        var otherGistsOfEnabledFeed = await _dbHandler.InsertTestGistsAsync(5, enabledFeedId);
-        var gistsOfDisabledFeed = await _dbHandler.InsertTestGistsAsync(10);
+        gistToFind.Id = await _mariaDbHandler.InsertGistAsync(gistToFind, CancellationToken.None);
+        var otherGistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(5, enabledFeedId);
+        var gistsOfDisabledFeed = await _mariaDbHandler.InsertTestGistsAsync(10);
         var parameters = new Dictionary<string, string?> {
             { "lastGist", otherGistsOfEnabledFeed.Last().Id!.Value.ToString() },
             { "tags", string.Join(";;", tags) },
             { "q", string.Join("  ", searchWords) },
-            { "disabledFeeds", string.Join(",", gistsOfDisabledFeed.Select(g => g.FeedId)) }
+            { "disabledFeeds", string.Join(",", [ gistsOfDisabledFeed.First().FeedId, 1337, 4332, 4332 ]) }
         };
+        var uri = QueryHelpers.AddQueryString(RoutingConstants.GistsRoute, parameters);
 
-        var actual = await _client.GetAsync(QueryHelpers.AddQueryString(RoutingConstants.GistsRoute, parameters));
+        var actual = await _client.GetAsync(uri);
 
         actual.EnsureSuccessStatusCode();
         var gists = await actual.Content.ReadFromJsonAsync<List<Gist>>(_jsonSerializerOptions);
         Assert.NotNull(gists);
         Assert.Single(gists);
-        Assert.Equal(gists.Single(), gistToFind);
+        Assert.Equal(gistToFind, gists.Single());
     }
 
     [Fact]
-    public async Task GetHealth_AllHealthyButNoGistsInDb_ReturnsOk()
+    public async Task GetHealth_AllHealthyButNoGistsInDb_Ok()
     {
         var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/health");
 
@@ -138,13 +162,72 @@ public class GistsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetHealth_AllHealthyAndSomeGistsInDb_ReturnsOk()
+    public async Task GetHealth_AllHealthyAndSomeGistsInDb_Ok()
     {
-        await _dbHandler.InsertTestGistsAsync(5);
+        await _mariaDbHandler.InsertTestGistsAsync(5);
 
         var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/health");
 
         actual.EnsureSuccessStatusCode();
         Assert.Equal(System.Net.HttpStatusCode.OK, actual.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSimilarGistsAsync_GistIdNotInDb_NotFound()
+    {
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/similar/999999999");
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, actual.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSimilarGistsAsync_NoDisabledFeeds_AllSimilarGists()
+    {
+        var testGists = (await _mariaDbHandler.InsertTestGistsAsync(2))
+            .Concat(await _mariaDbHandler.InsertTestGistsAsync(1)).ToList();
+        for (var i = 0; i < testGists.Count; i++)
+        {
+            var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
+            var entry = CreateTestEntry() with { Reference = testGists[i].Reference };
+            await _chromaDbHandler.InsertEntryAsync(entry, text, CancellationToken.None);
+        }
+        var gistId = testGists.First().Id!.Value;
+        var expectedGists = testGists.Where(gist => gist.Id != gistId).ToList();
+
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/similar/{gistId}");
+
+        actual.EnsureSuccessStatusCode();
+        var similarGists = await actual.Content.ReadFromJsonAsync<List<SimilarGist>>(_jsonSerializerOptions);
+        Assert.NotNull(similarGists);
+        var gists = similarGists.Select(similarGist => similarGist.Gist);
+        Assert.Equivalent(expectedGists, gists);
+    }
+
+    [Fact]
+    public async Task GetSimilarGistsAsync_OneDisabledFeed_OnlySimilarGistsOfOtherFeeds()
+    {
+        var gistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(2);
+        var gistsOfDisabledFeed = await _mariaDbHandler.InsertTestGistsAsync(1);
+        var testGists = gistsOfEnabledFeed.Concat(gistsOfDisabledFeed).ToList();
+        for (var i = 0; i < testGists.Count; i++)
+        {
+            var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
+            var entry = CreateTestEntry() with { Reference = testGists[i].Reference };
+            await _chromaDbHandler.InsertEntryAsync(entry, text, CancellationToken.None);
+        }
+        var gistId = testGists.First().Id!.Value;
+        var expectedGists = gistsOfEnabledFeed.Where(gist => gist.Id != gistId).ToList();
+        var parameters = new Dictionary<string, string?> {
+            { "disabledFeeds", string.Join(",", [ gistsOfDisabledFeed.First().FeedId, 33, 83, 83 ]) }
+        };
+        var uri = QueryHelpers.AddQueryString($"{RoutingConstants.GistsRoute}/similar/{gistId}", parameters);
+
+        var actual = await _client.GetAsync(uri);
+
+        actual.EnsureSuccessStatusCode();
+        var similarGists = await actual.Content.ReadFromJsonAsync<List<SimilarGist>>(_jsonSerializerOptions);
+        Assert.NotNull(similarGists);
+        var gists = similarGists.Select(similarGist => similarGist.Gist);
+        Assert.Equivalent(expectedGists, gists);
     }
 }

@@ -72,10 +72,10 @@ public class GistsController(
             var gist = await mariaDbHandler.GetGistByIdAsync(id, ct);
             if (gist is null) return NotFound();
             var similarityResults =
-                await chromaDbHandler.GetReferenceAndScoreOfSimilarEntriesAsync(gist.Reference, 6,
+                await chromaDbHandler.GetReferenceAndScoreOfSimilarEntriesAsync(gist.Reference, 5,
                     ParseDisabledFeeds(disabledFeeds), ct);
-            var gists = similarityResults.Select(async similarityResult =>
-                await GetSimilarGistFromDatabaseAsync(similarityResult, ct)).ToList();
+            var gists = await Task.WhenAll(similarityResults.Select(similarityResult =>
+                GetSimilarGistFromDatabaseAsync(similarityResult, ct)));
             return Ok(gists);
         }
         catch (Exception e)

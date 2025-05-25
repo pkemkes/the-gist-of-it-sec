@@ -1,21 +1,17 @@
 using GistBackend.Exceptions;
 using GistBackend.Handler.ChromaDbHandler;
-using GistBackend.Handler.OpenAiHandler;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
 using Microsoft.Extensions.Options;
-using NSubstitute;
+using static GistBackend.IntegrationTest.Utils.OpenAiHandlerUtils;
+using static GistBackend.IntegrationTest.Utils.TestData;
 
 namespace GistBackend.IntegrationTest;
 
 public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<ChromaDbFixture>
 {
     private readonly Random _random = new();
-    private static readonly Dictionary<string, float[]> TestTextsAndEmbeddings = new() {
-        { "test text", Enumerable.Repeat(0.1f, 100).ToArray() },
-        { "very different test text", Enumerable.Repeat(0.9f, 100).ToArray() },
-        { "very similar test text", Enumerable.Repeat(0.100000001f, 100).ToArray() },
-    };
+
     private static readonly SummaryAIResponse TestSummaryAIResponse = new(
         "test summary",
         ["test tag 1", "test tag 2", "test tag 3"],
@@ -197,28 +193,30 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         {
             await handler.InsertEntryAsync(entry, text, CancellationToken.None);
         }
+        var testReference = entries.First().Reference;
+        var expectedReferences = entries.Select(entry => entry.Reference)
+            .Where(reference => reference != testReference).ToList();
 
-        var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
-            nResults, null, CancellationToken.None);
+        var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(testReference, nResults, [], CancellationToken.None);
 
         Assert.True(actual.Count < nResults);
-        Assert.Equal(entries.Length, actual.Count);
-        Assert.Equivalent(entries.Select(entry => entry.Reference), actual.Select(doc => doc.Reference));
+        Assert.Equal(entries.Length - 1, actual.Count);
+        Assert.Equivalent(expectedReferences, actual.Select(doc => doc.Reference));
     }
 
     [Fact]
-    public async Task GetReferenceAndScoreOfSimilarEntriesAsync_NotEnoughEntriesInDb_ReturnsOnlyNEntries()
+    public async Task GetReferenceAndScoreOfSimilarEntriesAsync_EnoughEntriesInDb_ReturnsOnlyNEntries()
     {
         var handler = CreateChromaDbHandler(_random.NextString());
         var entries = TestTextsAndEmbeddings.Select(_ => CreateTestEntry()).ToArray();
-        const int nResults = 2;
+        const int nResults = 1;
         foreach (var ((text, _), entry) in TestTextsAndEmbeddings.Zip(entries))
         {
             await handler.InsertEntryAsync(entry, text, CancellationToken.None);
         }
 
         var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
-            nResults, null, CancellationToken.None);
+            nResults, [], CancellationToken.None);
 
         Assert.Equal(nResults, actual.Count);
         foreach (var similarDocument in actual)
@@ -242,15 +240,16 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         {
             await handler.InsertEntryAsync(entry, text, CancellationToken.None);
         }
+        var testReference = entries.First().Reference;
+        var expectedReferences = entries.Where(entry => entry.FeedId == enabledFeedId).Select(entry => entry.Reference)
+            .Where(reference => reference != testReference);
 
-        var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
-            6, [ disabledFeedId ], CancellationToken.None);
+        var actual =
+            await handler.GetReferenceAndScoreOfSimilarEntriesAsync(testReference, 5, [disabledFeedId],
+                CancellationToken.None);
 
-        Assert.Equal(2, actual.Count);
-        Assert.Equivalent(
-            entries.Where(entry => entry.FeedId == enabledFeedId).Select(entry => entry.Reference),
-            actual.Select(entry => entry.Reference)
-        );
+        Assert.Single(actual);
+        Assert.Equivalent(expectedReferences, actual.Select(entry => entry.Reference));
     }
 
     [Fact]
@@ -264,16 +263,16 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         }
         var disabledGist = new Gist(entries.Last(), TestSummaryAIResponse);
         await handler.EnsureGistHasCorrectMetadataAsync(disabledGist, true, CancellationToken.None);
+        var testReference = entries.First().Reference;
+        var expectedReferences = entries.SkipLast(1).Select(entry => entry.Reference)
+            .Where(reference => reference != testReference);
 
         var actual =
-            await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference, 6, null,
+            await handler.GetReferenceAndScoreOfSimilarEntriesAsync(testReference, 5, [],
                 CancellationToken.None);
 
-        Assert.Equal(2, actual.Count);
-        Assert.Equivalent(
-            entries.SkipLast(1).Select(entry => entry.Reference),
-            actual.Select(entry => entry.Reference)
-        );
+        Assert.Single(actual);
+        Assert.Equivalent(expectedReferences,  actual.Select(entry => entry.Reference));
     }
 
     private ChromaDbHandler CreateChromaDbHandler(string? collectionName = null)
@@ -283,27 +282,4 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
             : _handlerOptions with { GistsCollectionName = collectionName };
         return new ChromaDbHandler(CreateOpenAIHandlerMock(), new HttpClient(), Options.Create(options), null);
     }
-
-    private static IOpenAIHandler CreateOpenAIHandlerMock()
-    {
-        var openAiHandlerMock = Substitute.For<IOpenAIHandler>();
-        foreach (var (text, embedding) in TestTextsAndEmbeddings)
-        {
-            openAiHandlerMock.GenerateEmbeddingAsync(text, Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(embedding));
-        }
-        return openAiHandlerMock;
-    }
-
-    private RssEntry CreateTestEntry() => new(
-        _random.NextString(),
-        _random.Next(),
-        _random.NextString(),
-        _random.NextString(),
-        _random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
-        _random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
-        _random.NextString(),
-        [_random.NextString(), _random.NextString(), _random.NextString()],
-        text => text
-    );
 }
