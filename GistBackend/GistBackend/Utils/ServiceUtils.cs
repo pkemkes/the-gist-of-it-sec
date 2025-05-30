@@ -6,7 +6,7 @@ namespace GistBackend.Utils;
 
 public static class ServiceUtils
 {
-    public static async Task DelayUntilNextExecutionAsync(DateTime startTime, int delayMinutes, ILogger? logger,
+    public static async Task DelayUntilNextExecutionAsync(DateTime startTime, double delayMinutes, ILogger? logger,
         CancellationToken ct, IDateTimeHandler? dateTimeHandler = null)
     {
         var now = dateTimeHandler?.GetUtcNow() ?? DateTime.UtcNow;

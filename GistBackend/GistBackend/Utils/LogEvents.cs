@@ -40,4 +40,9 @@ public static class LogEvents {
     public static readonly EventId NoRecapFound = new(902, nameof(NoRecapFound));
     public static readonly EventId GettingLatestRecapFailed = new(903, nameof(GettingLatestRecapFailed));
     public static readonly EventId ErrorInHttpRequest = new(1000, nameof(ErrorInHttpRequest));
+    public static readonly EventId ChatRegisterCheckFailed = new(1100, nameof(ChatRegisterCheckFailed));
+    public static readonly EventId NoRecentGistFound = new(1101, nameof(NoRecentGistFound));
+    public static readonly EventId ChatRegistered = new(1102, nameof(ChatRegistered));
+    public static readonly EventId ChatUnregistered = new(1103, nameof(ChatUnregistered));
+    public static readonly EventId RegisteringChatFailed = new(1104, nameof(RegisteringChatFailed));
 }

@@ -33,6 +33,8 @@ public interface IMariaDbHandler {
     Task<Gist?> GetGistByIdAsync(int id, CancellationToken ct);
     Task<List<RssFeedInfo>> GetAllFeedInfosAsync(CancellationToken ct);
     Task<Recap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct);
+    Task<bool> IsChatRegisteredAsync(long chatId, CancellationToken ct);
+    Task RegisterChatAsync(long chatId, CancellationToken ct);
 }
 
 public class MariaDbHandler(
@@ -430,6 +432,15 @@ public class MariaDbHandler(
         }
     }
 
+    private static List<string> ParseSearchQuery(string? searchQuery) => string.IsNullOrWhiteSpace(searchQuery)
+        ? []
+        : searchQuery
+            .Split(' ')
+            .Where(word => !string.IsNullOrWhiteSpace(word))
+            .Select(word => word.Trim().ToLowerInvariant())
+            .Select(word => $"%{word}%")
+            .ToList();
+
     private static void AddTagsConstraint(DynamicParameters parameters, List<string> constraints, IEnumerable<string> tags)
     {
         var parsedTags = ParseTags(tags);
@@ -439,6 +450,11 @@ public class MariaDbHandler(
             constraints.Add($"Tags REGEXP @Tags{i}");
         }
     }
+
+    private static List<string> ParseTags(IEnumerable<string> tags) => tags
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .Select(tag => $@"\b{tag}\b")
+        .ToList();
 
     private static void AddDisabledFeedsConstraint(DynamicParameters parameters, List<string> constraints,
         IEnumerable<int> disabledFeeds)
@@ -512,19 +528,60 @@ public class MariaDbHandler(
         }
     }
 
-    private static List<string> ParseSearchQuery(string? searchQuery) => string.IsNullOrWhiteSpace(searchQuery)
-        ? []
-        : searchQuery
-            .Split(' ')
-            .Where(word => !string.IsNullOrWhiteSpace(word))
-            .Select(word => word.Trim().ToLowerInvariant())
-            .Select(word => $"%{word}%")
-            .ToList();
+    public async Task<bool> IsChatRegisteredAsync(long chatId, CancellationToken ct)
+    {
+        const string query = "SELECT * FROM Chats WHERE Id = @ChatId";
+        var command = new CommandDefinition(query, new { ChatId = chatId }, cancellationToken: ct);
 
-    private static List<string> ParseTags(IEnumerable<string> tags) => tags
-        .Where(tag => !string.IsNullOrWhiteSpace(tag))
-        .Select(tag => $@"\b{tag}\b")
-        .ToList();
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var count = await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(logger);
+            if (count > 1)
+            {
+                throw new DatabaseOperationException($"Found multiple chats with the same ID {chatId} in database");
+            }
+            return count > 0;
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(ChatRegisterCheckFailed, e, "Checking if chat is registered failed");
+            throw;
+        }
+    }
+
+    public async Task RegisterChatAsync(long chatId, CancellationToken ct)
+    {
+        const string query = "INSERT INTO Chats (Id, GistIdLastSent) VALUES (@ChatId, @GistIdLastSent)";
+        var mostRecentGist = await GetMostRecentGistAsync(ct);
+        // Default to 0 if no gists are found, so that the first gist will be sent
+        // otherwise set it to 5 less than the most recent gist ID to send the last 5 gists
+        var gistIdLastSent = mostRecentGist?.Id - 5 ?? 0;
+        var command = new CommandDefinition(query, new { ChatId = chatId, GistIdlastSend = gistIdLastSent },
+            cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            logger?.LogInformation(ChatRegistered,
+                "Chat with ID {ChatId} registered with GistIdLastSend {GistIdLastSend}", chatId, gistIdLastSent);
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(RegisteringChatFailed, e,
+                "Registering chat with ID {ChatId} and GistIdLastSend {GistIdLastSend} failed", chatId, gistIdLastSent);
+            throw;
+        }
+    }
+
+    private async Task<Gist?> GetMostRecentGistAsync(CancellationToken ct)
+    {
+        var gists = await GetPreviousGistsAsync(1, null, [], null, [], ct);
+        if (gists.Count != 0) return gists.Single();
+        logger?.LogInformation(NoRecentGistFound, "No recent gist found in database");
+        return null;
+    }
 
     private async Task<MySqlConnection> GetOpenConnectionAsync(CancellationToken ct)
     {

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
 using static GistBackend.Utils.LogEvents;
+using static GistBackend.Utils.ServiceUtils;
 
 namespace GistBackend.Services;
 
@@ -41,7 +42,7 @@ public class GistService(
             {
                 await ProcessFeedsAsync(ct);
             }
-            await ServiceUtils.DelayUntilNextExecutionAsync(startTime, 5, logger, ct);
+            await DelayUntilNextExecutionAsync(startTime, 5, logger, ct);
         }
     }
 
