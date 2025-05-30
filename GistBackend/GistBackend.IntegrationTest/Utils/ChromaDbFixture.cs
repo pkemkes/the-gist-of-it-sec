@@ -36,6 +36,17 @@ public class ChromaDbFixture : IAsyncLifetime
         await _container.StartAsync();
     }
 
-    public async Task DisposeAsync() => await _container.StopAsync();
-    public void Dispose() => _container.StopAsync().GetAwaiter().GetResult();
+    public async Task DisposeAsync()
+    {
+        try
+        {
+            await _container.StopAsync();
+        }
+        finally
+        {
+            await _container.DisposeAsync();
+        }
+    }
+
+    public void Dispose() => DisposeAsync().GetAwaiter().GetResult();
 }

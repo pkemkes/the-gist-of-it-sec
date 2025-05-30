@@ -1,4 +1,6 @@
-namespace GistBackend.Handler;
+using MySqlConnector;
+
+namespace GistBackend.Handler.MariaDbHandler;
 
 public record MariaDbHandlerOptions(
     string Server,
@@ -7,4 +9,13 @@ public record MariaDbHandlerOptions(
     uint Port = 3306
 ) {
     public readonly string Database = "TheGistOfItSec";
+
+    public string GetConnectionString() =>
+        new MySqlConnectionStringBuilder {
+            Server = Server,
+            Port = Port,
+            Database = Database,
+            UserID = User,
+            Password = Password
+        }.ConnectionString;
 };

@@ -16,9 +16,9 @@ using static GistBackend.IntegrationTest.Utils.TestData;
 
 namespace GistBackend.IntegrationTest;
 
-public class GistsControllerTests : IDisposable
+[Collection(nameof(TestsWithoutParallelizationCollection))]
+public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
 {
-    private readonly MariaDbFixture _mariaDbFixture;
     private readonly MariaDbHandler _mariaDbHandler;
     private readonly ChromaDbFixture _chromaDbFixture;
     private readonly IChromaDbHandler _chromaDbHandler;
@@ -30,16 +30,15 @@ public class GistsControllerTests : IDisposable
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public GistsControllerTests()
+    public GistsControllerTests(MariaDbFixture mariaDbFixture)
     {
-        _mariaDbFixture = new MariaDbFixture();
-        _mariaDbFixture.InitializeAsync().GetAwaiter().GetResult();
+        mariaDbFixture.ClearDatabaseAsync().GetAwaiter().GetResult();
 
         var mariaDbHandlerOptions = new MariaDbHandlerOptions(
-            _mariaDbFixture.Hostname,
+            mariaDbFixture.Hostname,
             MariaDbFixture.GistServiceDbUsername,
             MariaDbFixture.GistServiceDbPassword,
-            _mariaDbFixture.ExposedPort
+            mariaDbFixture.ExposedPort
         );
         _mariaDbHandler = new MariaDbHandler(Options.Create(mariaDbHandlerOptions), new DateTimeHandler(), null);
 
@@ -92,7 +91,6 @@ public class GistsControllerTests : IDisposable
     {
         _client.Dispose();
         _factory.Dispose();
-        _mariaDbFixture.Dispose();
         _chromaDbFixture.Dispose();
     }
 
@@ -175,7 +173,7 @@ public class GistsControllerTests : IDisposable
     [Fact]
     public async Task GetSimilarGistsAsync_GistIdNotInDb_NotFound()
     {
-        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/similar/999999999");
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/999999999/similar");
 
         Assert.Equal(System.Net.HttpStatusCode.NotFound, actual.StatusCode);
     }
@@ -194,7 +192,7 @@ public class GistsControllerTests : IDisposable
         var gistId = testGists.First().Id!.Value;
         var expectedGists = testGists.Where(gist => gist.Id != gistId).ToList();
 
-        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/similar/{gistId}");
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/{gistId}/similar");
 
         actual.EnsureSuccessStatusCode();
         var similarGists = await actual.Content.ReadFromJsonAsync<List<SimilarGist>>(_jsonSerializerOptions);
@@ -220,7 +218,7 @@ public class GistsControllerTests : IDisposable
         var parameters = new Dictionary<string, string?> {
             { "disabledFeeds", string.Join(",", [ gistsOfDisabledFeed.First().FeedId, 33, 83, 83 ]) }
         };
-        var uri = QueryHelpers.AddQueryString($"{RoutingConstants.GistsRoute}/similar/{gistId}", parameters);
+        var uri = QueryHelpers.AddQueryString($"{RoutingConstants.GistsRoute}/{gistId}/similar", parameters);
 
         var actual = await _client.GetAsync(uri);
 
@@ -229,5 +227,54 @@ public class GistsControllerTests : IDisposable
         Assert.NotNull(similarGists);
         var gists = similarGists.Select(similarGist => similarGist.Gist);
         Assert.Equivalent(expectedGists, gists);
+    }
+
+    [Fact]
+    public async Task GetSearchResultsAsync_GistIdNotInDb_EmptyList()
+    {
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/999999999/searchResults");
+
+        actual.EnsureSuccessStatusCode();
+        var searchResults = await actual.Content.ReadFromJsonAsync<List<GoogleSearchResult>>(_jsonSerializerOptions);
+        Assert.NotNull(searchResults);
+        Assert.Empty(searchResults);
+    }
+
+    [Fact]
+    public async Task GetSearchResultsAsync_GistIdInDb_SearchResults()
+    {
+        var gist = (await _mariaDbHandler.InsertTestGistsAsync(1)).Single();
+        var expectedSearchResults = await _mariaDbHandler.InsertTestSearchResultsAsync(10, gist.Id!.Value);
+
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/{gist.Id}/searchResults");
+
+        actual.EnsureSuccessStatusCode();
+        var searchResults = await actual.Content.ReadFromJsonAsync<List<GoogleSearchResult>>(_jsonSerializerOptions);
+        Assert.NotNull(searchResults);
+        Assert.Equivalent(expectedSearchResults, searchResults);
+    }
+
+    [Fact]
+    public async Task GetAllFeedsAsync_NoFeedsInDb_EmptyList()
+    {
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/feeds");
+
+        actual.EnsureSuccessStatusCode();
+        var feeds = await actual.Content.ReadFromJsonAsync<List<RssFeedInfo>>(_jsonSerializerOptions);
+        Assert.NotNull(feeds);
+        Assert.Empty(feeds);
+    }
+
+    [Fact]
+    public async Task GetAllFeedsAsync_FeedsInDb_Feeds()
+    {
+        var expectedFeeds = await _mariaDbHandler.InsertTestFeedInfosAsync(5);
+
+        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/feeds");
+
+        actual.EnsureSuccessStatusCode();
+        var feeds = await actual.Content.ReadFromJsonAsync<List<RssFeedInfo>>(_jsonSerializerOptions);
+        Assert.NotNull(feeds);
+        Assert.Equivalent(expectedFeeds, feeds);
     }
 }

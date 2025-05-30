@@ -10,7 +10,7 @@ using static GistBackend.IntegrationTest.Utils.TestData;
 
 namespace GistBackend.IntegrationTest;
 
-public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<MariaDbFixture> {
+public class MariaDbHandlerParallelTests(MariaDbFixture fixture) : IClassFixture<MariaDbFixture> {
     private readonly Random _random = new();
 
     private readonly MariaDbHandlerOptions _gistHandlerOptions = new (
@@ -24,6 +24,13 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
         fixture.Hostname,
         MariaDbFixture.RecapServiceDbUsername,
         MariaDbFixture.RecapServiceDbPassword,
+        fixture.ExposedPort
+    );
+
+    private readonly MariaDbHandlerOptions _cleanupHandlerOptions = new(
+        fixture.Hostname,
+        MariaDbFixture.CleanupServiceDbUsername,
+        MariaDbFixture.CleanupServiceDbPassword,
         fixture.ExposedPort
     );
 
@@ -465,10 +472,11 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
     [Fact]
     public async Task EnsureCorrectDisabledStateForGistAsync_GistIsEnabledAndShouldBeDisabled_FalseAndGistIsDisabled()
     {
-        var handler = CreateGistHandler();
-        var gistId = (await handler.InsertTestGistsAsync(1)).Single().Id!.Value;
+        var gistHandler = CreateGistHandler();
+        var gistId = (await gistHandler.InsertTestGistsAsync(1)).Single().Id!.Value;
+        var cleanupHandler = CreateCleanupHandler();
 
-        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+        var actual = await cleanupHandler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
 
         await GistAsserter.AssertGistIsDisabledAsync(gistId);
         Assert.False(actual);
@@ -477,11 +485,12 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
     [Fact]
     public async Task EnsureCorrectDisabledStateForGistAsync_GistIsDisabledAndShouldBeDisabled_TrueAndGistIsDisabled()
     {
-        var handler = CreateGistHandler();
-        var gistId = (await handler.InsertTestGistsAsync(1)).Single().Id!.Value;
-        await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+        var gistHandler = CreateGistHandler();
+        var gistId = (await gistHandler.InsertTestGistsAsync(1)).Single().Id!.Value;
+        var cleanupHandler = CreateCleanupHandler();
+        await cleanupHandler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
 
-        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+        var actual = await cleanupHandler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
 
         await GistAsserter.AssertGistIsDisabledAsync(gistId);
         Assert.True(actual);
@@ -490,13 +499,14 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
     [Fact]
     public async Task EnsureCorrectDisabledStateForGistAsync_GistIsEnabledAndShouldBeEnabled_TrueAndGistIsEnabled()
     {
-        var handler = CreateGistHandler();
+        var gistHandler = CreateGistHandler();
         var feedInfo = CreateTestFeedInfo();
-        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var feedInfoId = await gistHandler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
         var gistToInsert = CreateTestGist(feedInfoId);
-        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
+        var gistId = await gistHandler.InsertGistAsync(gistToInsert, CancellationToken.None);
+        var cleanupHandler = CreateCleanupHandler();
 
-        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, false, CancellationToken.None);
+        var actual = await cleanupHandler.EnsureCorrectDisabledStateForGistAsync(gistId, false, CancellationToken.None);
 
         await GistAsserter.AssertGistIsEnabledAsync(gistId);
         Assert.True(actual);
@@ -505,14 +515,15 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
     [Fact]
     public async Task EnsureCorrectDisabledStateForGistAsync_GistIsDisabledAndShouldBeEnabled_FalseAndGistIsEnabled()
     {
-        var handler = CreateGistHandler();
+        var gistHandler = CreateGistHandler();
         var feedInfo = CreateTestFeedInfo();
-        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var feedInfoId = await gistHandler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
         var gistToInsert = CreateTestGist(feedInfoId);
-        var gistId = await handler.InsertGistAsync(gistToInsert, CancellationToken.None);
-        await handler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
+        var gistId = await gistHandler.InsertGistAsync(gistToInsert, CancellationToken.None);
+        var cleanupHandler = CreateCleanupHandler();
+        await cleanupHandler.EnsureCorrectDisabledStateForGistAsync(gistId, true, CancellationToken.None);
 
-        var actual = await handler.EnsureCorrectDisabledStateForGistAsync(gistId, false, CancellationToken.None);
+        var actual = await cleanupHandler.EnsureCorrectDisabledStateForGistAsync(gistId, false, CancellationToken.None);
 
         await GistAsserter.AssertGistIsEnabledAsync(gistId);
         Assert.False(actual);
@@ -539,9 +550,16 @@ public class MariaDbHandlerSharedTests(MariaDbFixture fixture) : IClassFixture<M
         Assert.Null(actual);
     }
 
-    private MariaDbHandler CreateGistHandler() =>
-        new(Options.Create(_gistHandlerOptions), new DateTimeHandler(), null);
+    private MariaDbHandler CreateGistHandler(IDateTimeHandler? dateTimeHandler = null) =>
+        CreateMariaDbHandler(_gistHandlerOptions, dateTimeHandler);
 
     private MariaDbHandler CreateRecapHandler(IDateTimeHandler? dateTimeHandler = null) =>
-        new(Options.Create(_recapHandlerOptions), dateTimeHandler ?? new DateTimeHandler(), null);
+        CreateMariaDbHandler(_recapHandlerOptions, dateTimeHandler);
+
+    private MariaDbHandler CreateCleanupHandler(IDateTimeHandler? dateTimeHandler = null) =>
+        CreateMariaDbHandler(_cleanupHandlerOptions, dateTimeHandler);
+
+    private static MariaDbHandler
+        CreateMariaDbHandler(MariaDbHandlerOptions options, IDateTimeHandler? dateTimeHandler) =>
+        new(Options.Create(options), dateTimeHandler ?? new DateTimeHandler(), null);
 }

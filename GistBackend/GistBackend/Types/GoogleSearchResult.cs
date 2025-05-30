@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace GistBackend.Types;
 
+[method: JsonConstructor]
 public record GoogleSearchResult(
     int GistId,
     string Title,

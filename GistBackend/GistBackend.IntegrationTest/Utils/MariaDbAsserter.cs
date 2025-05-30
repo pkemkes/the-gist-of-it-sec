@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Dapper;
 using GistBackend.Handler;
+using GistBackend.Handler.MariaDbHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using MySqlConnector;

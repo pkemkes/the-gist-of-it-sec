@@ -31,6 +31,8 @@ public interface IMariaDbHandler {
     Task<List<Gist>> GetPreviousGistsAsync(int take, int? lastGistId, IEnumerable<string> tags, string? searchQuery,
         IEnumerable<int> disabledFeeds, CancellationToken ct);
     Task<Gist?> GetGistByIdAsync(int id, CancellationToken ct);
+    Task<List<RssFeedInfo>> GetAllFeedInfosAsync(CancellationToken ct);
+    Task<Recap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct);
 }
 
 public class MariaDbHandler(
@@ -38,13 +40,7 @@ public class MariaDbHandler(
     IDateTimeHandler dateTimeHandler,
     ILogger<MariaDbHandler>? logger) : IMariaDbHandler
 {
-    private readonly string _connectionString = new MySqlConnectionStringBuilder {
-        Server = options.Value.Server,
-        Port = options.Value.Port,
-        Database = options.Value.Database,
-        UserID = options.Value.User,
-        Password = options.Value.Password
-    }.ConnectionString;
+    private readonly string _connectionString = options.Value.GetConnectionString();
 
     public async Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(string rssUrl, CancellationToken ct)
     {
@@ -172,7 +168,7 @@ public class MariaDbHandler(
     public async Task<List<GoogleSearchResult>> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct)
     {
         const string query = """
-            SELECT Title, Snippet, Url, DisplayUrl, ThumbnailUrl, GistId FROM SearchResults
+            SELECT GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl, Id FROM SearchResults
                 WHERE GistId = @GistId;
         """;
         var command = new CommandDefinition(query, new { GistId = gistId }, cancellationToken: ct);
@@ -418,26 +414,6 @@ public class MariaDbHandler(
         }
     }
 
-    public async Task<Gist?> GetGistByIdAsync(int id, CancellationToken ct)
-    {
-        const string query = """
-            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
-            FROM Gists WHERE Id = @Id
-        """;
-        var command = new CommandDefinition(query, new { Id = id }, cancellationToken: ct);
-
-        try
-        {
-            await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.QuerySingleOrDefaultAsync<Gist>(command).WithDeadlockRetry(logger);
-        }
-        catch (MySqlException e)
-        {
-            logger?.LogError(GettingGistByReferenceFailed, e, "Getting gist by ID failed");
-            throw;
-        }
-    }
-
     private static void AddLastGistIdConstraint(List<string> constraints, DynamicParameters parameters, int? lastGistId)
     {
         constraints.Add("Id < @LastGistId");
@@ -471,6 +447,70 @@ public class MariaDbHandler(
         constraints.Add("FeedId NOT IN @DisabledFeeds");
     }
 
+    public async Task<Gist?> GetGistByIdAsync(int id, CancellationToken ct)
+    {
+        const string query = """
+            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
+            FROM Gists WHERE Id = @Id
+        """;
+        var command = new CommandDefinition(query, new { Id = id }, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return await connection.QuerySingleOrDefaultAsync<Gist>(command).WithDeadlockRetry(logger);
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(GettingGistByReferenceFailed, e, "Getting gist by ID failed");
+            throw;
+        }
+    }
+
+    public async Task<List<RssFeedInfo>> GetAllFeedInfosAsync(CancellationToken ct)
+    {
+        const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds";
+        var command = new CommandDefinition(query, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return (await connection.QueryAsync<RssFeedInfo>(command).WithDeadlockRetry(logger)).ToList();
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(GettingAllFeedInfosFailed, e, "Getting all feed infos failed");
+            throw;
+        }
+    }
+
+    public async Task<Recap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct)
+    {
+        var query = $"SELECT Created, Recap, Id FROM Recaps{recapType.ToTypeString()} ORDER BY Created DESC LIMIT 1";
+        var command = new CommandDefinition(query, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var serializedRecap = await connection.QuerySingleOrDefaultAsync<SerializedRecap>(command)
+                .WithDeadlockRetry(logger);
+            if (serializedRecap is null)
+            {
+                logger?.LogInformation(NoRecapFound, "No {RecapType} recap found in database",
+                    recapType.ToTypeString());
+                return null;
+            }
+            var categoryRecaps = JsonSerializer.Deserialize<IEnumerable<CategoryRecap>>(serializedRecap.Recap,
+                SerializerDefaults.JsonOptions);
+            return new Recap(serializedRecap.Created, categoryRecaps!);
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(GettingLatestRecapFailed, e, "Getting latest {RecapType} recap failed",
+                recapType.ToTypeString());
+            throw;
+        }
+    }
 
     private static List<string> ParseSearchQuery(string? searchQuery) => string.IsNullOrWhiteSpace(searchQuery)
         ? []

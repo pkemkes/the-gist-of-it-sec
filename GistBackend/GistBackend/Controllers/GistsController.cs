@@ -63,7 +63,7 @@ public class GistsController(
         }
     }
 
-    [HttpGet("similar/{id:int}")]
+    [HttpGet("{id:int}/similar")]
     public async Task<IActionResult> GetSimilarGistsAsync(int id, [FromQuery] string? disabledFeeds = null,
         CancellationToken ct = default)
     {
@@ -96,6 +96,59 @@ public class GistsController(
                 $"Similar gist with reference {similarDocument.Reference} not found in database");
         }
         return new SimilarGist(gist, similarDocument.Similarity);
+    }
+
+    [HttpGet("{id:int}/searchResults")]
+    public async Task<IActionResult> GetSearchResultsAsync(int id, CancellationToken ct)
+    {
+        try
+        {
+            var searchResults = await mariaDbHandler.GetSearchResultsByGistIdAsync(id, ct);
+            return Ok(searchResults);
+        }
+        catch (Exception e)
+        {
+            const string message = "Could not get search results for gist from the database";
+            logger?.LogError(ErrorInHttpRequest, e, message);
+            return Problem(message);
+        }
+    }
+
+    [HttpGet("feeds")]
+    public async Task<IActionResult> GetAllFeedsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var feeds = await mariaDbHandler.GetAllFeedInfosAsync(ct);
+            return Ok(feeds);
+        }
+        catch (Exception e)
+        {
+            const string message = "Could not get all feeds from the database";
+            logger?.LogError(ErrorInHttpRequest, e, message);
+            return Problem(message);
+        }
+    }
+
+    [HttpGet("recap/daily")]
+    public Task<IActionResult> GetDailyRecapAsync(CancellationToken ct) => GetRecapAsync(RecapType.Daily, ct);
+
+    [HttpGet("recap/weekly")]
+    public Task<IActionResult> GetWeeklyRecapAsync(CancellationToken ct) => GetRecapAsync(RecapType.Weekly, ct);
+
+    private async Task<IActionResult> GetRecapAsync(RecapType type, CancellationToken ct)
+    {
+        try
+        {
+            var recap = await mariaDbHandler.GetLatestRecapAsync(type, ct);
+            return Ok(recap);
+        }
+        catch (Exception e)
+        {
+            const string message = "Could not get recap from the database";
+            logger?.LogError(ErrorInHttpRequest, e, message);
+            return Problem(message);
+        }
     }
 
     private static List<string> ParseTags(string? tags) => string.IsNullOrWhiteSpace(tags)
