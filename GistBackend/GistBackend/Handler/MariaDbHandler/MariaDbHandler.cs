@@ -35,6 +35,9 @@ public interface IMariaDbHandler {
     Task<Recap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct);
     Task<bool> IsChatRegisteredAsync(long chatId, CancellationToken ct);
     Task RegisterChatAsync(long chatId, CancellationToken ct);
+    Task DeregisterChatAsync(long chatId, CancellationToken ct);
+    Task<List<Chat>> GetAllChatsAsync(CancellationToken ct);
+    Task<List<Gist>> GetNextGistsAsync(int lastGistId, CancellationToken ct);
 }
 
 public class MariaDbHandler(
@@ -581,6 +584,59 @@ public class MariaDbHandler(
         if (gists.Count != 0) return gists.Single();
         logger?.LogInformation(NoRecentGistFound, "No recent gist found in database");
         return null;
+    }
+
+    public async Task DeregisterChatAsync(long chatId, CancellationToken ct)
+    {
+        const string query = "DELETE FROM Chats WHERE Id = @ChatId";
+        var command = new CommandDefinition(query, new { ChatId = chatId }, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            switch (rowsAffected)
+            {
+                case 0:
+                    logger?.LogWarning(ChatToDeregisterNotFound, "No chat with ID {ChatId} found to deregister",
+                        chatId);
+                    break;
+                case > 1:
+                    logger?.LogError(ChatDeregisteredMultipleTimes,
+                        "Deregistered multiple chats with the same ID {ChatId}", chatId);
+                    throw new DatabaseOperationException($"Deregistered multiple chats with the same ID {chatId}");
+                default:
+                    logger?.LogInformation(ChatDeregistered, "Chat with ID {ChatId} deregistered", chatId);
+                    break;
+            }
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(DeregisteringChatFailed, e, "Deregistering chat with ID {ChatId} failed", chatId);
+            throw;
+        }
+    }
+
+    public async Task<List<Chat>> GetAllChatsAsync(CancellationToken ct)
+    {
+        const string query = "SELECT Id, GistIdLastSent FROM Chats";
+        var command = new CommandDefinition(query, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return (await connection.QueryAsync<Chat>(command).WithDeadlockRetry(logger)).ToList();
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(GettingAllChatsFailed, e, "Getting all chats failed");
+            throw;
+        }
+    }
+
+    public async Task<List<Gist>> GetNextGistsAsync(int lastGistId, CancellationToken ct)
+    {
+
     }
 
     private async Task<MySqlConnection> GetOpenConnectionAsync(CancellationToken ct)

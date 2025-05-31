@@ -36,8 +36,7 @@ CREATE INDEX IF NOT EXISTS GistsByUpdated ON Gists(Updated);
 
 CREATE TABLE IF NOT EXISTS Chats (
     Id INT PRIMARY KEY,
-    GistIdLastSent INT,
-    FOREIGN KEY (GistIdLastSent) REFERENCES Gists(Id)
+    GistIdLastSent INT
 );
 
 CREATE TABLE IF NOT EXISTS SearchResults (

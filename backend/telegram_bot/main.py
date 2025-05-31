@@ -1,4 +1,4 @@
-import asyncio
+erimport asyncio
 from prometheus_async.aio.web import start_http_server
 from prometheus_client import Gauge
 from time import time
