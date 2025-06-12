@@ -1,4 +1,4 @@
-namespace GistBackend.Handler.ChromaDbHandler;
+namespace GistBackend.Handlers.ChromaDbHandler;
 
 public record ChromaDbHandlerOptions(
     string Server,

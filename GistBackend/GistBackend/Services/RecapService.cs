@@ -1,6 +1,6 @@
-using GistBackend.Handler;
-using GistBackend.Handler.MariaDbHandler;
-using GistBackend.Handler.OpenAiHandler;
+using GistBackend.Handlers;
+using GistBackend.Handlers.MariaDbHandler;
+using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

@@ -1,8 +1,8 @@
-using GistBackend.Handler;
-using GistBackend.Handler.ChromaDbHandler;
-using GistBackend.Handler.GoogleSearchHandler;
-using GistBackend.Handler.MariaDbHandler;
-using GistBackend.Handler.OpenAiHandler;
+using GistBackend.Handlers;
+using GistBackend.Handlers.ChromaDbHandler;
+using GistBackend.Handlers.GoogleSearchHandler;
+using GistBackend.Handlers.MariaDbHandler;
+using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Services;
 using GistBackend.Types;
 using Microsoft.Extensions.Logging;

@@ -1,6 +1,6 @@
 using System.Text.Json;
 using GistBackend.Exceptions;
-using GistBackend.Handler.OpenAiHandler;
+using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using NSubstitute;

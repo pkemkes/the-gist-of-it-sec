@@ -1,4 +1,4 @@
-using GistBackend.Handler.MariaDbHandler;
+using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Types;
 using static GistBackend.IntegrationTest.Utils.TestData;
 
@@ -6,6 +6,8 @@ namespace GistBackend.IntegrationTest.Utils;
 
 public static class MariaDbHandlerTestExtensions
 {
+    private static readonly Random Random = new();
+
     public static async Task<List<RssFeedInfo>> InsertTestFeedInfosAsync(this IMariaDbHandler handler, int count)
     {
         var feedInfos = Enumerable.Range(0, count).Select(_ => CreateTestFeedInfo()).ToList();
@@ -32,5 +34,15 @@ public static class MariaDbHandlerTestExtensions
         var searchResults = Enumerable.Range(0, count).Select(_ => CreateTestSearchResult(gistId)).ToList();
         await handler.InsertSearchResultsAsync(searchResults, CancellationToken.None);
         return await handler.GetSearchResultsByGistIdAsync(gistId, CancellationToken.None);
+    }
+
+    public static async Task<List<Chat>> InsertTestChatsAsync(this IMariaDbHandler handler, int count)
+    {
+        var gistLastSent =
+            (await handler.GetPreviousGistsAsync(1, null, [], null, [], CancellationToken.None)).FirstOrDefault();
+        var chats = Enumerable.Range(0, count)
+            .Select(_ => new Chat(Random.NextInt64(), gistLastSent?.Id!.Value - 5 ?? 0)).ToList();
+        foreach (var chat in chats) await handler.RegisterChatAsync(chat.Id, CancellationToken.None);
+        return chats;
     }
 }

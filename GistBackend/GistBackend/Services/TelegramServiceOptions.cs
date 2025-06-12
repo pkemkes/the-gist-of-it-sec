@@ -1,5 +1,3 @@
 namespace GistBackend.Services;
 
-public record TelegramServiceOptions(
-    string BotToken
-);
+public record TelegramServiceOptions(string AppBaseUrl);

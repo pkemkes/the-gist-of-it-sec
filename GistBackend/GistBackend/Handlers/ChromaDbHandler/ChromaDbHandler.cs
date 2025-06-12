@@ -2,14 +2,14 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using GistBackend.Exceptions;
-using GistBackend.Handler.OpenAiHandler;
+using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using static GistBackend.Utils.LogEvents;
 
-namespace GistBackend.Handler.ChromaDbHandler;
+namespace GistBackend.Handlers.ChromaDbHandler;
 
 public interface IChromaDbHandler {
     Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);

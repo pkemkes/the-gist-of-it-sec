@@ -1,6 +1,6 @@
 using MySqlConnector;
 
-namespace GistBackend.Handler.MariaDbHandler;
+namespace GistBackend.Handlers.MariaDbHandler;
 
 public record MariaDbHandlerOptions(
     string Server,

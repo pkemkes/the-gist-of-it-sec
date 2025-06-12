@@ -1,6 +1,6 @@
 using GistBackend.Types;
 
-namespace GistBackend.Handler;
+namespace GistBackend.Handlers;
 
 public interface IRssFeedHandler
 {

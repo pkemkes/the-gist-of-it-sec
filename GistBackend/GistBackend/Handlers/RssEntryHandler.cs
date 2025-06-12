@@ -1,7 +1,7 @@
 using GistBackend.Types;
 using Microsoft.Extensions.Logging;
 
-namespace GistBackend.Handler;
+namespace GistBackend.Handlers;
 
 public interface IRssEntryHandler {
     public Task<string> FetchTextContentAsync(RssEntry entry, CancellationToken ct);

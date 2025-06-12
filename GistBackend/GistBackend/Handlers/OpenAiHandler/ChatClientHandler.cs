@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Chat;
 
-namespace GistBackend.Handler.OpenAiHandler;
+namespace GistBackend.Handlers.OpenAiHandler;
 
 public interface IChatClientHandler
 {

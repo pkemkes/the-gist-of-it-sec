@@ -1,6 +1,6 @@
 using System.Net;
 using GistBackend.Exceptions;
-using GistBackend.Handler.GoogleSearchHandler;
+using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Types;
 using GistBackend.UnitTest.Utils;
 using Google;

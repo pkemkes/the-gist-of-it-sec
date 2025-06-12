@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS GistsByReference ON Gists(Reference);
 CREATE INDEX IF NOT EXISTS GistsByUpdated ON Gists(Updated);
 
 CREATE TABLE IF NOT EXISTS Chats (
-    Id INT PRIMARY KEY,
+    Id BIGINT PRIMARY KEY,
     GistIdLastSent INT
 );
 

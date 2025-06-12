@@ -46,9 +46,12 @@ public static class LogEvents {
     public static readonly EventId ChatDeregistered = new(1103, nameof(ChatDeregistered));
     public static readonly EventId RegisteringChatFailed = new(1104, nameof(RegisteringChatFailed));
     public static readonly EventId DeregisteringChatFailed = new(1105, nameof(DeregisteringChatFailed));
-    public static readonly EventId ChatToDeregisterNotFound = new(1106, nameof(ChatToDeregisterNotFound));
-    public static readonly EventId ChatDeregisteredMultipleTimes = new(1107, nameof(ChatDeregisteredMultipleTimes));
     public static readonly EventId SentTelegramMessage = new(1108, nameof(SentTelegramMessage));
     public static readonly EventId UnexpectedTelegramError = new(1109, nameof(UnexpectedTelegramError));
     public static readonly EventId GettingAllChatsFailed = new(1110, nameof(GettingAllChatsFailed));
+    public static readonly EventId GettingNextFiveGistsFailed = new(1111, nameof(GettingNextFiveGistsFailed));
+    public static readonly EventId GettingFeedInfoByIdFailed = new(1112, nameof(GettingFeedInfoByIdFailed));
+    public static readonly EventId SendingGistToChatFailed = new(1113, nameof(SendingGistToChatFailed));
+    public static readonly EventId SettingGistIdLastSentFailed = new(1114, nameof(SettingGistIdLastSentFailed));
+    public static readonly EventId FeedInfoNotFound = new(1115, nameof(FeedInfoNotFound));
 }

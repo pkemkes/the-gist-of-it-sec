@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using GistBackend.Handler.ChromaDbHandler;
+using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Utils;
 
 namespace GistBackend.IntegrationTest.Utils;

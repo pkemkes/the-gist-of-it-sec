@@ -1,4 +1,4 @@
-namespace GistBackend.Handler.GoogleSearchHandler;
+namespace GistBackend.Handlers.GoogleSearchHandler;
 
 public record CustomSearchApiHandlerOptions(
     string ApiKey,

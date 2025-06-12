@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
 using static GistBackend.Utils.LogEvents;
 
-namespace GistBackend.Handler.OpenAiHandler;
+namespace GistBackend.Handlers.OpenAiHandler;
 
 public interface IOpenAIHandler {
     public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct);

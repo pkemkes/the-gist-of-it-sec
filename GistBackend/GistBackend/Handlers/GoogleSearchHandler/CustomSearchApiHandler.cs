@@ -3,7 +3,7 @@ using Google.Apis.CustomSearchAPI.v1.Data;
 using Google.Apis.Services;
 using Microsoft.Extensions.Options;
 
-namespace GistBackend.Handler.GoogleSearchHandler;
+namespace GistBackend.Handlers.GoogleSearchHandler;
 
 public interface ICustomSearchApiHandler
 {

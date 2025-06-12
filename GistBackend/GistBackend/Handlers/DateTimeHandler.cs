@@ -1,4 +1,4 @@
-namespace GistBackend.Handler;
+namespace GistBackend.Handlers;
 
 public interface IDateTimeHandler
 {

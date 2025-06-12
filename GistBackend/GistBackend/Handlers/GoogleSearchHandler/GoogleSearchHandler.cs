@@ -6,7 +6,7 @@ using Google.Apis.CustomSearchAPI.v1.Data;
 using Microsoft.Extensions.Logging;
 using static GistBackend.Utils.LogEvents;
 
-namespace GistBackend.Handler.GoogleSearchHandler;
+namespace GistBackend.Handlers.GoogleSearchHandler;
 
 public interface IGoogleSearchHandler {
     public Task<List<GoogleSearchResult>?> GetSearchResultsAsync(string searchQuery, int gistId,

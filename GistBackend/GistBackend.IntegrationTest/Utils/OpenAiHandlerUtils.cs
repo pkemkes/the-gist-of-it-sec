@@ -1,4 +1,4 @@
-using GistBackend.Handler.OpenAiHandler;
+using GistBackend.Handlers.OpenAiHandler;
 using NSubstitute;
 using static GistBackend.IntegrationTest.Utils.TestData;
 

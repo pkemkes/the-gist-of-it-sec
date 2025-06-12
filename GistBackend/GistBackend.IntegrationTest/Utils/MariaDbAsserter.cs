@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Dapper;
-using GistBackend.Handler;
-using GistBackend.Handler.MariaDbHandler;
+using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using MySqlConnector;
@@ -97,6 +96,22 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         var actual = await connection.QuerySingleAsync<bool>(command);
 
         Assert.Equal(expected, actual);
+    }
+
+    public async Task AssertChatIsInDbAsync(long expectedChatId, int? expectedGistIdLastSent = null)
+        => Assert.Equal(1, await GetCountOfRegisteredChatsAsync(expectedChatId, expectedGistIdLastSent));
+
+    public async Task AssertChatIsNotInDbAsync(long chatId)
+        => Assert.Equal(0, await GetCountOfRegisteredChatsAsync(chatId));
+
+    private async Task<int> GetCountOfRegisteredChatsAsync(long chatId, int? gistIdLastSent = null)
+    {
+        var query = "SELECT COUNT(*) FROM Chats WHERE Id = @ChatId";
+        if (gistIdLastSent.HasValue) query += " AND GistIdLastSent = @GistIdLastSent";
+        var command = new CommandDefinition(query, new { ChatId = chatId, GistIdLastSent = gistIdLastSent });
+
+        await using var connection = await GetOpenConnectionAsync();
+        return await connection.ExecuteScalarAsync<int>(command);
     }
 
     private async Task<MySqlConnection> GetOpenConnectionAsync()

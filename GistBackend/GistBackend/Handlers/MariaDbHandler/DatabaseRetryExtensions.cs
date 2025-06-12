@@ -3,7 +3,7 @@ using MySqlConnector;
 using Polly;
 using static GistBackend.Utils.LogEvents;
 
-namespace GistBackend.Handler.MariaDbHandler;
+namespace GistBackend.Handlers.MariaDbHandler;
 
 public static class DatabaseRetryExtensions
 {

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Embeddings;
 
-namespace GistBackend.Handler.OpenAiHandler;
+namespace GistBackend.Handlers.OpenAiHandler;
 
 public interface IEmbeddingClientHandler
 {

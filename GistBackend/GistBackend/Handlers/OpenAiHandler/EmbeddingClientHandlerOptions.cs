@@ -1,4 +1,4 @@
-namespace GistBackend.Handler.OpenAiHandler;
+namespace GistBackend.Handlers.OpenAiHandler;
 
 public record EmbeddingClientHandlerOptions(
     string ApiKey,

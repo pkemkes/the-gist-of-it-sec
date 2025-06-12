@@ -1,7 +1,7 @@
 using GistBackend.Exceptions;
-using GistBackend.Handler;
-using GistBackend.Handler.ChromaDbHandler;
-using GistBackend.Handler.MariaDbHandler;
+using GistBackend.Handlers;
+using GistBackend.Handlers.ChromaDbHandler;
+using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;

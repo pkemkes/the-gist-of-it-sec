@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using GistBackend.Controllers;
-using GistBackend.Handler;
-using GistBackend.Handler.ChromaDbHandler;
-using GistBackend.Handler.MariaDbHandler;
+using GistBackend.Handlers;
+using GistBackend.Handlers.ChromaDbHandler;
+using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
 using Microsoft.AspNetCore.Mvc.Testing;

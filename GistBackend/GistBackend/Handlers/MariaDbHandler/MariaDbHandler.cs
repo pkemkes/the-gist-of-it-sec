@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 using MySqlConnector;
 using static GistBackend.Utils.LogEvents;
 
-namespace GistBackend.Handler.MariaDbHandler;
+namespace GistBackend.Handlers.MariaDbHandler;
 
 public interface IMariaDbHandler {
     Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(string rssUrl, CancellationToken ct);
@@ -37,7 +37,9 @@ public interface IMariaDbHandler {
     Task RegisterChatAsync(long chatId, CancellationToken ct);
     Task DeregisterChatAsync(long chatId, CancellationToken ct);
     Task<List<Chat>> GetAllChatsAsync(CancellationToken ct);
-    Task<List<Gist>> GetNextGistsAsync(int lastGistId, CancellationToken ct);
+    Task<List<Gist>> GetNextFiveGistsAsync(int lastGistId, CancellationToken ct);
+    Task<RssFeedInfo> GetFeedInfoByIdAsync(int feedId, CancellationToken ct);
+    Task SetGistIdLastSentForChatAsync(long chatId, int gistId, CancellationToken ct);
 }
 
 public class MariaDbHandler(
@@ -533,7 +535,7 @@ public class MariaDbHandler(
 
     public async Task<bool> IsChatRegisteredAsync(long chatId, CancellationToken ct)
     {
-        const string query = "SELECT * FROM Chats WHERE Id = @ChatId";
+        const string query = "SELECT COUNT(Id) FROM Chats WHERE Id = @ChatId";
         var command = new CommandDefinition(query, new { ChatId = chatId }, cancellationToken: ct);
 
         try
@@ -560,7 +562,7 @@ public class MariaDbHandler(
         // Default to 0 if no gists are found, so that the first gist will be sent
         // otherwise set it to 5 less than the most recent gist ID to send the last 5 gists
         var gistIdLastSent = mostRecentGist?.Id - 5 ?? 0;
-        var command = new CommandDefinition(query, new { ChatId = chatId, GistIdlastSend = gistIdLastSent },
+        var command = new CommandDefinition(query, new { ChatId = chatId, GistIdLastSent = gistIdLastSent },
             cancellationToken: ct);
 
         try
@@ -598,12 +600,8 @@ public class MariaDbHandler(
             switch (rowsAffected)
             {
                 case 0:
-                    logger?.LogWarning(ChatToDeregisterNotFound, "No chat with ID {ChatId} found to deregister",
-                        chatId);
-                    break;
+                    throw new DatabaseOperationException($"No chat with ID {chatId} found to deregister");
                 case > 1:
-                    logger?.LogError(ChatDeregisteredMultipleTimes,
-                        "Deregistered multiple chats with the same ID {ChatId}", chatId);
                     throw new DatabaseOperationException($"Deregistered multiple chats with the same ID {chatId}");
                 default:
                     logger?.LogInformation(ChatDeregistered, "Chat with ID {ChatId} deregistered", chatId);
@@ -634,9 +632,67 @@ public class MariaDbHandler(
         }
     }
 
-    public async Task<List<Gist>> GetNextGistsAsync(int lastGistId, CancellationToken ct)
+    public async Task<List<Gist>> GetNextFiveGistsAsync(int lastGistId, CancellationToken ct)
     {
+        const string query = """
+            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
+            FROM Gists WHERE Id > @LastGistId AND Disabled IS FALSE ORDER BY Id ASC LIMIT 5
+        """;
+        var command = new CommandDefinition(query, new { LastGistId = lastGistId }, cancellationToken: ct);
 
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(logger)).ToList();
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(GettingNextFiveGistsFailed, e, "Getting next gists with lastGistId {LastGistId} failed",
+                lastGistId);
+            throw;
+        }
+    }
+
+    public async Task<RssFeedInfo> GetFeedInfoByIdAsync(int feedId, CancellationToken ct)
+    {
+        const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds WHERE Id = @FeedId";
+        var command = new CommandDefinition(query, new { FeedId = feedId }, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var feedInfo = await connection.QuerySingleOrDefaultAsync<RssFeedInfo>(command).WithDeadlockRetry(logger);
+            if (feedInfo is not null) return feedInfo;
+            logger?.LogInformation(FeedInfoNotFound, "No feed info found for ID {FeedId}", feedId);
+            throw new DatabaseOperationException($"No feed info found for ID {feedId}");
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(GettingFeedInfoByIdFailed, e, "Getting feed info by ID {FeedId} failed", feedId);
+            throw;
+        }
+    }
+
+    public async Task SetGistIdLastSentForChatAsync(long chatId, int gistId, CancellationToken ct)
+    {
+        const string query = "UPDATE Chats SET GistIdLastSent = @GistIdLastSent WHERE Id = @ChatId";
+        var command = new CommandDefinition(query, new { GistIdLastSent = gistId, ChatId = chatId },
+            cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            if (rowsAffected != 1)
+                throw new DatabaseOperationException(
+                    $"Did not successfully set GistIdLastSent for Chat {chatId} to {gistId}");
+        }
+        catch (MySqlException e)
+        {
+            logger?.LogError(SettingGistIdLastSentFailed, e,
+                "Setting GistIdLastSent for chat with ID {ChatId} to {GistId} failed", chatId, gistId);
+            throw;
+        }
     }
 
     private async Task<MySqlConnection> GetOpenConnectionAsync(CancellationToken ct)

@@ -1,7 +1,8 @@
-using GistBackend.Handler.ChromaDbHandler;
-using GistBackend.Handler.MariaDbHandler;
+using GistBackend.Handlers.ChromaDbHandler;
+using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Types;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using static GistBackend.Utils.LogEvents;
 
@@ -15,7 +16,7 @@ public static class RoutingConstants
 [ApiController]
 [Route(RoutingConstants.GistsRoute)]
 public class GistsController(
-    IMariaDbHandler mariaDbHandler,
+    [FromKeyedServices(StartUp.GistsControllerMariaDbHandlerOptionsName)] IMariaDbHandler mariaDbHandler,
     IChromaDbHandler chromaDbHandler,
     ILogger<GistsController>? logger) : ControllerBase
 {

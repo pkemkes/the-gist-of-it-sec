@@ -4,7 +4,7 @@ using Polly.Retry;
 using static Polly.Policy;
 using IHttpClientFactory = System.Net.Http.IHttpClientFactory;
 
-namespace GistBackend.Handler.GoogleSearchHandler;
+namespace GistBackend.Handlers.GoogleSearchHandler;
 
 public class RetryingHttpClientFactory(IHttpClientFactory httpClientFactory) : HttpClientFactory
 {

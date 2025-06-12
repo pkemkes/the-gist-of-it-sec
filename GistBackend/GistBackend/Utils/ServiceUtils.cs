@@ -1,4 +1,4 @@
-using GistBackend.Handler;
+using GistBackend.Handlers;
 using Microsoft.Extensions.Logging;
 using static GistBackend.Utils.LogEvents;
 

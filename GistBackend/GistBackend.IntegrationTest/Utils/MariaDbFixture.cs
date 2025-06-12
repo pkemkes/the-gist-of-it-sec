@@ -2,7 +2,7 @@ using Dapper;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Images;
-using GistBackend.Handler.MariaDbHandler;
+using GistBackend.Handlers.MariaDbHandler;
 using MySqlConnector;
 
 namespace GistBackend.IntegrationTest.Utils;
@@ -16,6 +16,8 @@ public class MariaDbFixture : IAsyncLifetime {
     public const string CleanupServiceDbPassword = "cleanup_service_pass";
     public const string GistsControllerDbUsername = "gists_controller_user";
     public const string GistsControllerDbPassword = "gists_controller_pass";
+    public const string TelegramServiceDbUsername = "telegram_service_user";
+    public const string TelegramServiceDbPassword = "telegram_service_pass";
 
     private readonly IFutureDockerImage _image;
     private readonly IContainer _container;
@@ -44,6 +46,8 @@ public class MariaDbFixture : IAsyncLifetime {
             .WithEnvironment("DB_CLEANUPSERVICE_PASSWORD", CleanupServiceDbPassword)
             .WithEnvironment("DB_GISTSCONTROLLER_USERNAME", GistsControllerDbUsername)
             .WithEnvironment("DB_GISTSCONTROLLER_PASSWORD", GistsControllerDbPassword)
+            .WithEnvironment("DB_TELEGRAMSERVICE_USERNAME", TelegramServiceDbUsername)
+            .WithEnvironment("DB_TELEGRAMSERVICE_PASSWORD", TelegramServiceDbPassword)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(3306)
                 .UntilCommandIsCompleted($"mariadb -u{RootUser} -p{RootPassword} -e 'SELECT 1'"))
             .Build();
