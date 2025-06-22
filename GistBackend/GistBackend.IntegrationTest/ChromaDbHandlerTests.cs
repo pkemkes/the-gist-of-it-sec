@@ -218,7 +218,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
             nResults, [], CancellationToken.None);
 
-        Assert.Equal(nResults, actual.Count);
+        Assert.Single(actual);
         foreach (var similarDocument in actual)
         {
             Assert.Contains(similarDocument.Reference, entries.Select(entry => entry.Reference));

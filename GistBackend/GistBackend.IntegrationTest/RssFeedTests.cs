@@ -9,6 +9,8 @@ public class RssFeedTests : IAsyncLifetime {
         .WithImage("nginx:latest")
         .WithPortBinding(80, true)
         .WithResourceMapping(new DirectoryInfo("testData"), "/usr/share/nginx/html/")
+        .WithWaitStrategy(Wait.ForUnixContainer()
+            .UntilHttpRequestIsSucceeded(r => r.ForPort(80).ForPath("/test_atom.xml")))
         .Build();
 
     private string GetBaseUrl() => $"http://{_container.Hostname}:{_container.GetMappedPublicPort(80)}/";

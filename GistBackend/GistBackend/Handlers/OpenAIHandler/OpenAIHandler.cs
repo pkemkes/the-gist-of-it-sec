@@ -182,6 +182,6 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         var assembly = Assembly.GetAssembly(typeof(OpenAIHandler)) ?? throw new Exception("Could not get assembly");
         var directory = Path.GetDirectoryName(assembly.Location)
                         ?? throw new Exception("Could not get directory of assembly");
-        return Path.Combine(directory, "Handler", "OpenAIHandler", "Resources", directoryName, fileName);
+        return Path.Combine(directory, "Handlers", "OpenAIHandler", "Resources", directoryName, fileName);
     }
 }

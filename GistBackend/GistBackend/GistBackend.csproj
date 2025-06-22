@@ -24,21 +24,21 @@
     <PackageReference Include="System.ServiceModel.Syndication" Version="9.0.2" />
     <PackageReference Include="Telegram.Bot" Version="22.5.1" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <None Update="Handler/OpenAiHandler/Resources/**/*">
+    <None Update="Handlers/OpenAIHandler/Resources/**/*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Handler\OpenAiHandler\Resources\Summary\ResponseSchema.json">
+    <None Update="Handlers/OpenAIHandler/Resources/Summary/ResponseSchema.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Handler\OpenAiHandler\Resources\Summary\SystemMessage.txt">
+    <None Update="Handlers/OpenAIHandler/Resources/Summary/SystemMessage.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Handler\OpenAiHandler\Resources\Summary\Tags.json">
+    <None Update="Handlers/OpenAIHandler/Resources/Summary/Tags.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Handler\OpenAiHandler\Resources\Summary\UserMessage.txt">
+    <None Update="Handlers/OpenAIHandler/Resources/Summary/UserMessage.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

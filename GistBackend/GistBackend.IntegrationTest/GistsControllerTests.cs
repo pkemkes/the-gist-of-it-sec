@@ -59,8 +59,8 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
                 builder.ConfigureTestServices(services =>
                 {
                     // Remove existing IMariaDbHandler registration
-                    var mariaDbHandlerDescriptor =
-                        services.SingleOrDefault(d => d.ServiceType == typeof(IMariaDbHandler));
+                    var mariaDbHandlerDescriptor = services.SingleOrDefault(d =>
+                        d.ServiceKey?.Equals(StartUp.GistsControllerMariaDbHandlerOptionsName) == true);
                     if (mariaDbHandlerDescriptor != null) services.Remove(mariaDbHandlerDescriptor);
 
                     // Remove any hosted services that use IOptionsSnapshot<MariaDbHandlerOptions>
@@ -72,7 +72,8 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
                     }
 
                     // Register test mariaDbHandler
-                    services.AddTransient<IMariaDbHandler>(_ => _mariaDbHandler);
+                    services.AddKeyedTransient<IMariaDbHandler>(StartUp.GistsControllerMariaDbHandlerOptionsName,
+                        (_, _) => _mariaDbHandler);
 
                     // Remove existing IChromaDbHandler registration
                     var chromaDbHandlerDescriptor =

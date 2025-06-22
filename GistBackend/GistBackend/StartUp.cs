@@ -62,6 +62,7 @@ public class StartUp(IConfiguration configuration)
         services.AddTransient<IGoogleSearchHandler, GoogleSearchHandler>();
         services.AddTransient<IGistDebouncer, GistDebouncer>();
         services.AddTransient<ITelegramBotClientHandler, TelegramBotClientHandler>();
+        services.AddTransient<IDateTimeHandler, DateTimeHandler>();
 
         services.AddControllers();
 
