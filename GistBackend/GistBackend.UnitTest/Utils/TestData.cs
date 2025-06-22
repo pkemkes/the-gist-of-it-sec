@@ -6,14 +6,14 @@ public static class TestData
 {
     public static readonly List<RssEntry> TestRssEntries = [
         new (
-            "test reference",
+            "first test reference",
             1,
-            "test author",
-            "test title",
+            "first test author",
+            "first test title",
             DateTime.UnixEpoch,
             DateTime.UnixEpoch,
-            "test url",
-            [ "test category" ],
+            "first test url",
+            [ "first test category" ],
             content => content
         ),
         new (
@@ -30,23 +30,23 @@ public static class TestData
     ];
 
     public static readonly List<RssFeed> TestRssFeeds = [
-        new("test url", content => content) {
+        new("first test feed url", content => content) {
             Id = 1,
-            Title = "test title",
-            Language = "test language",
+            Title = "first test feed title",
+            Language = "first test feed language",
             Entries = TestRssEntries
         },
-        new("another test url", content => content) {
+        new("another test feed url", content => content) {
             Id = 2,
-            Title = "another test title",
-            Language = "another test language"
+            Title = "another test feed title",
+            Language = "another test feed language"
         }
     ];
 
-    public static readonly List<string> TestTexts = [ "test text", "another test text" ];
+    public static readonly List<string> TestTexts = [ "first test text", "another test text" ];
 
     public static readonly List<SummaryAIResponse> TestAIResponses = [
-        new("test summary", [ "test tag", "second tag" ], "test search query"),
+        new("first test summary", [ "first test tag", "first second tag" ], "first test search query"),
         new("another test summary", [ "another test tag", "another second tag" ], "another test search query")
     ];
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using static GistBackend.UnitTest.Utils.TestData;
 using Chat = GistBackend.Types.Chat;
 using TelegramChat = Telegram.Bot.Types.Chat;
 
@@ -167,6 +168,34 @@ public class TelegramServiceTests
             .SendMessageAsync(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<ParseMode>());
         await mariaDbHandlerMock.DidNotReceive()
             .SetGistIdLastSentForChatAsync(Arg.Any<long>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MultipleRegisteredChats_SendsMessagesToAll()
+    {
+        List<Chat> chats = [ new(1, 0), new(2, 0), new(3, 0) ];
+        var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
+        mariaDbHandlerMock.GetAllChatsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(chats));
+        mariaDbHandlerMock.GetNextFiveGistsAsync(0, Arg.Any<CancellationToken>()).Returns(Task.FromResult(TestGists));
+        mariaDbHandlerMock.GetFeedInfoByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(TestRssFeeds.First().ToRssFeedInfo()));
+        var telegramBotClientHandlerMock = Substitute.For<ITelegramBotClientHandler>();
+        var telegramService = CreateTelegramService(mariaDbHandlerMock, telegramBotClientHandlerMock);
+
+        await telegramService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        foreach (var chat in chats)
+        {
+            foreach (var gist in TestGists)
+            {
+                await telegramBotClientHandlerMock.Received(1)
+                    .SendMessageAsync(chat.Id, Arg.Is<string>(s => s.Contains(gist.Title)), ParseMode.Html);
+                await mariaDbHandlerMock.Received(1)
+                    .SetGistIdLastSentForChatAsync(chat.Id, gist.Id!.Value, Arg.Any<CancellationToken>());
+            }
+        }
     }
 
     private static TestableTelegramService CreateTelegramService(
