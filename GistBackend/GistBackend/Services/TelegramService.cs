@@ -20,7 +20,7 @@ public class TelegramService(
     ILogger<TelegramService>? logger = null
 ) : BackgroundService
 {
-    private CancellationToken? _serviceCancellationToken;
+    protected CancellationToken? _serviceCancellationToken;
     private static readonly BotCommand StartCommand = new("start", "Register to receive messages");
     private static readonly BotCommand StopCommand = new("stop", "Unregister to stop receiving messages");
     private static readonly List<BotCommand> Commands = [StartCommand, StopCommand];
@@ -38,7 +38,7 @@ public class TelegramService(
         }
     }
 
-    private async Task OnMessageAsync(Message message, UpdateType updateType)
+    protected async Task OnMessageAsync(Message message, UpdateType updateType)
     {
         if (message.Type != MessageType.Text || message.Text is null)
             return;
@@ -72,11 +72,13 @@ public class TelegramService(
             await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
                 "You are already registered. I will continue to send you gists. Happy reading!");
         }
-
-        await mariaDbHandler.RegisterChatAsync(message.Chat.Id, _serviceCancellationToken!.Value);
-        await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
-            "Welcome to The Gist of IT Sec! I registered your chat. " +
-            "I will regularly send you gists of the freshest news of selected outlets.");
+        else
+        {
+            await mariaDbHandler.RegisterChatAsync(message.Chat.Id, _serviceCancellationToken!.Value);
+            await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
+                "Welcome to The Gist of IT Sec! I registered your chat. " +
+                "I will regularly send you gists of the freshest news of selected outlets.");
+        }
     }
 
     private async Task HandleStopCommandAsync(Message message)
@@ -94,7 +96,7 @@ public class TelegramService(
         }
     }
 
-    private Task OnErrorAsync(Exception exception, HandleErrorSource source)
+    protected Task OnErrorAsync(Exception exception, HandleErrorSource source)
     {
         logger?.LogError(UnexpectedTelegramError, exception, "An error occurred in the Telegram service: {Source}",
             source);
