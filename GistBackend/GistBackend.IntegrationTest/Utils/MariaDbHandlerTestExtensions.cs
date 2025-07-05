@@ -1,6 +1,6 @@
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Types;
-using static GistBackend.IntegrationTest.Utils.TestData;
+using static TestUtilities.TestData;
 
 namespace GistBackend.IntegrationTest.Utils;
 

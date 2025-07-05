@@ -4,7 +4,7 @@ using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
 using Microsoft.Extensions.Options;
 using static GistBackend.IntegrationTest.Utils.OpenAiHandlerUtils;
-using static GistBackend.IntegrationTest.Utils.TestData;
+using static TestUtilities.TestData;
 
 namespace GistBackend.IntegrationTest;
 

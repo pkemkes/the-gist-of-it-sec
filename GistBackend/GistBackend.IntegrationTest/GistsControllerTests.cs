@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using static GistBackend.IntegrationTest.Utils.TestData;
+using static TestUtilities.TestData;
 
 namespace GistBackend.IntegrationTest;
 

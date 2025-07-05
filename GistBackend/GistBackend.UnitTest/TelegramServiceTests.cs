@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using static GistBackend.UnitTest.Utils.TestData;
+using static TestUtilities.TestData;
 using Chat = GistBackend.Types.Chat;
 using TelegramChat = Telegram.Bot.Types.Chat;
 
@@ -174,12 +174,13 @@ public class TelegramServiceTests
     public async Task ExecuteAsync_MultipleRegisteredChats_SendsMessagesToAll()
     {
         List<Chat> chats = [ new(1, 0), new(2, 0), new(3, 0) ];
+        var gists = CreateTestGists(5);
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
         mariaDbHandlerMock.GetAllChatsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(chats));
-        mariaDbHandlerMock.GetNextFiveGistsAsync(0, Arg.Any<CancellationToken>()).Returns(Task.FromResult(TestGists));
+        mariaDbHandlerMock.GetNextFiveGistsAsync(0, Arg.Any<CancellationToken>()).Returns(Task.FromResult(gists));
         mariaDbHandlerMock.GetFeedInfoByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(TestRssFeeds.First().ToRssFeedInfo()));
+            .Returns(Task.FromResult(CreateTestFeedInfo()));
         var telegramBotClientHandlerMock = Substitute.For<ITelegramBotClientHandler>();
         var telegramService = CreateTelegramService(mariaDbHandlerMock, telegramBotClientHandlerMock);
 
@@ -188,7 +189,7 @@ public class TelegramServiceTests
 
         foreach (var chat in chats)
         {
-            foreach (var gist in TestGists)
+            foreach (var gist in gists)
             {
                 await telegramBotClientHandlerMock.Received(1)
                     .SendMessageAsync(chat.Id, Arg.Is<string>(s => s.Contains(gist.Title)), ParseMode.Html);
@@ -197,6 +198,12 @@ public class TelegramServiceTests
             }
         }
     }
+
+    // [Fact]
+    // public async Task ExecuteAsync_MoreThanFiveNewGists_OnlyFiveNewestAreSent()
+    // {
+    //
+    // }
 
     private static TestableTelegramService CreateTelegramService(
         IMariaDbHandler? mariaDbHandler = null,

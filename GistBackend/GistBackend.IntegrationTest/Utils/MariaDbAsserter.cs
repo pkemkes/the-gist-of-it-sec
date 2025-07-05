@@ -28,7 +28,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
 
         Assert.Single(feedInfosInDb);
         var actualFeedInfo = feedInfosInDb.Single();
-        expectedFeedInfo.Id ??= actualFeedInfo.Id;
+        expectedFeedInfo.Id = actualFeedInfo.Id;
         Assert.Equal(expectedFeedInfo, actualFeedInfo);
     }
 
@@ -45,7 +45,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
 
         Assert.Single(gistsInDb);
         var actualGist = gistsInDb.Single();
-        expectedGist.Id ??= actualGist.Id;
+        expectedGist.Id = actualGist.Id;
         Assert.Equal(expectedGist, actualGist);
     }
 
