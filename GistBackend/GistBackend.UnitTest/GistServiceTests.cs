@@ -41,14 +41,12 @@ public class GistServiceTests
     {
         var oldFeed = CreateTestRssFeed();
         var newFeed = CreateTestRssFeed() with { Id = oldFeed.Id };
-        var rssFeedHandlerMock = Substitute.For<IRssFeedHandler>();
-        rssFeedHandlerMock.Definitions.Returns([ newFeed ]);
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
         mariaDbHandlerMock
             .GetFeedInfoByRssUrlAsync(newFeed.RssUrl, Arg.Any<CancellationToken>())!
             .Returns(Task.FromResult(oldFeed.ToRssFeedInfo()));
         var gistService = CreateGistService(
-            rssFeedHandlerMock: rssFeedHandlerMock,
+            testRssFeeds: [ newFeed ],
             mariaDbHandlerMock: mariaDbHandlerMock
         );
 
@@ -58,193 +56,193 @@ public class GistServiceTests
         await mariaDbHandlerMock.Received(1).UpdateFeedInfoAsync(newFeed.ToRssFeedInfo(), Arg.Any<CancellationToken>());
     }
 
-    // [Fact]
-    // public async Task StartAsync_TwoTestEntriesInFeed_EntriesProcessedFromOldestToNewest()
-    // {
-    //     var testRssEntries = CreateTestEntries(5);
-    //     var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
-    //     var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock, testRssEntries: testRssEntries);
-    //
-    //     await gistService.StartAsync(CancellationToken.None);
-    //     await Task.Delay(TimeSpan.FromSeconds(2));
-    //
-    //     var orderedEntries = testRssEntries.OrderBy(entry => entry.Updated).ToArray();
-    //     Received.InOrder(async () => {
-    //         foreach (var entry in orderedEntries)
-    //             await mariaDbHandlerMock.GetGistByReferenceAsync(entry.Reference, Arg.Any<CancellationToken>());
-    //     });
-    // }
-    //
-    // [Fact]
-    // public async Task StartAsync_TwoTestEntriesReversedInFeed_EntriesProcessedFromOldestToNewest()
-    // {
-    //     var testRssEntries = CreateTestEntries(5);
-    //     var rssFeedHandlerMock = Substitute.For<IRssFeedHandler>();
-    //     var reversedEntries = testRssEntries.OrderBy(entry => entry.Updated).Reverse();
-    //     var rssFeeds = new List<RssFeed> { CreateTestRssFeed() with { Entries = reversedEntries } };
-    //     rssFeedHandlerMock.Definitions.Returns(rssFeeds);
-    //     var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
-    //     var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock);
-    //
-    //     await gistService.StartAsync(CancellationToken.None);
-    //     await Task.Delay(TimeSpan.FromSeconds(2));
-    //
-    //     var orderedEntries = testRssEntries.OrderBy(entry => entry.Updated).ToArray();
-    //     Received.InOrder(async () => {
-    //         foreach (var entry in orderedEntries)
-    //             await mariaDbHandlerMock.GetGistByReferenceAsync(entry.Reference, Arg.Any<CancellationToken>());
-    //     });
-    // }
-    //
-    // [Fact]
-    // public async Task StartAsync_EntryAlreadyExistInDbButSearchResultsAreNotForOneGist_SearchResultIsRequestedAndInsertedForGist()
-    // {
-    //     var testGists = CreateTestGists(5);
-    //     var testSearchResults = testGists.Select(gist => CreateTestSearchResults(10, gist.Id!.Value)).ToList();
-    //     var gistWithoutSearchResults = CreateTestGist();
-    //     var missingSearchResults = CreateTestSearchResults(10, gistWithoutSearchResults.Id!.Value);
-    //     var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
-    //     testGists.ForEach(gist =>
-    //         mariaDbHandlerMock.GetGistByReferenceAsync(gist.Reference, Arg.Any<CancellationToken>())!
-    //             .Returns(Task.FromResult(gist))
-    //     );
-    //     foreach (var (gist, searchResults) in testGists.Zip(testSearchResults))
-    //     {
-    //         mariaDbHandlerMock
-    //             .GetSearchResultsByGistIdAsync(gist.Id!.Value, Arg.Any<CancellationToken>())
-    //             .Returns(Task.FromResult(searchResults));
-    //     }
-    //     mariaDbHandlerMock
-    //         .GetSearchResultsByGistIdAsync(gistWithoutSearchResults.Id!.Value, Arg.Any<CancellationToken>())
-    //         .Returns(Task.FromResult(new List<GoogleSearchResult>()));
-    //     var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
-    //     googleSearchHandlerMock
-    //         .GetSearchResultsAsync(testGists.Last().SearchQuery, testGists.Last().Id!.Value,
-    //             Arg.Any<CancellationToken>())!.Returns(Task.FromResult(missingSearchResults));
-    //     var gistService = CreateGistService(
-    //         mariaDbHandlerMock: mariaDbHandlerMock,
-    //         googleSearchHandlerMock: googleSearchHandlerMock
-    //     );
-    //
-    //     await gistService.StartAsync(CancellationToken.None);
-    //     await Task.Delay(TimeSpan.FromSeconds(2));
-    //
-    //     await googleSearchHandlerMock.Received()
-    //         .GetSearchResultsAsync(gistWithoutSearchResults.SearchQuery, gistWithoutSearchResults.Id!.Value,
-    //             Arg.Any<CancellationToken>());
-    //     await mariaDbHandlerMock.Received()
-    //         .InsertSearchResultsAsync(missingSearchResults, Arg.Any<CancellationToken>());
-    // }
-    //
-    // [Fact]
-    // public async Task StartAsync_EntryAndSearchResultAlreadyExistInDb_SearchResultIsNeitherRequestedNorInserted()
-    // {
-    //     var testGists = CreateTestGists(5);
-    //     var testSearchResults = testGists.Select(gist => CreateTestSearchResults(10, gist.Id!.Value)).ToList();
-    //     var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
-    //     testGists.ForEach(gist =>
-    //         mariaDbHandlerMock.GetGistByReferenceAsync(gist.Reference, Arg.Any<CancellationToken>())!
-    //             .Returns(Task.FromResult(gist))
-    //     );
-    //     foreach (var (gist, searchResults) in testGists.Zip(testSearchResults))
-    //     {
-    //         mariaDbHandlerMock
-    //             .GetSearchResultsByGistIdAsync(gist.Id!.Value, Arg.Any<CancellationToken>())
-    //             .Returns(Task.FromResult(searchResults));
-    //     }
-    //     var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
-    //     var gistService = CreateGistService(
-    //         mariaDbHandlerMock: mariaDbHandlerMock,
-    //         googleSearchHandlerMock: googleSearchHandlerMock
-    //     );
-    //
-    //     await gistService.StartAsync(CancellationToken.None);
-    //     await Task.Delay(TimeSpan.FromSeconds(2));
-    //
-    //     await googleSearchHandlerMock.DidNotReceive()
-    //         .GetSearchResultsAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
-    //     await mariaDbHandlerMock.DidNotReceive()
-    //         .InsertSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
-    // }
-    //
-    // [Fact]
-    // public async Task StartAsync_OldVersionOfGistExists_GistIsGeneratedAndInserted()
-    // {
-    //     var testRssEntries = CreateTestEntries(5);
-    //     var testTexts = CreateTestStrings(testRssEntries.Count);
-    //     var testGists = CreateTestGists(testRssEntries.Count);
-    //     var testSearchResults = testGists.Select(gist => CreateTestSearchResults(10, gist.Id!.Value)).ToList();
-    //     var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
-    //     testGists.ForEach(gist =>
-    //         mariaDbHandlerMock.GetGistByReferenceAsync(gist.Reference, Arg.Any<CancellationToken>())!
-    //             .Returns(Task.FromResult(gist with { Updated = gist.Updated.AddDays(-5)}))
-    //     );
-    //     var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
-    //     var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
-    //     foreach (var (gist, searchResults) in testGists.Zip(testSearchResults))
-    //     {
-    //         googleSearchHandlerMock.GetSearchResultsAsync(gist.SearchQuery, gist.Id!.Value,
-    //             Arg.Any<CancellationToken>())!.Returns(Task.FromResult(searchResults));
-    //     }
-    //     var gistService = CreateGistService(
-    //         mariaDbHandlerMock: mariaDbHandlerMock,
-    //         chromaDbHandlerMock: chromaDbHandlerMock,
-    //         googleSearchHandlerMock: googleSearchHandlerMock,
-    //         testRssEntries: testRssEntries
-    //     );
-    //
-    //     await gistService.StartAsync(CancellationToken.None);
-    //     await Task.Delay(TimeSpan.FromSeconds(2));
-    //
-    //     foreach (var (entry, text) in testRssEntries.Zip(testTexts))
-    //         await chromaDbHandlerMock.Received(1).InsertEntryAsync(entry, text, Arg.Any<CancellationToken>());
-    //     await Task.WhenAll(testGists.Select(gist =>
-    //         mariaDbHandlerMock.Received(1).UpdateGistAsync(gist with { Id = null }, Arg.Any<CancellationToken>())));
-    //     await Task.WhenAll(testSearchResults.Select(searchResults =>
-    //         mariaDbHandlerMock.UpdateSearchResultsAsync(searchResults, Arg.Any<CancellationToken>())));
-    //     await mariaDbHandlerMock.DidNotReceive().InsertGistAsync(Arg.Any<Gist>(), Arg.Any<CancellationToken>());
-    //     await mariaDbHandlerMock.DidNotReceive()
-    //         .InsertSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
-    // }
-    //
-    // [Fact]
-    // public async Task StartAsync_GistDoesNotExist_GistIsGeneratedAndInserted()
-    // {
-    //     var testGists = CreateTestGists(5);
-    //     var testSearchResults = testGists.Select(gist => CreateTestSearchResults(10, gist.Id!.Value)).ToList();
-    //     var testRssEntries = CreateTestEntries(testGists.Count);
-    //     var testTexts = CreateTestStrings(testRssEntries.Count);
-    //     var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
-    //     var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
-    //     var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
-    //     foreach (var (gist, searchResults) in testGists.Zip(testSearchResults))
-    //     {
-    //         googleSearchHandlerMock.GetSearchResultsAsync(gist.SearchQuery, gist.Id!.Value,
-    //             Arg.Any<CancellationToken>())!.Returns(Task.FromResult(searchResults));
-    //     }
-    //     var gistService = CreateGistService(
-    //         mariaDbHandlerMock: mariaDbHandlerMock,
-    //         chromaDbHandlerMock: chromaDbHandlerMock,
-    //         googleSearchHandlerMock: googleSearchHandlerMock,
-    //         testRssEntries: testRssEntries,
-    //         testTexts: testTexts
-    //     );
-    //
-    //     await gistService.StartAsync(CancellationToken.None);
-    //     await Task.Delay(TimeSpan.FromSeconds(2));
-    //
-    //     foreach (var (entry, text) in testRssEntries.Zip(testTexts))
-    //     {
-    //         await chromaDbHandlerMock.Received(1).InsertEntryAsync(entry, text, Arg.Any<CancellationToken>());
-    //     }
-    //     await Task.WhenAll(testGists.Select(gist =>
-    //         mariaDbHandlerMock.Received(1).InsertGistAsync(gist with { Id = null }, Arg.Any<CancellationToken>())));
-    //     await Task.WhenAll(testSearchResults.Select(searchResults =>
-    //         mariaDbHandlerMock.InsertSearchResultsAsync(searchResults, Arg.Any<CancellationToken>())));
-    //     await mariaDbHandlerMock.DidNotReceive().UpdateGistAsync(Arg.Any<Gist>(), Arg.Any<CancellationToken>());
-    //     await mariaDbHandlerMock.DidNotReceive()
-    //         .UpdateSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
-    // }
+    [Fact]
+    public async Task StartAsync_TwoTestEntriesInFeed_EntriesProcessedFromOldestToNewest()
+    {
+        var testRssFeed = CreateTestRssFeed() with {
+            Entries = CreateTestEntries(5).OrderByDescending(entry => entry.Updated)
+        };
+        var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
+        var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock, testRssFeeds: [ testRssFeed ]);
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        var orderedEntries = testRssFeed.Entries.OrderBy(entry => entry.Updated).ToArray();
+        Received.InOrder(async () => {
+            foreach (var entry in orderedEntries)
+                await mariaDbHandlerMock.GetGistByReferenceAsync(entry.Reference, Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public async Task StartAsync_EntryAlreadyExistInDbButSearchResultsDoNotForSomeGists_SearchResultsAreRequestedAndInserted()
+    {
+        var rssFeed = CreateTestRssFeed();
+        var gists =
+            rssFeed.Entries.Select(entry => CreateTestGist(entry.FeedId, entry.Reference, entry.Updated)).ToList();
+        var gistsWithSearchResults = gists.Skip(2).ToList();
+        var gistsWithoutSearchResults = gists.Take(2).ToList();
+        var searchResults = gists.Select(gist => CreateTestSearchResults(10, gist.Id!.Value)).ToList();
+        var existingSearchResults = searchResults.Skip(2).ToList();
+        var missingSearchResults = searchResults.Take(2).ToList();
+        var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
+        gists.ForEach(gist =>
+            mariaDbHandlerMock.GetGistByReferenceAsync(gist.Reference, Arg.Any<CancellationToken>())!.Returns(
+                Task.FromResult(gist))
+        );
+        foreach (var (gist, searchResult) in gistsWithSearchResults.Zip(existingSearchResults))
+        {
+            mariaDbHandlerMock
+                .GetSearchResultsByGistIdAsync(gist.Id!.Value, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(searchResult));
+        }
+        var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
+        foreach (var (gist, searchResult) in gistsWithoutSearchResults.Zip(missingSearchResults))
+        {
+            mariaDbHandlerMock
+                .GetSearchResultsByGistIdAsync(gist.Id!.Value, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(new List<GoogleSearchResult>()));
+            googleSearchHandlerMock
+                .GetSearchResultsAsync(gist.SearchQuery, gist.Id!.Value,
+                    Arg.Any<CancellationToken>())!.Returns(Task.FromResult(searchResult));
+        }
+        var gistService = CreateGistService(
+            testRssFeeds: [rssFeed],
+            mariaDbHandlerMock: mariaDbHandlerMock,
+            googleSearchHandlerMock: googleSearchHandlerMock
+        );
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        foreach (var searchResult in missingSearchResults)
+            await mariaDbHandlerMock.Received(1).InsertSearchResultsAsync(searchResult, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartAsync_EntryAndSearchResultAlreadyExistInDb_SearchResultIsNeitherRequestedNorInserted()
+    {
+        var rssFeed = CreateTestRssFeed();
+        var gists =
+            rssFeed.Entries.Select(entry => CreateTestGist(entry.FeedId, entry.Reference, entry.Updated)).ToList();
+        var testSearchResults = gists.Select(gist => CreateTestSearchResults(10, gist.Id!.Value)).ToList();
+        var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
+        gists.ForEach(gist =>
+            mariaDbHandlerMock.GetGistByReferenceAsync(gist.Reference, Arg.Any<CancellationToken>())!
+                .Returns(Task.FromResult(gist))
+        );
+        foreach (var (gist, searchResults) in gists.Zip(testSearchResults))
+        {
+            mariaDbHandlerMock
+                .GetSearchResultsByGistIdAsync(gist.Id!.Value, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(searchResults));
+        }
+        var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
+        var gistService = CreateGistService(
+            testRssFeeds: [rssFeed],
+            mariaDbHandlerMock: mariaDbHandlerMock,
+            googleSearchHandlerMock: googleSearchHandlerMock
+        );
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        await googleSearchHandlerMock.DidNotReceive()
+            .GetSearchResultsAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        await mariaDbHandlerMock.DidNotReceive()
+            .InsertSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartAsync_OldVersionOfGistsExist_GistsAreGeneratedAndUpdated()
+    {
+        var rssFeed = CreateTestRssFeed();
+        var gists =
+            rssFeed.Entries.Select(entry => CreateTestGist(entry.FeedId, entry.Reference, entry.Updated)).ToList();
+        var testSearchResults = gists.Select(gist => CreateTestSearchResults(10, gist.Id!.Value)).ToList();
+        var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
+        gists.ForEach(gist =>
+            mariaDbHandlerMock.GetGistByReferenceAsync(gist.Reference, Arg.Any<CancellationToken>())!
+                .Returns(Task.FromResult(gist with { Updated = gist.Updated.AddDays(-5)}))
+        );
+        var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
+        var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
+        foreach (var (gist, searchResults) in gists.Zip(testSearchResults))
+        {
+            googleSearchHandlerMock.GetSearchResultsAsync(gist.SearchQuery, gist.Id!.Value,
+                Arg.Any<CancellationToken>())!.Returns(Task.FromResult(searchResults));
+        }
+        var gistService = CreateGistService(
+            testRssFeeds: [rssFeed],
+            mariaDbHandlerMock: mariaDbHandlerMock,
+            chromaDbHandlerMock: chromaDbHandlerMock,
+            googleSearchHandlerMock: googleSearchHandlerMock
+        );
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        await Task.WhenAll(rssFeed.Entries.Select(entry =>
+            chromaDbHandlerMock.Received(1).InsertEntryAsync(entry, Arg.Any<string>(), Arg.Any<CancellationToken>())));
+        await Task.WhenAll(rssFeed.Entries.Select(entry =>
+            mariaDbHandlerMock.Received(1)
+                .UpdateGistAsync(
+                    Arg.Is<Gist>(gist => gist.Reference == entry.Reference && gist.Updated == entry.Updated),
+                    Arg.Any<CancellationToken>())));
+        await Task.WhenAll(testSearchResults.Select(searchResults =>
+            mariaDbHandlerMock.UpdateSearchResultsAsync(searchResults, Arg.Any<CancellationToken>())));
+        await mariaDbHandlerMock.DidNotReceive().InsertGistAsync(Arg.Any<Gist>(), Arg.Any<CancellationToken>());
+        await mariaDbHandlerMock.DidNotReceive()
+            .InsertSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartAsync_GistDoesNotExist_GistIsGeneratedAndInserted()
+    {
+        var rssFeed = CreateTestRssFeed();
+        var searchResults = rssFeed.Entries.Select(_ => CreateTestSearchResults(10)).ToList();
+        var texts = CreateTestStrings(rssFeed.Entries.Count());
+        var aiResponses = CreateTestSummaryAIResponses(rssFeed.Entries.Count());
+        var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
+        var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
+        var googleSearchHandlerMock = Substitute.For<IGoogleSearchHandler>();
+        foreach (var (aiResponse, searchResult) in aiResponses.Zip(searchResults))
+        {
+            googleSearchHandlerMock.GetSearchResultsAsync(aiResponse.SearchQuery, Arg.Any<int>(),
+                Arg.Any<CancellationToken>())!.Returns(callInfo =>
+                Task.FromResult(
+                    searchResult.Select(result => result with { GistId = callInfo.ArgAt<int>(1) }).ToList()
+                ));
+        }
+        var gistService = CreateGistService(
+            mariaDbHandlerMock: mariaDbHandlerMock,
+            chromaDbHandlerMock: chromaDbHandlerMock,
+            googleSearchHandlerMock: googleSearchHandlerMock,
+            testRssFeeds: [rssFeed],
+            testTexts: texts,
+            testAIResponses: aiResponses
+        );
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        foreach (var (entry, text) in rssFeed.Entries.Zip(texts))
+        {
+            await chromaDbHandlerMock.Received(1).InsertEntryAsync(entry, text, Arg.Any<CancellationToken>());
+        }
+
+        await Task.WhenAll(rssFeed.Entries.Select(entry =>
+            mariaDbHandlerMock.Received(1)
+                .InsertGistAsync(
+                    Arg.Is<Gist>(gist => gist.Reference == entry.Reference && gist.Updated == entry.Updated),
+                    Arg.Any<CancellationToken>())));
+        await Task.WhenAll(searchResults.Select(searchResult =>
+            mariaDbHandlerMock.InsertSearchResultsAsync(searchResult, Arg.Any<CancellationToken>())));
+        await mariaDbHandlerMock.DidNotReceive().UpdateGistAsync(Arg.Any<Gist>(), Arg.Any<CancellationToken>());
+        await mariaDbHandlerMock.DidNotReceive()
+            .UpdateSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
+    }
 
     private static GistService CreateGistService(
         IRssFeedHandler? rssFeedHandlerMock = null,
@@ -282,11 +280,13 @@ public class GistServiceTests
         {
             openAIHandlerMock = Substitute.For<IOpenAIHandler>();
             var textIndex = 0;
-            foreach (var rssFeed in testRssFeeds)
+            foreach (var entry in testRssFeeds.SelectMany(rssFeed => rssFeed.Entries))
             {
-                rssFeed.Entries.ToList().ForEach(entry => openAIHandlerMock
-                    .GenerateSummaryTagsAndQueryAsync(entry.Title, testTexts[textIndex++], Arg.Any<CancellationToken>())
-                    .Returns(Task.FromResult(testAIResponses[textIndex++])));
+                openAIHandlerMock
+                    .GenerateSummaryTagsAndQueryAsync(entry.Title, testTexts[textIndex],
+                        Arg.Any<CancellationToken>())
+                    .Returns(Task.FromResult(testAIResponses[textIndex]));
+                textIndex += 1;
             }
         }
         return new GistService(

@@ -245,7 +245,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var handler = CreateGistHandler();
         var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
         var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
-        var searchResultsToInsert = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        var searchResultsToInsert = Enumerable.Repeat(gistId, 3).Select(id => CreateTestSearchResult(id)).ToList();
 
         await handler.InsertSearchResultsAsync(searchResultsToInsert, CancellationToken.None);
 
@@ -258,9 +258,9 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var handler = CreateGistHandler();
         var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
         var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
-        var existingSearchResults = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        var existingSearchResults = Enumerable.Repeat(gistId, 3).Select(id => CreateTestSearchResult(id)).ToList();
         await handler.InsertSearchResultsAsync(existingSearchResults, CancellationToken.None);
-        var searchResultsToInsert = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        var searchResultsToInsert = Enumerable.Repeat(gistId, 3).Select(id => CreateTestSearchResult(id)).ToList();
 
         await handler.InsertSearchResultsAsync(searchResultsToInsert, CancellationToken.None);
 
@@ -274,9 +274,9 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var handler = CreateGistHandler();
         var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
         var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
-        var existingSearchResults = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        var existingSearchResults = Enumerable.Repeat(gistId, 3).Select(id => CreateTestSearchResult(id)).ToList();
         await handler.InsertSearchResultsAsync(existingSearchResults, CancellationToken.None);
-        var searchResultsToUpdate = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        var searchResultsToUpdate = Enumerable.Repeat(gistId, 3).Select(id => CreateTestSearchResult(id)).ToList();
 
         await handler.InsertSearchResultsAsync(searchResultsToUpdate, CancellationToken.None);
 
@@ -289,7 +289,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var handler = CreateGistHandler();
         var feedInfoId = await handler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
         var gistId = await handler.InsertGistAsync(CreateTestGist(feedInfoId), CancellationToken.None);
-        var searchResultsToUpdate = Enumerable.Repeat(gistId, 3).Select(CreateTestSearchResult).ToArray();
+        var searchResultsToUpdate = Enumerable.Repeat(gistId, 3).Select(id => CreateTestSearchResult(id)).ToList();
 
         await Assert.ThrowsAsync<DatabaseOperationException>(() =>
             handler.UpdateSearchResultsAsync(searchResultsToUpdate, CancellationToken.None));

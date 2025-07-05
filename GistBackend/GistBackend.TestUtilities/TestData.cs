@@ -7,25 +7,29 @@ public static class TestData
 {
     private static readonly Random Random = new();
 
-    public static RssFeed CreateTestRssFeed() => new(Random.NextString(), s => s) {
-        Id = Random.Next(),
-        Title = Random.NextString(),
-        Language = Random.NextString(),
-        Entries = CreateTestEntries(5)
-    };
+    public static RssFeed CreateTestRssFeed()
+    {
+        var feedId = Random.Next();
+        return new RssFeed(Random.NextString(), s => s) {
+            Id = feedId,
+            Title = Random.NextString(),
+            Language = Random.NextString(),
+            Entries = CreateTestEntries(5, feedId)
+        };
+    }
+
+    public static RssFeedInfo CreateTestFeedInfo() => CreateTestRssFeed().ToRssFeedInfo();
 
     public static List<RssFeed> CreateTestRssFeeds(int count) =>
         Enumerable.Range(0, count).Select(_ => CreateTestRssFeed()).ToList();
 
-    public static RssFeedInfo CreateTestFeedInfo() => CreateTestRssFeed().ToRssFeedInfo();
-
-    public static Gist CreateTestGist(int? feedId = null) => new(
-        Random.NextString(),
+    public static Gist CreateTestGist(int? feedId = null, string? reference = null, DateTime? updated = null) => new(
+        reference ?? Random.NextString(),
         feedId ?? Random.Next(),
         Random.NextString(),
         Random.NextString(),
         Random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
-        Random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
+        updated ?? Random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
         Random.NextString(),
         Random.NextString(),
         string.Join(";;", Random.NextArrayOfStrings()),
@@ -36,8 +40,8 @@ public static class TestData
     public static List<Gist> CreateTestGists(int count, int? feedId = null) =>
         Enumerable.Range(0, count).Select(_ => CreateTestGist(feedId ?? Random.Next())).ToList();
 
-    public static GoogleSearchResult CreateTestSearchResult(int gistId) => new(
-        gistId,
+    public static GoogleSearchResult CreateTestSearchResult(int? gistId = null) => new(
+        gistId ?? Random.Next(),
         Random.NextString(),
         Random.NextString(),
         Random.NextString(),
@@ -45,7 +49,7 @@ public static class TestData
         Random.NextString()
     );
 
-public static List<GoogleSearchResult> CreateTestSearchResults(int count, int gistId) =>
+public static List<GoogleSearchResult> CreateTestSearchResults(int count, int? gistId = null) =>
         Enumerable.Range(0, count).Select(_ => CreateTestSearchResult(gistId)).ToList();
 
     public static List<CategoryRecap> CreateTestRecap() => Enumerable.Range(0, 5).Select(_ =>
@@ -62,9 +66,9 @@ public static List<GoogleSearchResult> CreateTestSearchResults(int count, int gi
         { "very similar test text", Enumerable.Repeat(0.100000001f, 100).ToArray() },
     };
 
-    public static RssEntry CreateTestEntry() => new(
+    public static RssEntry CreateTestEntry(int? feedId = null) => new(
         Random.NextString(),
-        Random.Next(),
+        feedId ?? Random.Next(),
         Random.NextString(),
         Random.NextString(),
         Random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
@@ -77,8 +81,8 @@ public static List<GoogleSearchResult> CreateTestSearchResults(int count, int gi
     public static List<string> CreateTestStrings(int count) =>
         Enumerable.Range(0, count).Select(_ => Random.NextString()).ToList();
 
-    public static List<RssEntry> CreateTestEntries(int count) =>
-        Enumerable.Range(0, count).Select(_ => CreateTestEntry()).ToList();
+    public static List<RssEntry> CreateTestEntries(int count, int? feedId = null) =>
+        Enumerable.Range(0, count).Select(_ => CreateTestEntry(feedId)).ToList();
 
     public static List<SummaryAIResponse> CreateTestSummaryAIResponses(int count) =>
         Enumerable.Range(0, count).Select(_ => new SummaryAIResponse(
