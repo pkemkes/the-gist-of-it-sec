@@ -1,9 +1,11 @@
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.TelegramBotClientHandler;
 using GistBackend.Types;
+using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Prometheus;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -13,27 +15,46 @@ using static GistBackend.Utils.ServiceUtils;
 
 namespace GistBackend.Services;
 
-public class TelegramService(
-    IMariaDbHandler mariaDbHandler,
-    ITelegramBotClientHandler telegramBotClientHandler,
-    IOptions<TelegramServiceOptions> options,
-    ILogger<TelegramService>? logger = null
-) : BackgroundService
+public class TelegramService : BackgroundService
 {
-    protected CancellationToken? _serviceCancellationToken;
+    protected CancellationToken? ServiceCancellationToken;
+    private readonly IMariaDbHandler _mariaDbHandler;
+    private readonly ITelegramBotClientHandler _telegramBotClientHandler;
+    private readonly string _appBaseUrl;
+    private readonly ILogger<TelegramService>? _logger;
+
+    public TelegramService(IMariaDbHandler mariaDbHandler,
+        ITelegramBotClientHandler telegramBotClientHandler,
+        IOptions<TelegramServiceOptions> options,
+        ILogger<TelegramService>? logger = null)
+    {
+        if (string.IsNullOrWhiteSpace(options.Value.AppBaseUrl))
+            throw new ArgumentException("App base URL is not set in the options.");
+        _mariaDbHandler = mariaDbHandler;
+        _telegramBotClientHandler = telegramBotClientHandler;
+        _appBaseUrl = options.Value.AppBaseUrl;
+        _logger = logger;
+    }
+
     private static readonly BotCommand StartCommand = new("start", "Register to receive messages");
     private static readonly BotCommand StopCommand = new("stop", "Unregister to stop receiving messages");
     private static readonly List<BotCommand> Commands = [StartCommand, StopCommand];
     private static readonly string AvailableCommands = string.Join(", ", Commands.Select(c => $"/{c.Command}"));
 
+    private static readonly Gauge ProcessChatsGauge =
+        Metrics.CreateGauge("process_chats_seconds", "Time spent to process all chats");
+
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        _serviceCancellationToken = ct;
-        telegramBotClientHandler.StartBotClient([StartCommand, StopCommand], OnMessageAsync, OnErrorAsync, ct);
+        ServiceCancellationToken = ct;
+        _telegramBotClientHandler.StartBotClient([StartCommand, StopCommand], OnMessageAsync, OnErrorAsync, ct);
         while (!ct.IsCancellationRequested)
         {
             var startTime = DateTime.UtcNow;
-            await ProcessAllChatsAsync(ct);
+            using (new SelfReportingStopwatch(elapsed => ProcessChatsGauge.Set(elapsed)))
+            {
+                await ProcessAllChatsAsync(ct);
+            }
             await DelayUntilNextExecutionAsync(startTime, 1, null, ct);
         }
     }
@@ -42,13 +63,15 @@ public class TelegramService(
     {
         if (message.Type != MessageType.Text || message.Text is null)
             return;
-        if (message.Text.StartsWith("/"))
+        if (message.Text.StartsWith('/'))
         {
             await HandleCommandAsync(message);
         }
         else
         {
-            await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
+            _logger?.LogInformation(TelegramCommandNotRecognized, "Received message without command: {MessageText}",
+                message.Text);
+            await _telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
                 $"Please use one of the following commands to interact with me: {AvailableCommands}");
         }
     }
@@ -60,22 +83,25 @@ public class TelegramService(
         else if (command == StopCommand.Command) await HandleStopCommandAsync(message);
         else
         {
-            await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
+            await _telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
                 $"Unknown command. Please use one of the following commands: {AvailableCommands}");
         }
     }
 
     private async Task HandleStartCommandAsync(Message message)
     {
-        if (await mariaDbHandler.IsChatRegisteredAsync(message.Chat.Id, _serviceCancellationToken!.Value))
+        if (await _mariaDbHandler.IsChatRegisteredAsync(message.Chat.Id, ServiceCancellationToken!.Value))
         {
-            await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
+            _logger?.LogInformation(StartCommandButAlreadyRegistered,
+                "Chat {ChatId} tried to register but is already registered", message.Chat.Id);
+            await _telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
                 "You are already registered. I will continue to send you gists. Happy reading!");
         }
         else
         {
-            await mariaDbHandler.RegisterChatAsync(message.Chat.Id, _serviceCancellationToken!.Value);
-            await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
+            _logger?.LogInformation(StartCommandForNewChat, "Registering new chat {ChatId}", message.Chat.Id);
+            await _mariaDbHandler.RegisterChatAsync(message.Chat.Id, ServiceCancellationToken!.Value);
+            await _telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
                 "Welcome to The Gist of IT Sec! I registered your chat. " +
                 "I will regularly send you gists of the freshest news of selected outlets.");
         }
@@ -83,33 +109,36 @@ public class TelegramService(
 
     private async Task HandleStopCommandAsync(Message message)
     {
-        if (await mariaDbHandler.IsChatRegisteredAsync(message.Chat.Id, _serviceCancellationToken!.Value))
+        if (await _mariaDbHandler.IsChatRegisteredAsync(message.Chat.Id, ServiceCancellationToken!.Value))
         {
-            await mariaDbHandler.DeregisterChatAsync(message.Chat.Id, _serviceCancellationToken.Value);
-            await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
+            _logger?.LogInformation(StopCommandForExistingChat, "Deregistering chat {ChatId}", message.Chat.Id);
+            await _mariaDbHandler.DeregisterChatAsync(message.Chat.Id, ServiceCancellationToken.Value);
+            await _telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
                 "Such a shame to see you go. I deregistered you. Goodbye.");
         }
         else
         {
-            await telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
+            _logger?.LogInformation(StopCommandButNotRegistered,
+                "Chat {ChatId} tried to deregister but is not registered", message.Chat.Id);
+            await _telegramBotClientHandler.SendMessageAsync(message.Chat.Id,
                 "Seems like you were not registered to begin with. I will not send you gists.");
         }
     }
 
-    protected Task OnErrorAsync(Exception exception, HandleErrorSource source)
+    private Task OnErrorAsync(Exception exception, HandleErrorSource source)
     {
-        logger?.LogError(UnexpectedTelegramError, exception, "An error occurred in the Telegram service: {Source}",
+        _logger?.LogError(UnexpectedTelegramError, exception, "An error occurred in the Telegram service: {Source}",
             source);
         return Task.CompletedTask;
     }
 
     private async Task ProcessAllChatsAsync(CancellationToken ct)
     {
-        var chats = await mariaDbHandler.GetAllChatsAsync(ct);
+        var chats = await _mariaDbHandler.GetAllChatsAsync(ct);
         var gistsToSendByGistIdLastSent = (await Task.WhenAll(
                 chats
                     .Select(chat => chat.GistIdLastSent).Distinct()
-                    .Select(async id => (id, gists: await mariaDbHandler.GetNextFiveGistsAsync(id, ct))
+                    .Select(async id => (id, gists: await _mariaDbHandler.GetNextFiveGistsAsync(id, ct))
                 )
             ))
             .ToDictionary(tuple => tuple.id, tuple => tuple.gists);
@@ -126,24 +155,23 @@ public class TelegramService(
     {
         try
         {
+            _logger?.LogInformation(SendingGistToChat, "Sending gist {GistId} to chat {ChatId}", gist.Id, chatId);
             var gistMessage = await BuildGistMessageAsync(gist, ct);
-            await telegramBotClientHandler.SendMessageAsync(chatId, gistMessage, ParseMode.Html);
-            await mariaDbHandler.SetGistIdLastSentForChatAsync(chatId, gist.Id!.Value, ct);
-            logger?.LogInformation(SentTelegramMessage, "Sent gist {GistId} to chat {ChatId}",
-                gist.Id, chatId);
+            await _telegramBotClientHandler.SendMessageAsync(chatId, gistMessage, ParseMode.Html);
+            await _mariaDbHandler.SetGistIdLastSentForChatAsync(chatId, gist.Id!.Value, ct);
         }
         catch (Exception ex)
         {
-            logger?.LogError(SendingGistToChatFailed, ex,
+            _logger?.LogError(SendingGistToChatFailed, ex,
                 "Failed to send gist {GistId} to chat {ChatId}", gist.Id, chatId);
         }
     }
 
     private async Task<string> BuildGistMessageAsync(Gist gist, CancellationToken ct)
     {
-        var feed = await mariaDbHandler.GetFeedInfoByIdAsync(gist.FeedId, ct);
+        var feed = await _mariaDbHandler.GetFeedInfoByIdAsync(gist.FeedId, ct);
         var updatedString = gist.Updated.ToString("dd.MM.YYYY HH:mm 'UTC'");
-        var gistUrl = $"{options.Value.AppBaseUrl}/?gist={gist.Id}";
+        var gistUrl = $"{_appBaseUrl}/?gist={gist.Id}";
         return $"<b>{HtmlEncode(gist.Title)}</b><br>" +
                $"{HtmlEncode(updatedString)}<br><br>" +
                $"{HtmlEncode(gist.Summary)}<br><br>" +

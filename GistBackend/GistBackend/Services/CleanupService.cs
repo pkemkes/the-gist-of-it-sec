@@ -27,7 +27,7 @@ public class CleanupService(
         Metrics.CreateSummary("check_gist_seconds", "Time spent to check a gist", "feed_title");
     private static readonly Gauge GistsCheckedGauge =
         Metrics.CreateGauge("gists_checked", "Number of gists checked in one run");
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(Program.RetryingHttpClientName);
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(StartUp.RetryingHttpClientName);
     private Dictionary<int, RssFeed> _feedsByFeedId = new();
 
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -87,8 +87,7 @@ public class CleanupService(
             var response = await _httpClient.SendAsync(request, ct);
 
             if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500) return true;
-            if (WasRedirectedAndNotPresentInFeedAnymore(gist, response)) return true;
-            return false;
+            return WasRedirectedAndNotPresentInFeedAnymore(gist, response);
         }
     }
 

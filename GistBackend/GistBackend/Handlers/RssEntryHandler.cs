@@ -9,7 +9,7 @@ public interface IRssEntryHandler {
 
 public class RssEntryHandler(IHttpClientFactory httpClientFactory, ILogger<RssEntryHandler>? logger) : IRssEntryHandler
 {
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(Program.RetryingHttpClientName);
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(StartUp.RetryingHttpClientName);
 
     public async Task<string> FetchTextContentAsync(RssEntry entry, CancellationToken ct)
     {

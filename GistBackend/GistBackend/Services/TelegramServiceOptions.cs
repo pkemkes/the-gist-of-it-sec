@@ -1,3 +1,6 @@
 namespace GistBackend.Services;
 
-public record TelegramServiceOptions(string AppBaseUrl);
+public record TelegramServiceOptions
+{
+    public string AppBaseUrl { get; init; } = "";
+};

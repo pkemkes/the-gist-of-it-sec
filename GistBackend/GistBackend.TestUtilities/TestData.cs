@@ -90,13 +90,4 @@ public static List<GoogleSearchResult> CreateTestSearchResults(int count, int? g
             CreateTestStrings(5),
             Random.NextString()
         )).ToList();
-
-    public static List<CategoryRecap> CreateTestRecap(int categoryCount) =>
-        Enumerable.Range(0, categoryCount).Select(_ =>
-            new CategoryRecap(
-                Random.NextString(),
-                Random.NextString(),
-                Enumerable.Range(0, Random.Next(3, 6)).Select(_ => Random.Next())
-            )
-        ).ToList();
 }

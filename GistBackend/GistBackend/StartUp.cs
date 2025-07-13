@@ -44,6 +44,15 @@ public class StartUp(IConfiguration configuration)
             configuration.GetSection(nameof(CleanupServiceOptions)));
         services.Configure<TelegramServiceOptions>(
             configuration.GetSection(nameof(TelegramServiceOptions)));
+        services.Configure<MariaDbHandlerOptions>(gistMariaDbHandlerOptionsName,
+            configuration.GetSection(gistMariaDbHandlerOptionsName));
+        services.Configure<MariaDbHandlerOptions>(recapMariaDbHandlerOptionsName,
+            configuration.GetSection(recapMariaDbHandlerOptionsName));
+        services.Configure<MariaDbHandlerOptions>(cleanupMariaDbHandlerOptionsName,
+            configuration.GetSection(cleanupMariaDbHandlerOptionsName));
+        services.Configure<MariaDbHandlerOptions>(telegramMariaDbHandlerOptionsName,
+            configuration.GetSection(telegramMariaDbHandlerOptionsName));
+        services.Configure<ChromaDbHandlerOptions>(configuration.GetSection(nameof(ChromaDbHandlerOptions)));
 
         services.AddHttpClient(RetryingHttpClientName)
             .ConfigureHttpClient(client => client.DefaultRequestHeaders.UserAgent.ParseAdd(dummyUserAgent))
@@ -67,32 +76,20 @@ public class StartUp(IConfiguration configuration)
         services.AddControllers();
 
         services.AddHostedService(provider =>
-        {
-            var options = provider.GetRequiredService<IOptionsSnapshot<MariaDbHandlerOptions>>()
-                .Get(gistMariaDbHandlerOptionsName);
-            return ActivatorUtilities.CreateInstance<GistService>(provider, options);
-        });
+            ActivatorUtilities.CreateInstance<GistService>(provider,
+                provider.GetKeyedMariaDbHandler(gistMariaDbHandlerOptionsName)));
 
         services.AddHostedService(provider =>
-        {
-            var options = provider.GetRequiredService<IOptionsSnapshot<MariaDbHandlerOptions>>()
-                .Get(recapMariaDbHandlerOptionsName);
-            return ActivatorUtilities.CreateInstance<RecapService>(provider, options);
-        });
+            ActivatorUtilities.CreateInstance<RecapService>(provider,
+                provider.GetKeyedMariaDbHandler(recapMariaDbHandlerOptionsName)));
 
         services.AddHostedService(provider =>
-        {
-            var options = provider.GetRequiredService<IOptionsSnapshot<MariaDbHandlerOptions>>()
-                .Get(cleanupMariaDbHandlerOptionsName);
-            return ActivatorUtilities.CreateInstance<CleanupService>(provider, options);
-        });
+            ActivatorUtilities.CreateInstance<CleanupService>(provider,
+                provider.GetKeyedMariaDbHandler(cleanupMariaDbHandlerOptionsName)));
 
         services.AddHostedService(provider =>
-        {
-            var options = provider.GetRequiredService<IOptionsSnapshot<TelegramServiceOptions>>()
-                .Get(telegramMariaDbHandlerOptionsName);
-            return ActivatorUtilities.CreateInstance<TelegramService>(provider, options);
-        });
+            ActivatorUtilities.CreateInstance<TelegramService>(provider,
+                provider.GetKeyedMariaDbHandler(telegramMariaDbHandlerOptionsName)));
 
         services.AddKeyedScoped<IMariaDbHandler>(GistsControllerMariaDbHandlerOptionsName, (provider, _) => {
             var options = provider.GetRequiredService<IOptionsSnapshot<MariaDbHandlerOptions>>()

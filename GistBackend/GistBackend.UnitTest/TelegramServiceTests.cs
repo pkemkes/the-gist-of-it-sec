@@ -21,7 +21,7 @@ public class TelegramServiceTests
             IOptions<TelegramServiceOptions> options,
             ILogger<TelegramService>? logger = null) : base(mariaDbHandler, telegramBotClientHandler, options, logger)
         {
-            _serviceCancellationToken = CancellationToken.None;
+            ServiceCancellationToken = CancellationToken.None;
         }
 
         public Task PublicOnMessageAsync(Message message, UpdateType updateType) => OnMessageAsync(message, updateType);
@@ -199,17 +199,11 @@ public class TelegramServiceTests
         }
     }
 
-    // [Fact]
-    // public async Task ExecuteAsync_MoreThanFiveNewGists_OnlyFiveNewestAreSent()
-    // {
-    //
-    // }
-
     private static TestableTelegramService CreateTelegramService(
         IMariaDbHandler? mariaDbHandler = null,
         ITelegramBotClientHandler? telegramBotClientHandler = null)
     {
-        var options = Options.Create(new TelegramServiceOptions("test-app-base-url"));
+        var options = Options.Create(new TelegramServiceOptions{ AppBaseUrl = "test-app-base-url" });
         return new TestableTelegramService(
             mariaDbHandler ?? Substitute.For<IMariaDbHandler>(),
             telegramBotClientHandler ?? Substitute.For<ITelegramBotClientHandler>(),

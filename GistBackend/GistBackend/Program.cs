@@ -6,8 +6,6 @@ namespace GistBackend;
 
 public static class Program
 {
-    public const string RetryingHttpClientName = "WithRetry";
-
     public static async Task Main(string[] args)
     {
         var builder = Host.CreateDefaultBuilder(args);

@@ -1,7 +1,8 @@
 namespace GistBackend.Handlers.OpenAiHandler;
 
-public record EmbeddingClientHandlerOptions(
-    string ApiKey,
-    string Model = "text-embedding-3-small",
-    string? ProjectId = null
-);
+public record EmbeddingClientHandlerOptions
+{
+    public string ApiKey { get; init; } = "";
+    public string Model { get; init; } = "text-embedding-3-small";
+    public string? ProjectId { get; init; } = null;
+}

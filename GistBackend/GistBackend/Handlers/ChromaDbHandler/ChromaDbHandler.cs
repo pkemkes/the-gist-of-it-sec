@@ -18,16 +18,38 @@ public interface IChromaDbHandler {
         string reference, int nResults, IEnumerable<int> disabledFeedIds, CancellationToken ct);
 }
 
-public class ChromaDbHandler(
-    IOpenAIHandler openAIHandler,
-    HttpClient httpClient,
-    IOptions<ChromaDbHandlerOptions> options,
-    ILogger<ChromaDbHandler>? logger) : IChromaDbHandler
+public class ChromaDbHandler : IChromaDbHandler
 {
-    private readonly Uri _chromaDbUri = new($"http://{options.Value.Server}:{options.Value.Port}/");
-    private readonly string _tenantName = options.Value.GistsTenantName;
-    private readonly string _databaseName = options.Value.GistsDatabaseName;
-    private readonly string _collectionName = options.Value.GistsCollectionName;
+    private readonly Uri _chromaDbUri;
+    private readonly string _tenantName;
+    private readonly string _databaseName;
+    private readonly string _collectionName;
+    private readonly IOpenAIHandler _openAIHandler;
+    private readonly HttpClient _httpClient;
+    private readonly string _credentialsHeaderName;
+    private readonly string _serverAuthnCredentials;
+    private readonly ILogger<ChromaDbHandler>? _logger;
+
+    public ChromaDbHandler(IOpenAIHandler openAIHandler,
+        HttpClient httpClient,
+        IOptions<ChromaDbHandlerOptions> options,
+        ILogger<ChromaDbHandler>? logger)
+    {
+        if (string.IsNullOrWhiteSpace(options.Value.Server))
+            throw new ArgumentException("Server is not set in the options.");
+        if (string.IsNullOrWhiteSpace(options.Value.ServerAuthnCredentials))
+            throw new ArgumentException("Server authentication credentials are not set in the options.");
+        _openAIHandler = openAIHandler;
+        _httpClient = httpClient;
+        _logger = logger;
+        _chromaDbUri = new Uri($"http://{options.Value.Server}:{options.Value.Port}/");
+        _credentialsHeaderName = options.Value.CredentialsHeaderName;
+        _serverAuthnCredentials = options.Value.ServerAuthnCredentials;
+        _tenantName = options.Value.GistsTenantName;
+        _databaseName = options.Value.GistsDatabaseName;
+        _collectionName = options.Value.GistsCollectionName;
+    }
+
     private static readonly string[] IncludeOnGet = ["metadatas", "distances"];
 
     public async Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(string reference,
@@ -101,7 +123,7 @@ public class ChromaDbHandler(
         }
 
         var metadata = new Metadata(entry.Reference, entry.FeedId);
-        var embedding = await openAIHandler.GenerateEmbeddingAsync(text, ct);
+        var embedding = await _openAIHandler.GenerateEmbeddingAsync(text, ct);
         var content = CreateStringContent(new Document([entry.Reference], [metadata], [embedding]));
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/add", content, ct);
@@ -110,7 +132,7 @@ public class ChromaDbHandler(
         {
             throw await CreateDatabaseOperationExceptionAsync("Could not insert entry", response, ct);
         }
-        logger?.LogInformation(DocumentInserted,
+        _logger?.LogInformation(DocumentInserted,
             "Inserted document with metadata {Metadata} for entry with reference {Reference}",
             metadata, entry.Reference);
     }
@@ -128,7 +150,7 @@ public class ChromaDbHandler(
         if (oldMetadata.Disabled == disabled && oldMetadata.FeedId == gist.FeedId) return true;
         var newMetaData = new Metadata(gist.Reference, gist.FeedId, disabled);
         await UpdateMetadataAsync(gist.Reference, newMetaData, ct);
-        logger?.LogInformation(ChangedMetadataOfGistInChromaDb,
+        _logger?.LogInformation(ChangedMetadataOfGistInChromaDb,
             "Changed metadata from {OldMetadata} to {NewMetadata} for gist with reference {GistReference}",
             oldMetadata, newMetaData, gist.Reference);
         return false;
@@ -260,7 +282,7 @@ public class ChromaDbHandler(
     {
         var uri = new Uri(_chromaDbUri, relativeUri);
         var request = CreateHttpRequestMessage(method, uri, content);
-        return await httpClient.SendAsync(request, ct);
+        return await _httpClient.SendAsync(request, ct);
     }
 
     private static StringContent CreateStringContent(object objectToSerialize) =>
@@ -270,7 +292,7 @@ public class ChromaDbHandler(
     private HttpRequestMessage CreateHttpRequestMessage(HttpMethod method, Uri uri, HttpContent? content = null)
     {
         var request = new HttpRequestMessage(method, uri);
-        request.Headers.Add(options.Value.CredentialsHeaderName, options.Value.ServerAuthnCredentials);
+        request.Headers.Add(_credentialsHeaderName, _serverAuthnCredentials);
         request.Content = content;
         return request;
     }

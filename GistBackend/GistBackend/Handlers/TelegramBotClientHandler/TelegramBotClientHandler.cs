@@ -26,6 +26,8 @@ public class TelegramBotClientHandler(
         CancellationToken ct)
     {
         _cancellationToken = ct;
+        if (string.IsNullOrWhiteSpace(options.Value.BotToken))
+            throw new ArgumentException("Bot token is not set in the options.");
         _botClient = new TelegramBotClient(options.Value.BotToken, cancellationToken: ct);
         _botClient.SetMyCommands(commands, cancellationToken: ct).GetAwaiter().GetResult();
         _botClient.OnMessage += onMessage;

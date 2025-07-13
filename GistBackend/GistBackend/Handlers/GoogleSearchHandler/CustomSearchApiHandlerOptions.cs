@@ -1,6 +1,7 @@
 namespace GistBackend.Handlers.GoogleSearchHandler;
 
-public record CustomSearchApiHandlerOptions(
-    string ApiKey,
-    string EngineId
-);
+public record CustomSearchApiHandlerOptions
+{
+    public string ApiKey { get; init; } = "";
+    public string EngineId { get; init; } = "";
+}

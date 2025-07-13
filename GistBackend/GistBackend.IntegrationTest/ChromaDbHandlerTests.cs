@@ -18,11 +18,12 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         "test search query"
     );
 
-    private readonly ChromaDbHandlerOptions _handlerOptions = new(
-        fixture.Hostname,
-        ChromaDbFixture.GistServiceServerAuthnCredentials,
-        fixture.ExposedPort
-    );
+    private readonly ChromaDbHandlerOptions _handlerOptions = new()
+    {
+        Server = fixture.Hostname,
+        ServerAuthnCredentials = ChromaDbFixture.GistServiceServerAuthnCredentials,
+        Port = fixture.ExposedPort
+    };
 
     private ChromaDbAsserter Asserter => new(_handlerOptions);
 

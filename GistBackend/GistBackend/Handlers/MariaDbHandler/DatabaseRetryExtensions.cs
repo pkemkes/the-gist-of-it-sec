@@ -21,9 +21,9 @@ public static class DatabaseRetryExtensions
         Policy
             .Handle<MySqlException>(ex => ex.Number == 1213) // 1213 is deadlock error code
             .WaitAndRetryAsync(
-                3,
-                attempt => TimeSpan.FromMilliseconds(50 * attempt),
+                5,
+                attempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, attempt-1)),
                 (_, _, attempt, _) =>
-                    logger?.LogWarning(DatabaseOperationRetry, "Deadlock detected, retry attempt {Attempt}/3", attempt)
+                    logger?.LogWarning(DatabaseOperationRetry, "Deadlock detected, retry attempt {Attempt}/5", attempt)
             );
 }

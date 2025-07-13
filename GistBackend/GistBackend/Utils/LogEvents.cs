@@ -54,4 +54,12 @@ public static class LogEvents {
     public static readonly EventId SendingGistToChatFailed = new(1113, nameof(SendingGistToChatFailed));
     public static readonly EventId SettingGistIdLastSentFailed = new(1114, nameof(SettingGistIdLastSentFailed));
     public static readonly EventId FeedInfoNotFound = new(1115, nameof(FeedInfoNotFound));
+    public static readonly EventId TelegramCommandNotRecognized = new(1200, nameof(TelegramCommandNotRecognized));
+    public static readonly EventId StartCommandButAlreadyRegistered = new(1201, nameof(StartCommandButAlreadyRegistered));
+    public static readonly EventId StartCommandForNewChat = new(1201, nameof(StartCommandForNewChat));
+    public static readonly EventId StopCommandButNotRegistered = new(1202, nameof(StopCommandButNotRegistered));
+    public static readonly EventId StopCommandForExistingChat = new(1202, nameof(StopCommandForExistingChat));
+    public static readonly EventId SendingGistToChat = new(1203, nameof(SendingGistToChat));
+
+
 }

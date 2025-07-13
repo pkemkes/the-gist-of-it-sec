@@ -61,7 +61,13 @@ public class MariaDbFixture : IAsyncLifetime {
 
     public async Task ClearDatabaseAsync()
     {
-        var options = new MariaDbHandlerOptions(Hostname, RootUser, RootPassword, ExposedPort);
+        var options = new MariaDbHandlerOptions
+        {
+            Server = Hostname,
+            User = RootUser,
+            Password = RootPassword,
+            Port = ExposedPort
+        };
         await using var connection = new MySqlConnection(options.GetConnectionString());
         await connection.OpenAsync();
         const string query = """

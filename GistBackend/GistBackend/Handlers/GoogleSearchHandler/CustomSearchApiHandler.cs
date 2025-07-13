@@ -10,15 +10,24 @@ public interface ICustomSearchApiHandler
     public Task<Search?> ExecuteSearchAsync(string searchQuery, CancellationToken ct);
 }
 
-public class CustomSearchApiHandler(
-    IOptions<CustomSearchApiHandlerOptions> options,
-    IHttpClientFactory httpClientFactory) : ICustomSearchApiHandler
+public class CustomSearchApiHandler : ICustomSearchApiHandler
 {
-    private readonly CustomSearchAPIService _customSearchApiService = new(new BaseClientService.Initializer {
-        ApiKey = options.Value.ApiKey,
-        HttpClientFactory = new RetryingHttpClientFactory(httpClientFactory)
-    });
-    private readonly string _engineId = options.Value.EngineId;
+    private readonly CustomSearchAPIService _customSearchApiService;
+    private readonly string _engineId;
+
+    public CustomSearchApiHandler(IOptions<CustomSearchApiHandlerOptions> options,
+        IHttpClientFactory httpClientFactory)
+    {
+        if (string.IsNullOrWhiteSpace(options.Value.ApiKey))
+            throw new ArgumentException("API key is not set in the options.");
+        _customSearchApiService = new CustomSearchAPIService(new BaseClientService.Initializer {
+            ApiKey = options.Value.ApiKey,
+            HttpClientFactory = new RetryingHttpClientFactory(httpClientFactory)
+        });
+        if (string.IsNullOrWhiteSpace(options.Value.EngineId))
+            throw new ArgumentException("Engine ID is not set in the options.");
+        _engineId = options.Value.EngineId;
+    }
 
     public Task<Search?> ExecuteSearchAsync(string searchQuery, CancellationToken ct)
     {

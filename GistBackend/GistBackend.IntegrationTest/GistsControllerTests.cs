@@ -34,22 +34,24 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     {
         mariaDbFixture.ClearDatabaseAsync().GetAwaiter().GetResult();
 
-        var mariaDbHandlerOptions = new MariaDbHandlerOptions(
-            mariaDbFixture.Hostname,
-            MariaDbFixture.GistServiceDbUsername,
-            MariaDbFixture.GistServiceDbPassword,
-            mariaDbFixture.ExposedPort
-        );
+        var mariaDbHandlerOptions = new MariaDbHandlerOptions
+        {
+            Server = mariaDbFixture.Hostname,
+            User = MariaDbFixture.GistServiceDbUsername,
+            Password = MariaDbFixture.GistServiceDbPassword,
+            Port = mariaDbFixture.ExposedPort
+        };
         _mariaDbHandler = new MariaDbHandler(Options.Create(mariaDbHandlerOptions), new DateTimeHandler(), null);
 
         _chromaDbFixture = new ChromaDbFixture();
         _chromaDbFixture.InitializeAsync().GetAwaiter().GetResult();
 
-        var chromeDbHandlerOptions = new ChromaDbHandlerOptions(
-            _chromaDbFixture.Hostname,
-            ChromaDbFixture.GistServiceServerAuthnCredentials,
-            _chromaDbFixture.ExposedPort
-        );
+        var chromeDbHandlerOptions = new ChromaDbHandlerOptions
+        {
+            Server = _chromaDbFixture.Hostname,
+            ServerAuthnCredentials = ChromaDbFixture.GistServiceServerAuthnCredentials,
+            Port = _chromaDbFixture.ExposedPort
+        };
         _chromaDbHandler = new ChromaDbHandler(OpenAiHandlerUtils.CreateOpenAIHandlerMock(), new HttpClient(),
             Options.Create(chromeDbHandlerOptions), null);
 

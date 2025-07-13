@@ -323,7 +323,7 @@ public class CleanupServiceTests
         }
         httpClientMock.SendAsync(Arg.Any<HttpRequestMessage>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(response));
-        httpClientFactoryMock.CreateClient(Program.RetryingHttpClientName)
+        httpClientFactoryMock.CreateClient(StartUp.RetryingHttpClientName)
             .Returns(httpClientMock);
         return httpClientFactoryMock;
     }

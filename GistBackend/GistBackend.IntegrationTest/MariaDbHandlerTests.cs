@@ -22,36 +22,41 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
     public MariaDbHandlerTests(MariaDbFixture fixture)
     {
-        _gistHandlerOptions = new MariaDbHandlerOptions(
-            fixture.Hostname,
-            MariaDbFixture.GistServiceDbUsername,
-            MariaDbFixture.GistServiceDbPassword,
-            fixture.ExposedPort
-        );
-        _recapHandlerOptions = new MariaDbHandlerOptions(
-            fixture.Hostname,
-            MariaDbFixture.RecapServiceDbUsername,
-            MariaDbFixture.RecapServiceDbPassword,
-            fixture.ExposedPort
-        );
-        _cleanupHandlerOptions = new MariaDbHandlerOptions(
-            fixture.Hostname,
-            MariaDbFixture.CleanupServiceDbUsername,
-            MariaDbFixture.CleanupServiceDbPassword,
-            fixture.ExposedPort
-        );
-        _gistControllerHandlerOptions = new MariaDbHandlerOptions(
-            fixture.Hostname,
-            MariaDbFixture.GistsControllerDbUsername,
-            MariaDbFixture.GistsControllerDbPassword,
-            fixture.ExposedPort
-        );
-        _telegramHandlerOptions = new MariaDbHandlerOptions(
-            fixture.Hostname,
-            MariaDbFixture.TelegramServiceDbUsername,
-            MariaDbFixture.TelegramServiceDbPassword,
-            fixture.ExposedPort
-        );
+        _gistHandlerOptions = new MariaDbHandlerOptions
+        {
+            Server = fixture.Hostname,
+            User = MariaDbFixture.GistServiceDbUsername,
+            Password = MariaDbFixture.GistServiceDbPassword,
+            Port = fixture.ExposedPort
+        };
+        _recapHandlerOptions = new MariaDbHandlerOptions
+        {
+            Server = fixture.Hostname,
+            User = MariaDbFixture.RecapServiceDbUsername,
+            Password = MariaDbFixture.RecapServiceDbPassword,
+            Port = fixture.ExposedPort
+        };
+        _cleanupHandlerOptions = new MariaDbHandlerOptions
+        {
+            Server = fixture.Hostname,
+            User = MariaDbFixture.CleanupServiceDbUsername,
+            Password = MariaDbFixture.CleanupServiceDbPassword,
+            Port = fixture.ExposedPort
+        };
+        _gistControllerHandlerOptions = new MariaDbHandlerOptions
+        {
+            Server = fixture.Hostname,
+            User = MariaDbFixture.GistsControllerDbUsername,
+            Password = MariaDbFixture.GistsControllerDbPassword,
+            Port = fixture.ExposedPort
+        };
+        _telegramHandlerOptions = new MariaDbHandlerOptions
+        {
+            Server = fixture.Hostname,
+            User = MariaDbFixture.TelegramServiceDbUsername,
+            Password = MariaDbFixture.TelegramServiceDbPassword,
+            Port = fixture.ExposedPort
+        };
         fixture.ClearDatabaseAsync().GetAwaiter().GetResult();
     }
 

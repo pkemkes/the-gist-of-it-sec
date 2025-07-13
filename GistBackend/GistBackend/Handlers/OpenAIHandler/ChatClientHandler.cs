@@ -12,12 +12,19 @@ public interface IChatClientHandler
         CancellationToken ct);
 }
 
-public class ChatClientHandler(IOptions<ChatClientHandlerOptions> options) : IChatClientHandler
+public class ChatClientHandler : IChatClientHandler
 {
-    private readonly ChatClient _client = options.Value.ProjectId is not null
-        ? new ChatClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey),
-            new OpenAIClientOptions { ProjectId = options.Value.ProjectId })
-        : new ChatClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey));
+    private readonly ChatClient _client;
+
+    public ChatClientHandler(IOptions<ChatClientHandlerOptions> options)
+    {
+        if (string.IsNullOrWhiteSpace(options.Value.ApiKey))
+            throw new ArgumentException("API key is not set in the options.");
+        _client = options.Value.ProjectId is not null
+            ? new ChatClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey),
+                new OpenAIClientOptions { ProjectId = options.Value.ProjectId })
+            : new ChatClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey));
+    }
 
     public async Task<string> CompleteChatAsync(IEnumerable<ChatMessage> messages, ChatCompletionOptions options,
         CancellationToken ct)
