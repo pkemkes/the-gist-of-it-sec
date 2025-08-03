@@ -50,7 +50,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
     }
 
     public async Task AssertSearchResultsForGistIdInDbAsync(int gistId,
-        IEnumerable<GoogleSearchResult> expectedSearchResults)
+        IList<GoogleSearchResult> expectedSearchResults)
     {
         const string query = """
             SELECT GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl, Id
@@ -59,12 +59,12 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         var command = new CommandDefinition(query, new { GistId = gistId });
 
         await using var connection = await GetOpenConnectionAsync();
-        var searchResultsInDb = await connection.QueryAsync<GoogleSearchResult>(command);
+        var searchResultsInDb = (await connection.QueryAsync<GoogleSearchResult>(command)).ToList();
 
         // We don't want to check whether the IDs are the same for the expected and actual searchResults
         foreach (var searchResult in expectedSearchResults.Concat(searchResultsInDb)) searchResult.Id = null;
 
-        Assert.Equivalent(expectedSearchResults, searchResultsInDb);
+        Assert.Equal(expectedSearchResults, searchResultsInDb);
     }
 
     public async Task AssertRecapIsInDbAsync(List<CategoryRecap> expectedRecap, DateTime expectedCreated,

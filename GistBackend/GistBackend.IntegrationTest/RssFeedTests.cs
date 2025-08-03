@@ -21,23 +21,22 @@ public class RssFeedTests : IAsyncLifetime {
     [Fact]
     public async Task ParseFeedAsync_Rss2FeedXML_FeedIsCorrectlyParsed()
     {
-        var rssFeedUrl = $"{GetBaseUrl()}/test_rss_2.xml";
-        var rssFeed = new RssFeed(rssFeedUrl, content => content) {
-            Id = 0
-        };
+        var rssFeedUrl = new Uri($"{GetBaseUrl()}/test_rss_2.xml");
+        var rssFeed = new RssFeed(rssFeedUrl, content => content);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
+        rssFeed.ParseEntries(0);
 
         Assert.Equal("Test RSS Feed", rssFeed.Title);
         Assert.Equal("en", rssFeed.Language);
-        Assert.Equal(3, rssFeed.Entries.Count());
-        var entries = rssFeed.Entries.ToArray();
+        Assert.Equal(3, rssFeed.Entries!.Count());
+        var entries = rssFeed.Entries!.ToArray();
         Assert.Equal("First news article", entries[0].Title);
         Assert.Equal("Second news article", entries[1].Title);
         Assert.Equal("Last news article", entries[2].Title);
-        Assert.Equal("https://www.test-news-site.com/first-news-article", entries[0].Url);
-        Assert.Equal("https://www.test-news-site.com/second-news-article", entries[1].Url);
-        Assert.Equal("https://www.test-news-site.com/last-news-article", entries[2].Url);
+        Assert.Equal(new Uri("https://www.test-news-site.com/first-news-article"), entries[0].Url);
+        Assert.Equal(new Uri("https://www.test-news-site.com/second-news-article"), entries[1].Url);
+        Assert.Equal(new Uri("https://www.test-news-site.com/last-news-article"), entries[2].Url);
         Assert.Equal(DateTimeOffset.Parse("Mon, 24 Feb 2025 15:00:00 GMT"), entries[0].Published);
         Assert.Equal(DateTimeOffset.Parse("Tue, 25 Feb 2025 16:00:00 GMT"), entries[1].Published);
         Assert.Equal(DateTimeOffset.Parse("Fri, 28 Feb 2025 17:00:00 GMT"), entries[2].Published);
@@ -58,23 +57,22 @@ public class RssFeedTests : IAsyncLifetime {
     [Fact]
     public async Task ParseFeedAsync_AtomFeedXML_FeedIsCorrectlyParsed()
     {
-        var rssFeedUrl = $"{GetBaseUrl()}/test_atom.xml";
-        var rssFeed = new RssFeed(rssFeedUrl, content => content) {
-            Id = 0
-        };
+        var rssFeedUrl = new Uri($"{GetBaseUrl()}/test_atom.xml");
+        var rssFeed = new RssFeed(rssFeedUrl, content => content);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
+        rssFeed.ParseEntries(0);
 
         Assert.Equal("Test RSS Feed", rssFeed.Title);
         Assert.Equal("en-US", rssFeed.Language);
-        Assert.Equal(3, rssFeed.Entries.Count());
-        var entries = rssFeed.Entries.ToArray();
+        Assert.Equal(3, rssFeed.Entries!.Count());
+        var entries = rssFeed.Entries!.ToArray();
         Assert.Equal("First news article", entries[0].Title);
         Assert.Equal("Second news article", entries[1].Title);
         Assert.Equal("Last news article", entries[2].Title);
-        Assert.Equal("https://www.test-news-site.com/first-news-article", entries[0].Url);
-        Assert.Equal("https://www.test-news-site.com/second-news-article", entries[1].Url);
-        Assert.Equal("https://www.test-news-site.com/last-news-article", entries[2].Url);
+        Assert.Equal(new Uri("https://www.test-news-site.com/first-news-article"), entries[0].Url);
+        Assert.Equal(new Uri("https://www.test-news-site.com/second-news-article"), entries[1].Url);
+        Assert.Equal(new Uri("https://www.test-news-site.com/last-news-article"), entries[2].Url);
         Assert.Equal(DateTimeOffset.Parse("2025-02-25T16:38:43-05:00"), entries[0].Published);
         Assert.Equal(DateTimeOffset.Parse("2025-02-24T12:11:07-05:00"), entries[1].Published);
         Assert.Equal(DateTimeOffset.Parse("2025-02-24T06:37:02-05:00"), entries[2].Published);
@@ -98,15 +96,14 @@ public class RssFeedTests : IAsyncLifetime {
     public async Task ParseFeedAsync_FeedContainsEntriesWithoutAllowedCategory_OnlyEntriesWithAllowedCategoriesParsed(
         string rssFeedPath)
     {
-        var rssFeedUrl = $"{GetBaseUrl()}/{rssFeedPath}";
-        var rssFeed = new RssFeed(rssFeedUrl, content => content, [ "Test Category 1" ]) {
-            Id = 0
-        };
+        var rssFeedUrl = new Uri($"{GetBaseUrl()}/{rssFeedPath}");
+        var rssFeed = new RssFeed(rssFeedUrl, content => content, [ "Test Category 1" ]);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
+        rssFeed.ParseEntries(0);
 
-        Assert.Equal(2, rssFeed.Entries.Count());
+        Assert.Equal(2, rssFeed.Entries!.Count());
         Assert.DoesNotContain("https://www.test-news-site.com/last-news-article",
-            rssFeed.Entries.Select(entry => entry.Reference));
+            rssFeed.Entries!.Select(entry => entry.Reference));
     }
 }

@@ -127,7 +127,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     {
         var handler = CreateGistHandler();
 
-        var actualFeedInfo = await handler.GetFeedInfoByRssUrlAsync("test rss url", CancellationToken.None);
+        var actualFeedInfo = await handler.GetFeedInfoByRssUrlAsync(new Uri("http://test.rss.url/"), CancellationToken.None);
 
         Assert.Null(actualFeedInfo);
     }
@@ -269,7 +269,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         await handler.InsertSearchResultsAsync(searchResultsToInsert, CancellationToken.None);
 
-        var expectedSearchResults = existingSearchResults.Concat(searchResultsToInsert);
+        var expectedSearchResults = existingSearchResults.Concat(searchResultsToInsert).ToList();
         await GistAsserter.AssertSearchResultsForGistIdInDbAsync(gistId, expectedSearchResults);
     }
 
@@ -283,7 +283,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         await handler.InsertSearchResultsAsync(existingSearchResults, CancellationToken.None);
         var searchResultsToUpdate = Enumerable.Repeat(gistId, 3).Select(id => CreateTestSearchResult(id)).ToList();
 
-        await handler.InsertSearchResultsAsync(searchResultsToUpdate, CancellationToken.None);
+        await handler.UpdateSearchResultsAsync(searchResultsToUpdate, CancellationToken.None);
 
         await GistAsserter.AssertSearchResultsForGistIdInDbAsync(gistId, searchResultsToUpdate);
     }
@@ -544,7 +544,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         var actual = await gistsControllerHandler.GetAllGistsAsync(CancellationToken.None);
 
-        Assert.Equivalent(expected, actual);
+        Assert.Equal(expected.OrderBy(g => g.Id), actual.OrderBy(g => g.Id));
     }
 
     [Fact]
@@ -631,7 +631,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
             await gistsControllerHandler.GetPreviousGistsAsync(gistCount + 5, null, [], null, [],
                 CancellationToken.None);
 
-        Assert.Equivalent(expectedGists, actualGists);
+        Assert.Equal(expectedGists, actualGists);
     }
 
     [Fact]
@@ -646,7 +646,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var actualGists =
             await gistsControllerHandler.GetPreviousGistsAsync(take, null, [], null, [], CancellationToken.None);
 
-        Assert.Equivalent(expectedGists, actualGists);
+        Assert.Equal(expectedGists, actualGists);
     }
 
     [Theory]
@@ -665,7 +665,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var actualGists =
             await gistsControllerHandler.GetPreviousGistsAsync(take, lastGistId, [], null, [], CancellationToken.None);
 
-        Assert.Equivalent(expectedGists, actualGists);
+        Assert.Equal(expectedGists, actualGists);
     }
 
     [Fact]
@@ -694,7 +694,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var actualGists =
             await gistsControllerHandler.GetPreviousGistsAsync(10, null, tags, null, [], CancellationToken.None);
 
-        Assert.Equivalent(expectedGists, actualGists);
+        Assert.Equal(expectedGists.OrderBy(g => g.Id), actualGists.OrderBy(g => g.Id));
     }
 
     [Fact]
@@ -733,7 +733,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var actualGists =
             await gistsControllerHandler.GetPreviousGistsAsync(10, null, [], searchQuery, [], CancellationToken.None);
 
-        Assert.Equivalent(expectedGists, actualGists);
+        Assert.Equal(expectedGists.OrderBy(g => g.Id), actualGists.OrderBy(g => g.Id));
     }
 
     [Fact]
@@ -745,7 +745,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var gistsFromEnabledFeed = await gistHandler.InsertTestGistsAsync(5);
         var gistsFromOtherEnabledFeed = await gistHandler.InsertTestGistsAsync(5);
         var disabledFeedIds = new[] { gistsFromDisabledFeed.First().FeedId, gistsFromOtherDisabledFeed.First().FeedId };
-        var expectedGists = new List<Gist> { gistsFromEnabledFeed.First(), gistsFromOtherEnabledFeed.First() };
+        var expectedGists = gistsFromEnabledFeed.Concat(gistsFromOtherEnabledFeed).ToList();
         var take = gistsFromDisabledFeed.Count
                    + gistsFromOtherDisabledFeed.Count
                    + gistsFromEnabledFeed.Count
@@ -756,7 +756,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
             await gistsControllerHandler.GetPreviousGistsAsync(take, null, [], null, disabledFeedIds,
                 CancellationToken.None);
 
-        Assert.Equivalent(expectedGists, actualGists);
+        Assert.Equal(expectedGists.OrderBy(g => g.Id), actualGists.OrderBy(g => g.Id));
     }
 
     [Fact]
@@ -799,7 +799,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         var actual = await gistControllerHandler.GetAllFeedInfosAsync(CancellationToken.None);
 
-        Assert.Equivalent(expected, actual);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
@@ -1056,7 +1056,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         var actual = await telegramHandler.GetNextFiveGistsAsync(firstGist.Id!.Value, CancellationToken.None);
 
-        Assert.Equivalent(expected, actual);
+        Assert.Equal(expected.OrderBy(g => g.Id), actual.OrderBy(g => g.Id));
     }
 
     [Fact]
@@ -1069,7 +1069,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         var actual = await telegramHandler.GetNextFiveGistsAsync(firstGist.Id!.Value, CancellationToken.None);
 
-        Assert.Equivalent(expected, actual);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]

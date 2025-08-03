@@ -118,7 +118,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
         actual.EnsureSuccessStatusCode();
         var gists = await actual.Content.ReadFromJsonAsync<List<Gist>>(_jsonSerializerOptions);
         Assert.NotNull(gists);
-        Assert.Equivalent(expectedGists, gists);
+        Assert.Equal(expectedGists, gists);
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
         var similarGists = await actual.Content.ReadFromJsonAsync<List<SimilarGist>>(_jsonSerializerOptions);
         Assert.NotNull(similarGists);
         var gists = similarGists.Select(similarGist => similarGist.Gist);
-        Assert.Equivalent(expectedGists, gists);
+        Assert.Equal(expectedGists.OrderBy(g => g.Id), gists.OrderBy(g => g.Id));
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
         for (var i = 0; i < testGists.Count; i++)
         {
             var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
-            var entry = CreateTestEntry() with { Reference = testGists[i].Reference };
+            var entry = CreateTestEntry(testGists[i].FeedId) with { Reference = testGists[i].Reference };
             await _chromaDbHandler.InsertEntryAsync(entry, text, CancellationToken.None);
         }
         var gistId = testGists.First().Id!.Value;
@@ -229,7 +229,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
         var similarGists = await actual.Content.ReadFromJsonAsync<List<SimilarGist>>(_jsonSerializerOptions);
         Assert.NotNull(similarGists);
         var gists = similarGists.Select(similarGist => similarGist.Gist);
-        Assert.Equivalent(expectedGists, gists);
+        Assert.Equal(expectedGists.OrderBy(g => g.Id), gists.OrderBy(g => g.Id));
     }
 
     [Fact]
@@ -278,6 +278,6 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
         actual.EnsureSuccessStatusCode();
         var feeds = await actual.Content.ReadFromJsonAsync<List<RssFeedInfo>>(_jsonSerializerOptions);
         Assert.NotNull(feeds);
-        Assert.Equivalent(expectedFeeds, feeds);
+        Assert.Equal(expectedFeeds, feeds);
     }
 }

@@ -7,6 +7,9 @@ public static class RandomExtensions {
         Enumerable.Repeat(Characters, length).Select(s => s[random.Next(s.Length)]).ToArray()
     );
 
+    public static Uri NextUri(this Random random, int partLength = 50) =>
+        new($"https://www.{random.NextString(partLength)}.com/{random.NextString(partLength)}");
+
     public static string[] NextArrayOfStrings(this Random random, int? length = null) => Enumerable
         .Repeat("", length ?? random.Next(1, 11)).Select(_ => random.NextString()).ToArray();
 

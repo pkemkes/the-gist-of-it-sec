@@ -17,7 +17,7 @@ public static class SyndicationItemExtensions {
             ? item.LastUpdatedTime.UtcDateTime
             : item.PublishDate.UtcDateTime;
 
-    public static string ExtractUrl(this SyndicationItem item) => item.Links.First().Uri.AbsoluteUri;
+    public static Uri ExtractUrl(this SyndicationItem item) => item.Links.First().Uri;
 
     public static IEnumerable<string> ExtractCategories(this SyndicationItem item) =>
         item.Categories.Select(category => category.Name.Trim());

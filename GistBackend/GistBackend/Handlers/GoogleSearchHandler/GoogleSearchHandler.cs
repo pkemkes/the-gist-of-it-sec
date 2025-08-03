@@ -29,9 +29,9 @@ public class GoogleSearchHandler(ICustomSearchApiHandler customSearchApiHandler,
             gistId,
             item.Title,
             item.Snippet,
-            item.Link,
-            item.DisplayLink,
-            item.Image.ThumbnailLink
+            new Uri(item.Link),
+            new Uri(item.DisplayLink),
+            new Uri(item.Image.ThumbnailLink)
         )).ToList();
     }
 

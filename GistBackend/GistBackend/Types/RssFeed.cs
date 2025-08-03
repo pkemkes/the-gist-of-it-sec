@@ -4,21 +4,30 @@ using GistBackend.Utils;
 
 namespace GistBackend.Types;
 
-public record RssFeed(string RssUrl, Func<string, string> ExtractText, IEnumerable<string>? AllowedCategories = null) {
+public record RssFeed(Uri RssUrl, Func<string, string> ExtractText, IEnumerable<string>? AllowedCategories = null) {
+    private SyndicationFeed? SyndicationFeed { get; set; }
     public int? Id { get; set; }
     public string? Title { get; set; }
     public string? Language { get; set; }
-    public IEnumerable<RssEntry> Entries { get; set; } = [];
+    public IEnumerable<RssEntry>? Entries { get; private set; }
 
     public async Task ParseFeedAsync(HttpClient httpClient, CancellationToken ct)
     {
         var response = await httpClient.GetStringAsync(RssUrl, ct);
         using var stringReader = new StringReader(response);
         using var xmlReader = XmlReader.Create(stringReader);
-        var feed = SyndicationFeed.Load(xmlReader);
-        Title = feed.Title.Text;
-        Language = feed.Language;
-        Entries = feed.Items.Select(SyndicationItemToRssEntry).FilterForAllowedCategories(AllowedCategories);
+        SyndicationFeed = SyndicationFeed.Load(xmlReader);
+        Title = SyndicationFeed.Title.Text;
+        Language = SyndicationFeed.Language;
+    }
+
+    public void ParseEntries(int feedId)
+    {
+        if (SyndicationFeed is null)
+            throw new InvalidOperationException($"{nameof(SyndicationFeed)} is null, need to parse feed first");
+        Id = feedId;
+        Entries = SyndicationFeed.Items.Select(SyndicationItemToRssEntry)
+            .FilterForAllowedCategories(AllowedCategories);
     }
 
     public RssFeedInfo ToRssFeedInfo()
@@ -28,13 +37,10 @@ public record RssFeed(string RssUrl, Func<string, string> ExtractText, IEnumerab
         return new RssFeedInfo(Title, RssUrl, Language) { Id = Id };
     }
 
-    private RssEntry SyndicationItemToRssEntry(SyndicationItem item)
-    {
-        if (Id is null) throw new Exception("Feed ID was not set");
-        if (ExtractText is null) throw new Exception("ExtractText for feed was not set");
-        return new RssEntry(
+    private RssEntry SyndicationItemToRssEntry(SyndicationItem item) =>
+        new(
             item.Id.Trim(),
-            Id.Value,
+            Id!.Value,
             item.ExtractAuthor(),
             item.Title.Text.Trim(),
             item.PublishDate.UtcDateTime,
@@ -43,5 +49,4 @@ public record RssFeed(string RssUrl, Func<string, string> ExtractText, IEnumerab
             item.ExtractCategories(),
             ExtractText
         );
-    }
 }

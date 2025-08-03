@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Prometheus;
+using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Services;
 
@@ -46,17 +47,21 @@ public class CleanupService(
     }
 
     private Task ParseFeedsAsync(CancellationToken ct) =>
-        Task.WhenAll(rssFeedHandler.Definitions.Select(feed => ParseAndStoreFeedAsync(feed, ct)));
+        Task.WhenAll(rssFeedHandler.Definitions.Select(feed => ParseAndCacheFeedAsync(feed, ct)));
 
-    private async Task ParseAndStoreFeedAsync(RssFeed feed, CancellationToken ct)
+    private async Task ParseAndCacheFeedAsync(RssFeed feed, CancellationToken ct)
     {
         await rssFeedHandler.ParseFeedAsync(feed, ct);
         var feedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
         if (feedInfo is null)
         {
-            throw new UnexpectedStateException($"Could not find feed with Url {feed.RssUrl} in db");
+            logger?.LogWarning(DidNotFindExpectedFeedInDb, "Could not find feed with Url {RssUrl} in db", feed.RssUrl);
         }
-        _feedsByFeedId.Add(feedInfo.Id!.Value, feed);
+        else
+        {
+            feed.ParseEntries(feedInfo.Id!.Value);
+            _feedsByFeedId.Add(feedInfo.Id!.Value, feed);
+        }
     }
 
     private async Task CleanupGistsAsync(CancellationToken ct)
@@ -79,8 +84,8 @@ public class CleanupService(
 
     private async Task<bool> GistShouldBeDisabledAsync(Gist gist, CancellationToken ct)
     {
-        if (options.Value.DomainsToIgnore.Any(domain => gist.Url.StartsWith(domain))) return false;
-        var feedTitle = _feedsByFeedId[gist.FeedId].Title!;
+        if (options.Value.DomainsToIgnore.Any(domain => gist.Url.Host.Equals(domain))) return false;
+        var feedTitle = GetFeedTitleByFeedId(gist.FeedId);
         using (new SelfReportingStopwatch(elapsed => CheckGistSummary.WithLabels(feedTitle).Observe(elapsed)))
         {
             var request = new HttpRequestMessage(HttpMethod.Get, gist.Url);
@@ -91,10 +96,19 @@ public class CleanupService(
         }
     }
 
+    private string GetFeedTitleByFeedId(int feedId)
+    {
+        if (!_feedsByFeedId.TryGetValue(feedId, out var feed))
+        {
+            throw new FeedNotFoundException($"Feed with ID {feedId} not found");
+        }
+        return feed.Title ?? throw new InvalidOperationException($"Feed with ID {feedId} has no title");
+    }
+
     private bool WasRedirectedAndNotPresentInFeedAnymore(Gist gist, HttpResponseMessage response)
     {
-        var wasRedirected = gist.Url != response.RequestMessage?.RequestUri?.ToString();
-        var isPresentInFeed = _feedsByFeedId[gist.FeedId].Entries.Any(entry => entry.Url == gist.Url);
+        var wasRedirected = gist.Url != response.RequestMessage?.RequestUri;
+        var isPresentInFeed = _feedsByFeedId[gist.FeedId].Entries!.Any(entry => entry.Url == gist.Url);
         return wasRedirected && !isPresentInFeed;
     }
 }

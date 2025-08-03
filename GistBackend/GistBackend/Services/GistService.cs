@@ -53,20 +53,26 @@ public class GistService(
     private async Task ProcessFeedAsync(RssFeed feed, CancellationToken ct)
     {
         await rssFeedHandler.ParseFeedAsync(feed, ct);
-        await EnsureCurrentFeedInfoInDbAsync(feed, ct);
-        foreach (var entry in feed.Entries.OrderBy(entry => entry.Updated)) await ProcessEntryAsync(entry, feed, ct);
+        var feedId = await EnsureCurrentFeedInfoInDbAsync(feed, ct);
+        feed.ParseEntries(feedId);
+        foreach (var entry in feed.Entries!.OrderBy(entry => entry.Updated)) await ProcessEntryAsync(entry, feed, ct);
     }
 
-    private async Task EnsureCurrentFeedInfoInDbAsync(RssFeed feed, CancellationToken ct)
+    private async Task<int> EnsureCurrentFeedInfoInDbAsync(RssFeed feed, CancellationToken ct)
     {
         var existingFeedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
         var parsedFeedInfo = feed.ToRssFeedInfo();
 
-        if (existingFeedInfo is null) await mariaDbHandler.InsertFeedInfoAsync(parsedFeedInfo, ct);
-        else if (parsedFeedInfo with { Id = existingFeedInfo.Id } != existingFeedInfo)
+        if (existingFeedInfo is null)
+        {
+            var feedId = await mariaDbHandler.InsertFeedInfoAsync(parsedFeedInfo, ct);
+            return feedId;
+        }
+        if (parsedFeedInfo with { Id = existingFeedInfo.Id } != existingFeedInfo)
         {
             await mariaDbHandler.UpdateFeedInfoAsync(parsedFeedInfo, ct);
         }
+        return existingFeedInfo.Id!.Value;
     }
 
     private async Task ProcessEntryAsync(RssEntry entry, RssFeed feed, CancellationToken ct)

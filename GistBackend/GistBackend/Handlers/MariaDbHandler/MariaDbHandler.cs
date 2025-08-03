@@ -11,7 +11,7 @@ using static GistBackend.Utils.LogEvents;
 namespace GistBackend.Handlers.MariaDbHandler;
 
 public interface IMariaDbHandler {
-    Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(string rssUrl, CancellationToken ct);
+    Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(Uri rssUrl, CancellationToken ct);
     Task<int> InsertFeedInfoAsync(RssFeedInfo feedInfo, CancellationToken ct);
     Task UpdateFeedInfoAsync(RssFeedInfo feedInfo, CancellationToken ct);
     Task<Gist?> GetGistByReferenceAsync(string reference, CancellationToken ct);
@@ -42,14 +42,23 @@ public interface IMariaDbHandler {
     Task SetGistIdLastSentForChatAsync(long chatId, int gistId, CancellationToken ct);
 }
 
-public class MariaDbHandler(
-    IOptions<MariaDbHandlerOptions> options,
-    IDateTimeHandler dateTimeHandler,
-    ILogger<MariaDbHandler>? logger) : IMariaDbHandler
+public class MariaDbHandler : IMariaDbHandler
 {
-    private readonly string _connectionString = options.Value.GetConnectionString();
+    private readonly string _connectionString;
+    private readonly IDateTimeHandler _dateTimeHandler;
+    private readonly ILogger<MariaDbHandler>? _logger;
 
-    public async Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(string rssUrl, CancellationToken ct)
+    public MariaDbHandler(IOptions<MariaDbHandlerOptions> options,
+        IDateTimeHandler dateTimeHandler,
+        ILogger<MariaDbHandler>? logger)
+    {
+        _dateTimeHandler = dateTimeHandler;
+        _logger = logger;
+        _connectionString = options.Value.GetConnectionString();
+        SqlMapper.AddTypeHandler(new UriTypeHandler());
+    }
+
+    public async Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(Uri rssUrl, CancellationToken ct)
     {
         const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds WHERE RssUrl = @RssUrl";
         var command = new CommandDefinition(query, new { RssUrl = rssUrl }, cancellationToken: ct);
@@ -57,11 +66,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.QueryFirstOrDefaultAsync<RssFeedInfo>(command).WithDeadlockRetry(logger);
+            return await connection.QueryFirstOrDefaultAsync<RssFeedInfo>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingFeedInfoByUrlFailed, e, "Getting feedInfo by rssUrl failed");
+            _logger?.LogError(GettingFeedInfoByUrlFailed, e, "Getting feedInfo by rssUrl failed");
             throw;
         }
     }
@@ -78,11 +87,11 @@ public class MariaDbHandler(
         await using var connection = await GetOpenConnectionAsync(ct);
         try
         {
-            return await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(logger);
+            return await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(InsertingFeedInfoFailed, e, "Inserting FeedInfo failed");
+            _logger?.LogError(InsertingFeedInfoFailed, e, "Inserting FeedInfo failed");
             throw;
         }
     }
@@ -95,12 +104,12 @@ public class MariaDbHandler(
         await using var connection = await GetOpenConnectionAsync(ct);
         try
         {
-            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
             if (rowsAffected != 1) throw new DatabaseOperationException("Did not successfully update feed info");
         }
         catch (Exception e) when (e is MySqlException or DatabaseOperationException)
         {
-            logger?.LogError(UpdatingFeedInfoFailed, e, "Updating FeedInfo failed");
+            _logger?.LogError(UpdatingFeedInfoFailed, e, "Updating FeedInfo failed");
             throw;
         }
     }
@@ -116,11 +125,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.QueryFirstOrDefaultAsync<Gist>(command).WithDeadlockRetry(logger);
+            return await connection.QueryFirstOrDefaultAsync<Gist>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingGistByReferenceFailed, e, "Getting gist by reference failed");
+            _logger?.LogError(GettingGistByReferenceFailed, e, "Getting gist by reference failed");
             throw;
         }
     }
@@ -140,11 +149,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(logger);
+            return await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(InsertingGistFailed, e, "Inserting Gist failed");
+            _logger?.LogError(InsertingGistFailed, e, "Inserting Gist failed");
             throw;
         }
     }
@@ -162,12 +171,12 @@ public class MariaDbHandler(
         await using var connection = await GetOpenConnectionAsync(ct);
         try
         {
-            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
             if (rowsAffected != 1) throw new DatabaseOperationException("Did not successfully update gist");
         }
         catch (Exception e) when (e is MySqlException or DatabaseOperationException)
         {
-            logger?.LogError(UpdatingGistFailed, e, "Updating gist failed");
+            _logger?.LogError(UpdatingGistFailed, e, "Updating gist failed");
             throw;
         }
     }
@@ -183,11 +192,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<GoogleSearchResult>(command).WithDeadlockRetry(logger)).ToList();
+            return (await connection.QueryAsync<GoogleSearchResult>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingSearchResultsFailed, e, "Getting search results failed");
+            _logger?.LogError(GettingSearchResultsFailed, e, "Getting search results failed");
             throw;
         }
     }
@@ -200,7 +209,7 @@ public class MariaDbHandler(
         {
             await InsertSearchResultAsync(searchResult, connection, transaction, ct);
         }
-        await transaction.CommitAsync(ct).WithDeadlockRetry(logger);
+        await transaction.CommitAsync(ct).WithDeadlockRetry(_logger);
     }
 
     public async Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct)
@@ -213,7 +222,7 @@ public class MariaDbHandler(
         {
             await InsertSearchResultAsync(searchResult, connection, transaction, ct);
         }
-        await transaction.CommitAsync(ct).WithDeadlockRetry(logger);
+        await transaction.CommitAsync(ct).WithDeadlockRetry(_logger);
     }
 
     private async Task InsertSearchResultAsync(GoogleSearchResult searchResult, MySqlConnection connection,
@@ -225,7 +234,7 @@ public class MariaDbHandler(
                 VALUES (@GistId, @Title, @Snippet, @Url, @DisplayUrl, @ThumbnailUrl)
         """;
         var command = new CommandDefinition(query, searchResult, transaction, cancellationToken: ct);
-        await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+        await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
     }
 
     private async Task DeleteSearchResultsForGistIdAsync(int gistId, MySqlConnection connection,
@@ -233,10 +242,10 @@ public class MariaDbHandler(
     {
         const string query = "DELETE FROM SearchResults WHERE GistId = @GistId";
         var command = new CommandDefinition(query, new { GistId = gistId }, transaction, cancellationToken: ct);
-        var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+        var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
         if (rowsAffected == 0)
         {
-            logger?.LogError(DeletingSearchResultsFailed,
+            _logger?.LogError(DeletingSearchResultsFailed,
                 "Did not delete any search results for gist with ID {GistId} failed", gistId);
             throw new DatabaseOperationException("Did not delete any search results");
         }
@@ -250,7 +259,7 @@ public class MariaDbHandler(
     {
         var query = $"SELECT COUNT(id) FROM Recaps{recapType.ToTypeString()}" +
             " WHERE Created >= @EarliestCreated AND Created <= @Now";
-        var now = dateTimeHandler.GetUtcNow();
+        var now = _dateTimeHandler.GetUtcNow();
         // We always want to check whether the last recap was created in the last 24 hours
         // because we want to create new recaps every day, even if it is the weekly one.
         var command = new CommandDefinition(query, new { Now = now, EarliestCreated = now.AddDays(-1) },
@@ -259,7 +268,7 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            var recapCount = await connection.QuerySingleAsync<int>(command).WithDeadlockRetry(logger);
+            var recapCount = await connection.QuerySingleAsync<int>(command).WithDeadlockRetry(_logger);
             return recapCount switch {
                 0 => false,
                 1 => true,
@@ -268,7 +277,7 @@ public class MariaDbHandler(
         }
         catch (Exception e) when (e is MySqlException or DatabaseOperationException)
         {
-            logger?.LogError(CheckIfRecapExistsFailed, e, "Check if the {RecapType} recap exists failed",
+            _logger?.LogError(CheckIfRecapExistsFailed, e, "Check if the {RecapType} recap exists failed",
                 recapType.ToTypeString());
             throw;
         }
@@ -284,7 +293,7 @@ public class MariaDbHandler(
             SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
             FROM Gists WHERE updated >= @EarliestUpdated AND updated <= @Now
         """;
-        var now = dateTimeHandler.GetUtcNow();
+        var now = _dateTimeHandler.GetUtcNow();
         var earliestUpdated = now.AddDays(-days);
         var command = new CommandDefinition(query, new { Now = now, EarliestUpdated = earliestUpdated },
             cancellationToken: ct);
@@ -292,11 +301,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(logger)).ToList();
+            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingGistsForRecapFailed, e, "Getting the gists of the last {Days} days failed", days);
+            _logger?.LogError(GettingGistsForRecapFailed, e, "Getting the gists of the last {Days} days failed", days);
             throw;
         }
     }
@@ -311,7 +320,7 @@ public class MariaDbHandler(
     {
         var query = $"INSERT INTO Recaps{recapType.ToTypeString()} (created, recap) VALUES (@Created, @Recap)";
         var serializedRecap = new SerializedRecap(
-            dateTimeHandler.GetUtcNow(),
+            _dateTimeHandler.GetUtcNow(),
             JsonSerializer.Serialize(recap, SerializerDefaults.JsonOptions)
         );
         var command = new CommandDefinition(query, serializedRecap, cancellationToken: ct);
@@ -319,11 +328,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(e, "Inserting {RecapType} recap failed", recapType.ToTypeString());
+            _logger?.LogError(e, "Inserting {RecapType} recap failed", recapType.ToTypeString());
             throw;
         }
     }
@@ -339,11 +348,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(logger)).ToList();
+            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingAllGistsFailed, e, "Getting all gists failed");
+            _logger?.LogError(GettingAllGistsFailed, e, "Getting all gists failed");
             throw;
         }
     }
@@ -357,16 +366,16 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
             if (rowsAffected != 1) throw new DatabaseOperationException("Did not successfully set gist disabled state");
         }
         catch (Exception e) when (e is MySqlException or DatabaseOperationException)
         {
-            logger?.LogError(EnsuringCorrectDisabledFailed, e, "Ensuring correct disabled state for gist failed");
+            _logger?.LogError(EnsuringCorrectDisabledFailed, e, "Ensuring correct disabled state for gist failed");
             throw;
         }
 
-        logger?.LogInformation(ChangedDisabledStateOfGistInDb,
+        _logger?.LogInformation(ChangedDisabledStateOfGistInDb,
             "Changed disabled state of gist with ID {GistId} to {Disabled}", gistId, disabled);
         return false;
     }
@@ -379,11 +388,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.QuerySingleAsync<bool>(command).WithDeadlockRetry(logger);
+            return await connection.QuerySingleAsync<bool>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingDisabledStateFailed, e, "Getting disabled state for gist failed");
+            _logger?.LogError(GettingDisabledStateFailed, e, "Getting disabled state for gist failed");
             throw;
         }
     }
@@ -412,11 +421,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(logger)).ToList();
+            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingPreviousGistsFailed, e, "Getting previous gists failed");
+            _logger?.LogError(GettingPreviousGistsFailed, e, "Getting previous gists failed");
             throw;
         }
     }
@@ -479,11 +488,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.QuerySingleOrDefaultAsync<Gist>(command).WithDeadlockRetry(logger);
+            return await connection.QuerySingleOrDefaultAsync<Gist>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingGistByReferenceFailed, e, "Getting gist by ID failed");
+            _logger?.LogError(GettingGistByReferenceFailed, e, "Getting gist by ID failed");
             throw;
         }
     }
@@ -496,11 +505,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<RssFeedInfo>(command).WithDeadlockRetry(logger)).ToList();
+            return (await connection.QueryAsync<RssFeedInfo>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingAllFeedInfosFailed, e, "Getting all feed infos failed");
+            _logger?.LogError(GettingAllFeedInfosFailed, e, "Getting all feed infos failed");
             throw;
         }
     }
@@ -514,10 +523,10 @@ public class MariaDbHandler(
         {
             await using var connection = await GetOpenConnectionAsync(ct);
             var serializedRecap = await connection.QuerySingleOrDefaultAsync<SerializedRecap>(command)
-                .WithDeadlockRetry(logger);
+                .WithDeadlockRetry(_logger);
             if (serializedRecap is null)
             {
-                logger?.LogInformation(NoRecapFound, "No {RecapType} recap found in database",
+                _logger?.LogInformation(NoRecapFound, "No {RecapType} recap found in database",
                     recapType.ToTypeString());
                 return null;
             }
@@ -527,7 +536,7 @@ public class MariaDbHandler(
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingLatestRecapFailed, e, "Getting latest {RecapType} recap failed",
+            _logger?.LogError(GettingLatestRecapFailed, e, "Getting latest {RecapType} recap failed",
                 recapType.ToTypeString());
             throw;
         }
@@ -541,7 +550,7 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            var count = await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(logger);
+            var count = await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(_logger);
             if (count > 1)
             {
                 throw new DatabaseOperationException($"Found multiple chats with the same ID {chatId} in database");
@@ -550,7 +559,7 @@ public class MariaDbHandler(
         }
         catch (MySqlException e)
         {
-            logger?.LogError(ChatRegisterCheckFailed, e, "Checking if chat is registered failed");
+            _logger?.LogError(ChatRegisterCheckFailed, e, "Checking if chat is registered failed");
             throw;
         }
     }
@@ -568,13 +577,13 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
-            logger?.LogInformation(ChatRegistered,
+            await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
+            _logger?.LogInformation(ChatRegistered,
                 "Chat with ID {ChatId} registered with GistIdLastSend {GistIdLastSend}", chatId, gistIdLastSent);
         }
         catch (MySqlException e)
         {
-            logger?.LogError(RegisteringChatFailed, e,
+            _logger?.LogError(RegisteringChatFailed, e,
                 "Registering chat with ID {ChatId} and GistIdLastSend {GistIdLastSend} failed", chatId, gistIdLastSent);
             throw;
         }
@@ -584,7 +593,7 @@ public class MariaDbHandler(
     {
         var gists = await GetPreviousGistsAsync(1, null, [], null, [], ct);
         if (gists.Count != 0) return gists.Single();
-        logger?.LogInformation(NoRecentGistFound, "No recent gist found in database");
+        _logger?.LogInformation(NoRecentGistFound, "No recent gist found in database");
         return null;
     }
 
@@ -596,7 +605,7 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
             switch (rowsAffected)
             {
                 case 0:
@@ -604,13 +613,13 @@ public class MariaDbHandler(
                 case > 1:
                     throw new DatabaseOperationException($"Deregistered multiple chats with the same ID {chatId}");
                 default:
-                    logger?.LogInformation(ChatDeregistered, "Chat with ID {ChatId} deregistered", chatId);
+                    _logger?.LogInformation(ChatDeregistered, "Chat with ID {ChatId} deregistered", chatId);
                     break;
             }
         }
         catch (MySqlException e)
         {
-            logger?.LogError(DeregisteringChatFailed, e, "Deregistering chat with ID {ChatId} failed", chatId);
+            _logger?.LogError(DeregisteringChatFailed, e, "Deregistering chat with ID {ChatId} failed", chatId);
             throw;
         }
     }
@@ -623,11 +632,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<Chat>(command).WithDeadlockRetry(logger)).ToList();
+            return (await connection.QueryAsync<Chat>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingAllChatsFailed, e, "Getting all chats failed");
+            _logger?.LogError(GettingAllChatsFailed, e, "Getting all chats failed");
             throw;
         }
     }
@@ -643,11 +652,11 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(logger)).ToList();
+            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingNextFiveGistsFailed, e, "Getting next gists with lastGistId {LastGistId} failed",
+            _logger?.LogError(GettingNextFiveGistsFailed, e, "Getting next gists with lastGistId {LastGistId} failed",
                 lastGistId);
             throw;
         }
@@ -661,14 +670,14 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            var feedInfo = await connection.QuerySingleOrDefaultAsync<RssFeedInfo>(command).WithDeadlockRetry(logger);
+            var feedInfo = await connection.QuerySingleOrDefaultAsync<RssFeedInfo>(command).WithDeadlockRetry(_logger);
             if (feedInfo is not null) return feedInfo;
-            logger?.LogInformation(FeedInfoNotFound, "No feed info found for ID {FeedId}", feedId);
+            _logger?.LogInformation(FeedInfoNotFound, "No feed info found for ID {FeedId}", feedId);
             throw new DatabaseOperationException($"No feed info found for ID {feedId}");
         }
         catch (MySqlException e)
         {
-            logger?.LogError(GettingFeedInfoByIdFailed, e, "Getting feed info by ID {FeedId} failed", feedId);
+            _logger?.LogError(GettingFeedInfoByIdFailed, e, "Getting feed info by ID {FeedId} failed", feedId);
             throw;
         }
     }
@@ -682,14 +691,14 @@ public class MariaDbHandler(
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(logger);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
             if (rowsAffected != 1)
                 throw new DatabaseOperationException(
                     $"Did not successfully set GistIdLastSent for Chat {chatId} to {gistId}");
         }
         catch (MySqlException e)
         {
-            logger?.LogError(SettingGistIdLastSentFailed, e,
+            _logger?.LogError(SettingGistIdLastSentFailed, e,
                 "Setting GistIdLastSent for chat with ID {ChatId} to {GistId} failed", chatId, gistId);
             throw;
         }
@@ -706,7 +715,7 @@ public class MariaDbHandler(
         }
         catch (Exception e)
         {
-            logger?.LogError(DatabaseConnectionFailed, e, "Failed to connect to database");
+            _logger?.LogError(DatabaseConnectionFailed, e, "Failed to connect to database");
             if (connection is not null) await connection.DisposeAsync();
             throw;
         }

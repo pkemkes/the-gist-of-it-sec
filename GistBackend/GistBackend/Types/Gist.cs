@@ -10,7 +10,7 @@ public record Gist(
     string Title,
     DateTime Published,
     DateTime Updated,
-    string Url,
+    Uri Url,
     string Summary,
     string Tags,
     string SearchQuery,

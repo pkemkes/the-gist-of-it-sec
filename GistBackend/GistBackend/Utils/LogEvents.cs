@@ -60,6 +60,5 @@ public static class LogEvents {
     public static readonly EventId StopCommandButNotRegistered = new(1202, nameof(StopCommandButNotRegistered));
     public static readonly EventId StopCommandForExistingChat = new(1202, nameof(StopCommandForExistingChat));
     public static readonly EventId SendingGistToChat = new(1203, nameof(SendingGistToChat));
-
-
+    public static readonly EventId DidNotFindExpectedFeedInDb = new(1300, nameof(DidNotFindExpectedFeedInDb));
 }

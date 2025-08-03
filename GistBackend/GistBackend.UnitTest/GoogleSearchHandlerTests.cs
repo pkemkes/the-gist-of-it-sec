@@ -21,20 +21,16 @@ public class GoogleSearchHandlerTests
             new Result {
                 Title = "first test title",
                 Snippet = "first test snippet",
-                Link = "first test link",
-                DisplayLink = "first test display link",
-                Image = new Result.ImageData {
-                    ThumbnailLink = "first test thumbnail link"
-                }
+                Link = "https://first.test.link.com/",
+                DisplayLink = "https://first.test.display.link.com/",
+                Image = new Result.ImageData { ThumbnailLink = "https://first.test.thumbnail.link.com/" }
             },
             new Result {
                 Title = "second test title",
                 Snippet = "second test snippet",
-                Link = "second test link",
-                DisplayLink = "second test display link",
-                Image = new Result.ImageData {
-                    ThumbnailLink = "second test thumbnail link"
-                }
+                Link = "https://second.test.link.com/",
+                DisplayLink = "https://second.test.display.link.com/",
+                Image = new Result.ImageData { ThumbnailLink = "https://second.test.thumbnail.link.com/" }
             }
         ]
     };
@@ -44,17 +40,17 @@ public class GoogleSearchHandlerTests
             gistId,
             "first test title",
             "first test snippet",
-            "first test link",
-            "first test display link",
-            "first test thumbnail link"
+            new Uri("https://first.test.link.com/"),
+            new Uri("https://first.test.display.link.com/"),
+            new Uri("https://first.test.thumbnail.link.com/")
         ),
         new(
             gistId,
             "second test title",
             "second test snippet",
-            "second test link",
-            "second test display link",
-            "second test thumbnail link"
+            new Uri("https://second.test.link.com/"),
+            new Uri("https://second.test.display.link.com/"),
+            new Uri("https://second.test.thumbnail.link.com/")
         )
     ];
 

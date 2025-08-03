@@ -5,7 +5,7 @@ namespace GistBackend.Types;
 [method: JsonConstructor]
 public record RssFeedInfo(
     string Title,
-    string RssUrl,
+    Uri RssUrl,
     string Language,
     int? Id = null
 ) {
