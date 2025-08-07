@@ -4,6 +4,7 @@ using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
+using GistBackend.Handlers.RssHandlers;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;

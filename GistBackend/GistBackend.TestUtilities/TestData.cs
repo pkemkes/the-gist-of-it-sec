@@ -3,6 +3,7 @@ using System.ServiceModel.Syndication;
 using System.Text;
 using System.Xml;
 using GistBackend.Handlers;
+using GistBackend.Handlers.RssHandlers;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
 

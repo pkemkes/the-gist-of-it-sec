@@ -3,6 +3,7 @@ using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
+using GistBackend.Handlers.RssHandlers;
 using GistBackend.Handlers.TelegramBotClientHandler;
 using GistBackend.Services;
 using GistBackend.Utils;
@@ -52,6 +53,8 @@ public class StartUp(IConfiguration configuration)
             configuration.GetSection(cleanupMariaDbHandlerOptionsName));
         services.Configure<MariaDbHandlerOptions>(telegramMariaDbHandlerOptionsName,
             configuration.GetSection(telegramMariaDbHandlerOptionsName));
+        services.Configure<MariaDbHandlerOptions>(GistsControllerMariaDbHandlerOptionsName,
+            configuration.GetSection(GistsControllerMariaDbHandlerOptionsName));
         services.Configure<ChromaDbHandlerOptions>(configuration.GetSection(nameof(ChromaDbHandlerOptions)));
 
         services.AddHttpClient(RetryingHttpClientName)
