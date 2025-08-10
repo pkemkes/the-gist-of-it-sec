@@ -1,21 +1,21 @@
 export interface Gist {
   id: number,
-  feed_title: string,
-  feed_link: string,
+  feedTitle: string,
+  feedUrl: string,
   title: string,
   author: string,
-  link: string,
+  url: string,
   published: string,
   updated: string,
   summary: string,
   tags: string[],
-  search_query: string,
+  searchQuery: string,
 }
 
 export interface FeedInfo {
   id: number,
   title: string,
-  link: string,
+  rssUrl: string,
   language: string,
 }
 
