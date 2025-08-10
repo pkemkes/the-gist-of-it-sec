@@ -135,15 +135,15 @@ public class TelegramService : BackgroundService
     private async Task ProcessAllChatsAsync(CancellationToken ct)
     {
         var chats = await _mariaDbHandler.GetAllChatsAsync(ct);
-        var gistsToSendByGistIdLastSent = (await Task.WhenAll(
-                chats
-                    .Select(chat => chat.GistIdLastSent).Distinct()
-                    .Select(async id => (id, gists: await _mariaDbHandler.GetNextFiveGistsAsync(id, ct))
-                )
-            ))
-            .ToDictionary(tuple => tuple.id, tuple => tuple.gists);
-        await Task.WhenAll(chats.Select(chat =>
-            SendGistsToChatAsync(chat.Id, gistsToSendByGistIdLastSent[chat.GistIdLastSent], ct)));
+        var gistsToSendByGistIdLastSent = new Dictionary<int, List<Gist>>();
+        foreach (var gistId in chats.Select(chat => chat.GistIdLastSent).Distinct())
+        {
+            gistsToSendByGistIdLastSent[gistId] = await _mariaDbHandler.GetNextFiveGistsAsync(gistId, ct);
+        }
+        foreach (var chat in chats)
+        {
+            await SendGistsToChatAsync(chat.Id, gistsToSendByGistIdLastSent[chat.GistIdLastSent], ct);
+        }
     }
 
     private async Task SendGistsToChatAsync(long chatId, IEnumerable<Gist> gists, CancellationToken ct)

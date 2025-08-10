@@ -1,103 +1,85 @@
-# Exception
-
-```
-System.InvalidOperationException: MariaDB connection parameters are not set.
-at GistBackend.Handlers.MariaDbHandler.MariaDbHandlerOptions.CheckIfConfigIsSet() in /src/GistBackend/Handlers/MariaDbHandler/MariaDbHandlerOptions.cs:line 27
-at GistBackend.Handlers.MariaDbHandler.MariaDbHandlerOptions.GetConnectionString() in /src/GistBackend/Handlers/MariaDbHandler/MariaDbHandlerOptions.cs:line 14
-at GistBackend.Handlers.MariaDbHandler.MariaDbHandler..ctor(IOptions`1 options, IDateTimeHandler dateTimeHandler, ILogger`1 logger) in /src/GistBackend/Handlers/MariaDbHandler/MariaDbHandler.cs:line 57
-at GistBackend.StartUp.<>c.<ConfigureServices>b__4_6(IServiceProvider provider, Object _) in /src/GistBackend/StartUp.cs:line 96
-at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)
-   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)
-   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)
-   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)
-at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)
-at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.<>c__DisplayClass2_0.<RealizeService>b__0(ServiceProviderEngineScope scope)
-at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
-at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetKeyedService(Type serviceType, Object serviceKey)
-at lambda_method58(Closure, IServiceProvider, Object[])
-at Microsoft.AspNetCore.Mvc.Controllers.ControllerFactoryProvider.<>c__DisplayClass6_0.<CreateControllerFactory>g__CreateController|0(ControllerContext controllerContext)
-at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
-at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
---- End of stack trace from previous location ---
-at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
-at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
-at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
-at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
-at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)
-```
+# Plan: Suppress HTTP Client Logs While Keeping Web Request Logs
 
 ## Problem Analysis
+The application is generating verbose logs for outbound HTTP requests to ChromaDB with:
+- Source Context: `System.Net.Http.HttpClient.Default.LogicalHandler`
+- Event ID: 100 (RequestPipelineStart)
+- These logs appear for every HTTP POST to ChromaDB API endpoints
 
-The exception occurs because the `GistsControllerMariaDbHandlerOptions` configuration is missing from the StartUp.cs services configuration, NOT from docker-compose.yaml.
+## Goal
+- Suppress HTTP client logs for outbound requests (to ChromaDB, OpenAI, etc.)
+- Keep ASP.NET Core web request logs for incoming HTTP requests
+- Maintain all other application logs at current levels
 
-**Root Cause:**
-- The docker-compose.yaml correctly includes all environment variables including `GistsControllerMariaDbHandlerOptions`
-- However, the StartUp.cs `ConfigureServices` method is missing the `services.Configure<MariaDbHandlerOptions>` call for `GistsControllerMariaDbHandlerOptionsName`
-- The StartUp.cs configures 4 MariaDbHandler instances but missing the 5th one:
-  - `GistMariaDbHandlerOptions` ✓ (configured in StartUp.cs)
-  - `RecapMariaDbHandlerOptions` ✓ (configured in StartUp.cs)
-  - `CleanupMariaDbHandlerOptions` ✓ (configured in StartUp.cs)
-  - `TelegramMariaDbHandlerOptions` ✓ (configured in StartUp.cs)
-  - `GistsControllerMariaDbHandlerOptions` ❌ (MISSING from StartUp.cs services.Configure calls)
+## Solution Strategy
 
-**Why it fails:**
-When the GistsController tries to inject the keyed MariaDbHandler, the configuration system can't find the `GistsControllerMariaDbHandlerOptions` section because it was never registered with `services.Configure`, causing the options to have default empty values.
+### Step 1: Configure Serilog Minimum Level Overrides
+Add logging level overrides in the Serilog configuration to specifically target the HTTP client logger source contexts:
 
-## Solution Steps
+- `System.Net.Http.HttpClient` - Controls HttpClient logging
+- `System.Net.Http.HttpClient.Default.LogicalHandler` - Controls detailed request pipeline logs
+- `System.Net.Http.HttpClient.Default.ClientHandler` - Controls low-level HTTP handler logs
 
-1. **Add missing configuration call** to StartUp.cs in the `ConfigureServices` method:
-   ```csharp
-   services.Configure<MariaDbHandlerOptions>(GistsControllerMariaDbHandlerOptionsName,
-       configuration.GetSection(GistsControllerMariaDbHandlerOptionsName));
-   ```
+### Step 2: Preserve ASP.NET Core Request Logging
+Ensure that incoming web request logs are preserved by keeping these loggers at Information level:
+- `Microsoft.AspNetCore.Hosting.Diagnostics` - Incoming request logs
+- `Microsoft.AspNetCore.Routing` - Route matching logs
+- `Microsoft.AspNetCore.Mvc` - Controller action logs
 
-2. **Verify the environment variables** `DB_GISTSCONTROLLER_USERNAME` and `DB_GISTSCONTROLLER_PASSWORD` exist in your .env file
+### Step 3: Implementation Details
 
-3. **Test the configuration** by making a request to the `/api/v1/gists` endpoint to confirm the GistsController can initialize properly
+#### Modify Program.cs
+Update the Serilog configuration in `Program.cs` to include minimum level overrides:
 
-# docker-compose.yaml configuration
-
-```yaml
-  backend:
-    image: pkemkes/gist-backend
-    container_name: backend
-    depends_on:
-      database:
-        condition: service_healthy
-      chromadb:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
-    environment:
-      - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
-      - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
-      - ChatClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
-      - ChatClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
-      - ChromaDbHandlerOptions__Server=chromadb
-      - ChromaDbHandlerOptions__ServerAuthnCredentials=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - CustomSearchApiHandlerOptions__ApiKey=${GOOGLE_API_KEY}
-      - CustomSearchApiHandlerOptions__EngineId=${GOOGLE_SEARCH_ENGINE_ID}
-      - TelegramBotClientHandlerOptions__BotToken=${TELEGRAM_API_KEY}
-      - TelegramServiceOptions__AppBaseUrl=http://localhost:8081  # NOTE: Change this to your base URL
-      - GistMariaDbHandlerOptions__Server=database
-      - GistMariaDbHandlerOptions__User=${DB_GISTSERVICE_USERNAME}
-      - GistMariaDbHandlerOptions__Password=${DB_GISTSERVICE_PASSWORD}
-      - RecapMariaDbHandlerOptions__Server=database
-      - RecapMariaDbHandlerOptions__User=${DB_RECAPSERVICE_USERNAME}
-      - RecapMariaDbHandlerOptions__Password=${DB_RECAPSERVICE_PASSWORD}
-      - CleanupMariaDbHandlerOptions__Server=database
-      - CleanupMariaDbHandlerOptions__User=${DB_CLEANUPSERVICE_USERNAME}
-      - CleanupMariaDbHandlerOptions__Password=${DB_CLEANUPSERVICE_PASSWORD}
-      - TelegramMariaDbHandlerOptions__Server=database
-      - TelegramMariaDbHandlerOptions__User=${DB_TELEGRAMSERVICE_USERNAME}
-      - TelegramMariaDbHandlerOptions__Password=${DB_TELEGRAMSERVICE_PASSWORD}
-      - GistsControllerMariaDbHandlerOptions__Server=database
-      - GistsControllerMariaDbHandlerOptions__User=${DB_GISTSCONTROLLER_USERNAME}
-      - GistsControllerMariaDbHandlerOptions__Password=${DB_GISTSCONTROLLER_PASSWORD}
-    networks:
-      - database
-      - chromadb
-      - prometheus
-    ports:
-      - "8080:8080"
+```csharp
+configuration
+    .Enrich.FromLogContext()
+    .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
+    .MinimumLevel.Override("System.Net.Http.HttpClient.Default.LogicalHandler", LogEventLevel.Warning)
+    .MinimumLevel.Override("System.Net.Http.HttpClient.Default.ClientHandler", LogEventLevel.Warning)
+    .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter());
 ```
+
+#### Alternative: More Granular Control
+If the above suppresses too much, use more specific overrides:
+- Set `System.Net.Http.HttpClient.Default.LogicalHandler` to `Error` to only show actual errors
+- Keep other HTTP client loggers at `Warning` for important issues
+
+### Step 4: Verification Steps
+
+1. **Before Changes**: Run the application and observe the current log volume
+2. **After Changes**: Verify that:
+   - HTTP client logs (POST to ChromaDB) are suppressed
+   - Incoming web requests to your API endpoints are still logged
+   - Application errors and warnings are still visible
+   - Other important logs (business logic, exceptions) remain intact
+
+### Step 5: Alternative Solutions (if needed)
+
+#### Option A: Custom Log Filter
+If minimum level overrides don't provide enough control, implement a custom Serilog filter:
+- Use `.Filter.ByExcluding()` with conditions based on source context and message templates
+- More granular control over which specific log messages to suppress
+
+#### Option B: HttpClient-Specific Configuration
+Configure logging specifically for the HttpClient instances:
+- Use `services.Configure<HttpClientFactoryOptions>()` to set logging options
+- Apply logging configuration per named HttpClient
+
+#### Option C: Custom Serilog Enricher
+Create a custom enricher to modify or suppress logs based on context properties:
+- Check for specific URI patterns (ChromaDB endpoints)
+- Suppress logs based on HTTP method and destination
+
+### Step 6: Testing Scenarios
+
+1. **HTTP Client Logs**: Make requests to ChromaDB - should not see detailed request pipeline logs
+2. **Web Request Logs**: Make requests to your API endpoints - should see incoming request logs
+3. **Error Logs**: Simulate HTTP client errors - should still see error-level logs
+4. **Application Logs**: Verify business logic logs are unaffected
+
+## Expected Outcome
+- Significantly reduced log noise from HTTP client operations
+- Maintained visibility into incoming web requests and application behavior
+- Preserved error visibility for troubleshooting
+- Cleaner, more focused log output for production monitoring

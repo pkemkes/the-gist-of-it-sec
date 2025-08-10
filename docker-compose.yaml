@@ -11,6 +11,7 @@ services:
       prometheus:
         condition: service_healthy
     environment:
+      - CORS_ALLOWED_ORIGIN=http://localhost:5173  # NOTE: Change this to your frontend's base URL
       - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
       - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
       - ChatClientHandlerOptions__ApiKey=${OPENAI_API_KEY}

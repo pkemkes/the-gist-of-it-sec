@@ -47,9 +47,10 @@ public class GistService(
         }
     }
 
-    private Task ProcessFeedsAsync(CancellationToken ct) => Task.WhenAll(
-        rssFeedHandler.Definitions.Select(feed => ProcessFeedAsync(feed, ct))
-    );
+    private async Task ProcessFeedsAsync(CancellationToken ct)
+    {
+        foreach (var feed in rssFeedHandler.Definitions) await ProcessFeedAsync(feed, ct);
+    }
 
     private async Task ProcessFeedAsync(RssFeed feed, CancellationToken ct)
     {

@@ -93,8 +93,8 @@ public static class TestData
         Random.NextString(),
         Random.NextString(),
         Random.NextUri(),
-        Random.NextUri(),
-        Random.NextUri()
+        Random.NextString(),
+        Random.Next(0, 2) == 0 ? Random.NextUri() : null
     );
 
     public static List<GoogleSearchResult> CreateTestSearchResults(int count, int? gistId = null) =>

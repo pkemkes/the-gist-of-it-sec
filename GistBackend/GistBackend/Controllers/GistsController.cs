@@ -75,8 +75,11 @@ public class GistsController(
             var similarityResults =
                 await chromaDbHandler.GetReferenceAndScoreOfSimilarEntriesAsync(gist.Reference, 5,
                     ParseDisabledFeeds(disabledFeeds), ct);
-            var gists = await Task.WhenAll(similarityResults.Select(similarityResult =>
-                GetSimilarGistFromDatabaseAsync(similarityResult, ct)));
+            var gists = new List<SimilarGist>();
+            foreach (var similarityResult in similarityResults)
+            {
+                gists.Add(await GetSimilarGistFromDatabaseAsync(similarityResult, ct));
+            }
             return Ok(gists);
         }
         catch (Exception e)

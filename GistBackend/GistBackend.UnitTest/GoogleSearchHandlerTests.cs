@@ -22,14 +22,14 @@ public class GoogleSearchHandlerTests
                 Title = "first test title",
                 Snippet = "first test snippet",
                 Link = "https://first.test.link.com/",
-                DisplayLink = "https://first.test.display.link.com/",
+                DisplayLink = "first.test.display.link.com",
                 Image = new Result.ImageData { ThumbnailLink = "https://first.test.thumbnail.link.com/" }
             },
             new Result {
                 Title = "second test title",
                 Snippet = "second test snippet",
                 Link = "https://second.test.link.com/",
-                DisplayLink = "https://second.test.display.link.com/",
+                DisplayLink = "second.test.display.link.com",
                 Image = new Result.ImageData { ThumbnailLink = "https://second.test.thumbnail.link.com/" }
             }
         ]
@@ -41,7 +41,7 @@ public class GoogleSearchHandlerTests
             "first test title",
             "first test snippet",
             new Uri("https://first.test.link.com/"),
-            new Uri("https://first.test.display.link.com/"),
+            "first.test.display.link.com",
             new Uri("https://first.test.thumbnail.link.com/")
         ),
         new(
@@ -49,7 +49,7 @@ public class GoogleSearchHandlerTests
             "second test title",
             "second test snippet",
             new Uri("https://second.test.link.com/"),
-            new Uri("https://second.test.display.link.com/"),
+            "second.test.display.link.com",
             new Uri("https://second.test.thumbnail.link.com/")
         )
     ];

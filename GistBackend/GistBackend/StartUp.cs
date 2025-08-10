@@ -25,6 +25,26 @@ public class StartUp(IConfiguration configuration)
 
     public void ConfigureServices(IServiceCollection services)
     {
+        // CORS Configuration
+        var corsOrigin = configuration.GetValue<string>("CORS_ALLOWED_ORIGIN")
+            ?? Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGIN") ?? "http://localhost:8081";
+
+        if (string.IsNullOrEmpty(corsOrigin))
+        {
+            throw new InvalidOperationException("CORS_ALLOWED_ORIGIN environment variable is required");
+        }
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("RestrictiveCorsPolicy", builder =>
+            {
+                builder.WithOrigins(corsOrigin)
+                       .WithMethods("GET")
+                       .WithHeaders("Content-Type", "Authorization", "Accept")
+                       .DisallowCredentials();
+            });
+        });
+
         const string gistMariaDbHandlerOptionsName = $"Gist{nameof(MariaDbHandlerOptions)}";
         const string recapMariaDbHandlerOptionsName = $"Recap{nameof(MariaDbHandlerOptions)}";
         const string cleanupMariaDbHandlerOptionsName = $"Cleanup{nameof(MariaDbHandlerOptions)}";
@@ -109,6 +129,7 @@ public class StartUp(IConfiguration configuration)
 
     public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        app.UseCors("RestrictiveCorsPolicy");
         app.UseRouting();
         app.UseEndpoints(endpoints =>
         {

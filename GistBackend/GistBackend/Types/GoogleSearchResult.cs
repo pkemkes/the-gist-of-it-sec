@@ -8,8 +8,8 @@ public record GoogleSearchResult(
     string Title,
     string Snippet,
     Uri Url,
-    Uri DisplayUrl,
-    Uri ThumbnailUrl,
+    string DisplayUrl,
+    Uri? ThumbnailUrl,
     int? Id = null
 ) {
     public int? Id { get; set; } = Id;

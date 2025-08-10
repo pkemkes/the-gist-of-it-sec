@@ -26,10 +26,8 @@ public class RecapService(
         while (!ct.IsCancellationRequested)
         {
             var startTime = dateTimeHandler.GetUtcNow();
-            await Task.WhenAll(
-                CreateDailyRecapIfNecessaryAsync(startTime, ct),
-                CreateWeeklyRecapIfNecessaryAsync(startTime, ct)
-            );
+            await CreateDailyRecapIfNecessaryAsync(startTime, ct);
+            await CreateWeeklyRecapIfNecessaryAsync(startTime, ct);
             await ServiceUtils.DelayUntilNextExecutionAsync(startTime, 5, logger, ct, dateTimeHandler);
         }
     }

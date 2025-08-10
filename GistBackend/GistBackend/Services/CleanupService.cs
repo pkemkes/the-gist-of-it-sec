@@ -47,8 +47,10 @@ public class CleanupService(
         }
     }
 
-    private Task ParseFeedsAsync(CancellationToken ct) =>
-        Task.WhenAll(rssFeedHandler.Definitions.Select(feed => ParseAndCacheFeedAsync(feed, ct)));
+    private async Task ParseFeedsAsync(CancellationToken ct)
+    {
+        foreach (var feed in rssFeedHandler.Definitions) await ParseAndCacheFeedAsync(feed, ct);
+    }
 
     private async Task ParseAndCacheFeedAsync(RssFeed feed, CancellationToken ct)
     {
@@ -69,17 +71,16 @@ public class CleanupService(
     {
         var allGists = await mariaDbHandler.GetAllGistsAsync(ct);
         GistsCheckedGauge.Set(allGists.Count - gistDebouncer.GetDebouncedGistsCount());
-        await Task.WhenAll(allGists.Select(gist => CheckGistAsync(gist, ct)));
+        foreach (var gist in allGists) await CheckGistAsync(gist, ct);
     }
 
     private async Task CheckGistAsync(Gist gist, CancellationToken ct)
     {
         if (gistDebouncer.IsDebounced(gist.Id!.Value)) return;
         var shouldBeDisabled = await GistShouldBeDisabledAsync(gist, ct);
-        var wasAlreadyCorrect = (await Task.WhenAll(
-                mariaDbHandler.EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, shouldBeDisabled, ct),
-                chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct)))
-            .All(wasAlreadyCorrect => wasAlreadyCorrect);
+        var wasAlreadyCorrect =
+            await mariaDbHandler.EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, shouldBeDisabled, ct) &&
+            await chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct);
         if (!wasAlreadyCorrect) gistDebouncer.ResetDebounceState(gist.Id!.Value);
     }
 

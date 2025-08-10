@@ -25,15 +25,29 @@ public class GoogleSearchHandler(ICustomSearchApiHandler customSearchApiHandler,
         );
         var search = await ExecuteSearchAsync(searchQuery, ct);
 
-        return search?.Items?.Select(item => new GoogleSearchResult(
-            gistId,
-            item.Title,
-            item.Snippet,
-            new Uri(item.Link),
-            new Uri(item.DisplayLink),
-            new Uri(item.Image.ThumbnailLink)
-        )).ToList();
+        return search?.Items?.Select(item => {
+            try
+            {
+                return new GoogleSearchResult(
+                    gistId,
+                    item.Title,
+                    item.Snippet,
+                    new Uri(item.Link),
+                    item.DisplayLink,
+                    ExtractThumbnailUri(item)
+                );
+            }
+            catch (Exception ex) when (ex is UriFormatException or NullReferenceException)
+            {
+                logger?.LogError(ex, "Invalid URI in search result - Link: {Link}, DisplayLink: {DisplayLink}, ThumbnailLink: {ThumbnailLink}",
+                    item.Link, item.DisplayLink, item.Image?.ThumbnailLink);
+                throw;
+            }
+        }).ToList();
     }
+
+    private static Uri? ExtractThumbnailUri(Result item) =>
+        item.Image?.ThumbnailLink is null ? null : new Uri(item.Image.ThumbnailLink);
 
     private async Task<Search?> ExecuteSearchAsync(string searchQuery, CancellationToken ct)
     {
