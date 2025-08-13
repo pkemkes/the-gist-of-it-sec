@@ -3,13 +3,6 @@ services:
   backend:
     image: pkemkes/gist-backend
     container_name: backend
-    logging:
-      driver: loki
-      options:
-        loki-url: "http://loki:3100/loki/api/v1/push"
-        loki-batch-size: "100"
-        max-size: "10m"
-        labels: "service=backend,container=backend"
     depends_on:
       database:
         condition: service_healthy
@@ -141,6 +134,20 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+  
+  promtail:
+    image: grafana/promtail:3.5.3
+    container_name: promtail
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      loki:
+        condition: service_started
+    networks:
+      - monitoring
 
   grafana:
     image: pkemkes/the-gist-of-it-sec-grafana
