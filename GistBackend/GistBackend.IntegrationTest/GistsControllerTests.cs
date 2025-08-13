@@ -111,14 +111,16 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     [Fact]
     public async Task GetGists_WithGists_Gists()
     {
-        var expectedGists = await _mariaDbHandler.InsertTestGistsAsync(5);
+        var testFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var testGists = await _mariaDbHandler.InsertTestGistsAsync(5, testFeed.Id);
+        var expectedGistsWithFeed = testGists.Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed)).ToList();
 
         var actual = await _client.GetAsync(RoutingConstants.GistsRoute);
 
         actual.EnsureSuccessStatusCode();
-        var gists = await actual.Content.ReadFromJsonAsync<List<Gist>>(_jsonSerializerOptions);
-        Assert.NotNull(gists);
-        Assert.Equal(expectedGists, gists);
+        var actualGistsWithFeed = await actual.Content.ReadFromJsonAsync<List<GistWithFeed>>(_jsonSerializerOptions);
+        Assert.NotNull(actualGistsWithFeed);
+        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
 
     [Fact]
@@ -126,31 +128,33 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     {
         var searchWords = new[] { "word1", "word2" };
         var tags = new[] { "tag1", "tag2" };
-        var gistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(4);
-        var enabledFeedId = gistsOfEnabledFeed.First().FeedId;
-        var gistToFind = CreateTestGist(enabledFeedId) with {
+        var enabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        await _mariaDbHandler.InsertTestGistsAsync(4, enabledFeed.Id);  // gists of enabled feed
+        var gistToFind = CreateTestGist(enabledFeed.Id) with {
             Title = $"This is a {searchWords.First()} title",
             Summary = $"This is a {searchWords.Last()} summary",
             Tags = string.Join(";;", tags.Concat(_random.NextArrayOfStrings(3)))
         };
         gistToFind.Id = await _mariaDbHandler.InsertGistAsync(gistToFind, CancellationToken.None);
-        var otherGistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(5, enabledFeedId);
-        var gistsOfDisabledFeed = await _mariaDbHandler.InsertTestGistsAsync(10);
+        var expectedGistWithFeed = GistWithFeed.FromGistAndFeed(gistToFind, enabledFeed);
+        var otherGistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(5, enabledFeed.Id);
+        var disabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        await _mariaDbHandler.InsertTestGistsAsync(10, disabledFeed.Id);  // gists of disabled feed
         var parameters = new Dictionary<string, string?> {
             { "lastGist", otherGistsOfEnabledFeed.Last().Id!.Value.ToString() },
             { "tags", string.Join(";;", tags) },
             { "q", string.Join("  ", searchWords) },
-            { "disabledFeeds", string.Join(",", [ gistsOfDisabledFeed.First().FeedId, 1337, 4332, 4332 ]) }
+            { "disabledFeeds", string.Join(",", [ disabledFeed.Id, 1337, 4332, 4332 ]) }
         };
         var uri = QueryHelpers.AddQueryString(RoutingConstants.GistsRoute, parameters);
 
         var actual = await _client.GetAsync(uri);
 
         actual.EnsureSuccessStatusCode();
-        var gists = await actual.Content.ReadFromJsonAsync<List<Gist>>(_jsonSerializerOptions);
-        Assert.NotNull(gists);
-        Assert.Single(gists);
-        Assert.Equal(gistToFind, gists.Single());
+        var actualGistsWithFeed = await actual.Content.ReadFromJsonAsync<List<GistWithFeed>>(_jsonSerializerOptions);
+        Assert.NotNull(actualGistsWithFeed);
+        var actualGistWithFeed = Assert.Single(actualGistsWithFeed);
+        Assert.Equivalent(expectedGistWithFeed, actualGistWithFeed);
     }
 
     [Fact]
@@ -184,31 +188,35 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     [Fact]
     public async Task GetSimilarGistsAsync_NoDisabledFeeds_AllSimilarGists()
     {
-        var testGists = (await _mariaDbHandler.InsertTestGistsAsync(2))
-            .Concat(await _mariaDbHandler.InsertTestGistsAsync(1)).ToList();
+        var testFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var testGists = await _mariaDbHandler.InsertTestGistsAsync(3, testFeed.Id);
         for (var i = 0; i < testGists.Count; i++)
         {
             var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
-            var entry = CreateTestEntry() with { Reference = testGists[i].Reference };
+            var entry = CreateTestEntry(testGists[i].FeedId) with { Reference = testGists[i].Reference };
             await _chromaDbHandler.InsertEntryAsync(entry, text, CancellationToken.None);
         }
         var gistId = testGists.First().Id!.Value;
-        var expectedGists = testGists.Where(gist => gist.Id != gistId).ToList();
+        var expectedGistsWithFeed = testGists.Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed))
+            .Where(gist => gist.Id != gistId).ToList();
 
         var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/{gistId}/similar");
 
         actual.EnsureSuccessStatusCode();
-        var similarGists = await actual.Content.ReadFromJsonAsync<List<SimilarGist>>(_jsonSerializerOptions);
-        Assert.NotNull(similarGists);
-        var gists = similarGists.Select(similarGist => similarGist.Gist);
-        Assert.Equal(expectedGists.OrderBy(g => g.Id), gists.OrderBy(g => g.Id));
+        var similarGistsWithFeed =
+            await actual.Content.ReadFromJsonAsync<List<SimilarGistWithFeed>>(_jsonSerializerOptions);
+        Assert.NotNull(similarGistsWithFeed);
+        var gistsWithFeed = similarGistsWithFeed.Select(similarGist => similarGist.Gist).ToList();
+        Assert.Equivalent(expectedGistsWithFeed.OrderBy(g => g.Id), gistsWithFeed.OrderBy(g => g.Id));
     }
 
     [Fact]
     public async Task GetSimilarGistsAsync_OneDisabledFeed_OnlySimilarGistsOfOtherFeeds()
     {
-        var gistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(2);
-        var gistsOfDisabledFeed = await _mariaDbHandler.InsertTestGistsAsync(1);
+        var enabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var gistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(2, enabledFeed.Id);
+        var disabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var gistsOfDisabledFeed = await _mariaDbHandler.InsertTestGistsAsync(1, disabledFeed.Id);
         var testGists = gistsOfEnabledFeed.Concat(gistsOfDisabledFeed).ToList();
         for (var i = 0; i < testGists.Count; i++)
         {
@@ -217,19 +225,20 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
             await _chromaDbHandler.InsertEntryAsync(entry, text, CancellationToken.None);
         }
         var gistId = testGists.First().Id!.Value;
-        var expectedGists = gistsOfEnabledFeed.Where(gist => gist.Id != gistId).ToList();
+        var expectedGistsWithFeed = gistsOfEnabledFeed.Select(gist => GistWithFeed.FromGistAndFeed(gist, enabledFeed))
+            .Where(gist => gist.Id != gistId).ToList();
         var parameters = new Dictionary<string, string?> {
-            { "disabledFeeds", string.Join(",", [ gistsOfDisabledFeed.First().FeedId, 33, 83, 83 ]) }
+            { "disabledFeeds", string.Join(",", [ disabledFeed.Id, 33, 83, 83 ]) }
         };
         var uri = QueryHelpers.AddQueryString($"{RoutingConstants.GistsRoute}/{gistId}/similar", parameters);
 
         var actual = await _client.GetAsync(uri);
 
         actual.EnsureSuccessStatusCode();
-        var similarGists = await actual.Content.ReadFromJsonAsync<List<SimilarGist>>(_jsonSerializerOptions);
-        Assert.NotNull(similarGists);
-        var gists = similarGists.Select(similarGist => similarGist.Gist);
-        Assert.Equal(expectedGists.OrderBy(g => g.Id), gists.OrderBy(g => g.Id));
+        var similarGistsWithFeed = await actual.Content.ReadFromJsonAsync<List<SimilarGistWithFeed>>(_jsonSerializerOptions);
+        Assert.NotNull(similarGistsWithFeed);
+        var gistsWithFeed = similarGistsWithFeed.Select(similarGist => similarGist.Gist);
+        Assert.Equivalent(expectedGistsWithFeed, gistsWithFeed);
     }
 
     [Fact]

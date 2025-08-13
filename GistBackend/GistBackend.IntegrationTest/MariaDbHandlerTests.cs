@@ -608,11 +608,11 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     }
 
     [Fact]
-    public async Task GetPreviousGistsAsync_NoGists_EmptyList()
+    public async Task GetPreviousGistsWithFeedAsync_NoGists_EmptyList()
     {
         var handler = CreateGistControllerHandler();
 
-        var gists = await handler.GetPreviousGistsAsync(10, null, [], null, [], CancellationToken.None);
+        var gists = await handler.GetPreviousGistsWithFeedAsync(10, null, [], null, [], CancellationToken.None);
 
         Assert.Empty(gists);
     }
@@ -621,65 +621,72 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     [InlineData(3)]
     [InlineData(5)]
     [InlineData(8)]
-    public async Task GetPreviousGistsAsync_LessGistsThanTake_AllGists(int gistCount)
+    public async Task GetPreviousGistsWithFeedAsync_LessGistsThanTake_AllGists(int gistCount)
     {
         var gistHandler = CreateGistHandler();
-        var expectedGists = await gistHandler.InsertTestGistsAsync(gistCount);
+        var testFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var testGists = await gistHandler.InsertTestGistsAsync(gistCount, testFeed.Id);
+        var expectedGistsWithFeed = testGists.Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed)).ToList();
         var gistsControllerHandler = CreateGistControllerHandler();
 
-        var actualGists =
-            await gistsControllerHandler.GetPreviousGistsAsync(gistCount + 5, null, [], null, [],
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousGistsWithFeedAsync(gistCount + 5, null, [], null, [],
                 CancellationToken.None);
 
-        Assert.Equal(expectedGists, actualGists);
+        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
 
     [Fact]
-    public async Task GetPreviousGistsAsync_MoreGistsThanTake_AsManyGistsAsExpected()
+    public async Task GetPreviousGistsWithFeedAsync_MoreGistsThanTake_AsManyGistsAsExpected()
     {
         var gistHandler = CreateGistHandler();
         const int take = 5;
-        var testGists = await gistHandler.InsertTestGistsAsync(take+5);
-        var expectedGists = testGists.Take(take).ToList();
+        var testFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var testGists = await gistHandler.InsertTestGistsAsync(take+5, testFeed.Id);
+        var expectedGistsWithFeed =
+            testGists.Take(take).Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed)).ToList();
         var gistsControllerHandler = CreateGistControllerHandler();
 
-        var actualGists =
-            await gistsControllerHandler.GetPreviousGistsAsync(take, null, [], null, [], CancellationToken.None);
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousGistsWithFeedAsync(take, null, [], null, [],
+                CancellationToken.None);
 
-        Assert.Equal(expectedGists, actualGists);
+        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
 
     [Theory]
     [InlineData(3)]
     [InlineData(5)]
     [InlineData(8)]
-    public async Task GetPreviousGistsAsync_LastGistGivenId_GistsAfterLastGistId(int take)
+    public async Task GetPreviousGistsWithFeedAsync_LastGistGivenId_GistsAfterLastGistId(int take)
     {
         var gistHandler = CreateGistHandler();
-        var testGists = await gistHandler.InsertTestGistsAsync(10);
+        var testFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var testGists = await gistHandler.InsertTestGistsAsync(10, testFeed.Id);
         var firstHalfOfGists = testGists.Skip(5).ToList();
         var lastGistId = testGists[4].Id;
-        var expectedGists = firstHalfOfGists.Take(take).ToList();
+        var expectedGistsWithFeed = firstHalfOfGists.Take(take)
+            .Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed)).ToList();
         var gistsControllerHandler = CreateGistControllerHandler();
 
-        var actualGists =
-            await gistsControllerHandler.GetPreviousGistsAsync(take, lastGistId, [], null, [], CancellationToken.None);
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousGistsWithFeedAsync(take, lastGistId, [], null, [], CancellationToken.None);
 
-        Assert.Equal(expectedGists, actualGists);
+        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
 
     [Fact]
-    public async Task GetPreviousGistsAsync_QuerySpecificTags_GistsWithAllTags()
+    public async Task GetPreviousGistsWithFeedAsync_QuerySpecificTags_GistsWithAllTags()
     {
         var tags = new[] { "tag1", "tag2", "tag3" };
         var gistHandler = CreateGistHandler();
-        var feedId = await gistHandler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
-        var gistWithoutExpectedTags = CreateTestGist(feedId);
-        var gistWithOnlyOneExpectedTag = CreateTestGist(feedId) with {
+        var testFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var gistWithoutExpectedTags = CreateTestGist(testFeed.Id);
+        var gistWithOnlyOneExpectedTag = CreateTestGist(testFeed.Id) with {
             Tags = string.Join(";;", tags.First())
         };
-        var gistWithExpectedTags = CreateTestGist(feedId) with { Tags = string.Join(";;", tags) };
-        var gistWithExpectedAndOtherTags = CreateTestGist(feedId) with {
+        var gistWithExpectedTags = CreateTestGist(testFeed.Id) with { Tags = string.Join(";;", tags) };
+        var gistWithExpectedAndOtherTags = CreateTestGist(testFeed.Id) with {
             Tags = string.Join(";;", tags.Concat(_random.NextArrayOfStrings(3)))
         };
         await gistHandler.InsertGistAsync(gistWithoutExpectedTags, CancellationToken.None);
@@ -687,33 +694,36 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         gistWithExpectedTags.Id = await gistHandler.InsertGistAsync(gistWithExpectedTags, CancellationToken.None);
         gistWithExpectedAndOtherTags.Id =
             await gistHandler.InsertGistAsync(gistWithExpectedAndOtherTags, CancellationToken.None);
-        var expectedGists = new List<Gist>
-            { gistWithExpectedTags, gistWithExpectedAndOtherTags };
+        var expectedGistsWithFeed = new List<GistWithFeed>
+        {
+            GistWithFeed.FromGistAndFeed(gistWithExpectedTags, testFeed),
+            GistWithFeed.FromGistAndFeed(gistWithExpectedAndOtherTags, testFeed)
+        };
         var gistsControllerHandler = CreateGistControllerHandler();
 
-        var actualGists =
-            await gistsControllerHandler.GetPreviousGistsAsync(10, null, tags, null, [], CancellationToken.None);
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousGistsWithFeedAsync(10, null, tags, null, [], CancellationToken.None);
 
-        Assert.Equal(expectedGists.OrderBy(g => g.Id), actualGists.OrderBy(g => g.Id));
+        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
 
     [Fact]
-    public async Task GetPreviousGistsAsync_QueryWordsFromTitleAndSummary_GistsWithAllWords()
+    public async Task GetPreviousGistsWithFeedAsync_QueryWordsFromTitleAndSummary_GistsWithAllWords()
     {
         var words = new[] { "word1", "word2", "word3" };
         var gistHandler = CreateGistHandler();
-        var feedId = await gistHandler.InsertFeedInfoAsync(CreateTestFeedInfo(), CancellationToken.None);
-        var gistWithoutExpectedWords = CreateTestGist(feedId);
-        var gistWithOnlyOneExpectedWordInTitle = CreateTestGist(feedId) with {
+        var testFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var gistWithoutExpectedWords = CreateTestGist(testFeed.Id);
+        var gistWithOnlyOneExpectedWordInTitle = CreateTestGist(testFeed.Id) with {
             Title = $"This is a {words.First()} title"
         };
-        var gistWithAllExpectedWordsInTitle = CreateTestGist(feedId) with {
+        var gistWithAllExpectedWordsInTitle = CreateTestGist(testFeed.Id) with {
             Title = $"This is a {words[0]}someextratext and {words[1]}{words[2]} title"
         };
-        var gistWithAllExpectedWordsInSummary = CreateTestGist(feedId) with {
+        var gistWithAllExpectedWordsInSummary = CreateTestGist(testFeed.Id) with {
             Summary = $"This is a {words[0]}someextratext and {words[1]}{words[2]} summary"
         };
-        var gistWithAllExpectedWords = CreateTestGist(feedId) with {
+        var gistWithAllExpectedWords = CreateTestGist(testFeed.Id) with {
             Title = $"This is a {words[0]}someextratext title",
             Summary = $"This is a {words[1]}{words[2]} summary"
         };
@@ -727,47 +737,55 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
             await gistHandler.InsertGistAsync(gistWithAllExpectedWords, CancellationToken.None);
         var expectedGists = new List<Gist>
             { gistWithAllExpectedWords, gistWithAllExpectedWordsInTitle, gistWithAllExpectedWordsInSummary };
+        var expectedGistsWithFeed = expectedGists.Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed)).ToList();
         var searchQuery = string.Join(' ', words);
         var gistsControllerHandler = CreateGistControllerHandler();
 
-        var actualGists =
-            await gistsControllerHandler.GetPreviousGistsAsync(10, null, [], searchQuery, [], CancellationToken.None);
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousGistsWithFeedAsync(10, null, [], searchQuery, [], CancellationToken.None);
 
-        Assert.Equal(expectedGists.OrderBy(g => g.Id), actualGists.OrderBy(g => g.Id));
+        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
 
     [Fact]
-    public async Task GetPreviousGistsAsync_GistsFromDisabledFeedInDb_OnlyGistsFromEnabledFeeds()
+    public async Task GetPreviousGistsWithFeedAsync_GistsFromDisabledFeedInDb_OnlyGistsFromEnabledFeeds()
     {
         var gistHandler = CreateGistHandler();
         var gistsFromDisabledFeed = await gistHandler.InsertTestGistsAsync(5);
         var gistsFromOtherDisabledFeed = await gistHandler.InsertTestGistsAsync(5);
-        var gistsFromEnabledFeed = await gistHandler.InsertTestGistsAsync(5);
-        var gistsFromOtherEnabledFeed = await gistHandler.InsertTestGistsAsync(5);
+        var enabledFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var gistsFromEnabledFeed = await gistHandler.InsertTestGistsAsync(5, enabledFeed.Id);
+        var otherEnabledFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var gistsFromOtherEnabledFeed = await gistHandler.InsertTestGistsAsync(5, otherEnabledFeed.Id);
         var disabledFeedIds = new[] { gistsFromDisabledFeed.First().FeedId, gistsFromOtherDisabledFeed.First().FeedId };
-        var expectedGists = gistsFromEnabledFeed.Concat(gistsFromOtherEnabledFeed).ToList();
+        var expectedGistsWithFeed = gistsFromEnabledFeed
+            .Select(gist => GistWithFeed.FromGistAndFeed(gist, enabledFeed))
+            .Concat(gistsFromOtherEnabledFeed.Select(gist => GistWithFeed.FromGistAndFeed(gist, otherEnabledFeed)))
+            .ToList();
         var take = gistsFromDisabledFeed.Count
                    + gistsFromOtherDisabledFeed.Count
                    + gistsFromEnabledFeed.Count
                    + gistsFromOtherEnabledFeed.Count + 5;
         var gistsControllerHandler = CreateGistControllerHandler();
 
-        var actualGists =
-            await gistsControllerHandler.GetPreviousGistsAsync(take, null, [], null, disabledFeedIds,
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousGistsWithFeedAsync(take, null, [], null, disabledFeedIds,
                 CancellationToken.None);
 
-        Assert.Equal(expectedGists.OrderBy(g => g.Id), actualGists.OrderBy(g => g.Id));
+        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
 
     [Fact]
     public async Task GetGistByIdAsync_GistExists_CorrectGist()
     {
         var handler = CreateGistHandler();
-        var expectedGist = (await handler.InsertTestGistsAsync(1)).Single();
+        var testFeed = (await handler.InsertTestFeedInfosAsync(1)).Single();
+        var testGist = (await handler.InsertTestGistsAsync(1, testFeed.Id)).Single();
+        var expectedGist = GistWithFeed.FromGistAndFeed(testGist, testFeed);
 
-        var actualGist = await handler.GetGistByIdAsync(expectedGist.Id!.Value, CancellationToken.None);
+        var actualGistWithFeed = await handler.GetGistWithFeedByIdAsync(expectedGist.Id, CancellationToken.None);
 
-        Assert.Equal(expectedGist, actualGist);
+        Assert.Equivalent(expectedGist, actualGistWithFeed);
     }
 
     [Fact]
@@ -775,7 +793,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     {
         var handler = CreateGistHandler();
 
-        var actual = await handler.GetGistByIdAsync(1234566789, CancellationToken.None);
+        var actual = await handler.GetGistWithFeedByIdAsync(1234566789, CancellationToken.None);
 
         Assert.Null(actual);
     }

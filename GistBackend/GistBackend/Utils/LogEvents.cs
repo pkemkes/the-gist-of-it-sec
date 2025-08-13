@@ -35,7 +35,7 @@ public static class LogEvents {
     public static readonly EventId GettingAllGistsFailed = new(802, nameof(GettingAllGistsFailed));
     public static readonly EventId EnsuringCorrectDisabledFailed = new(803, nameof(EnsuringCorrectDisabledFailed));
     public static readonly EventId GettingDisabledStateFailed = new(804, nameof(GettingDisabledStateFailed));
-    public static readonly EventId GettingPreviousGistsFailed = new(900, nameof(GettingPreviousGistsFailed));
+    public static readonly EventId GettingPreviousGistsWithFeedFailed = new(900, nameof(GettingPreviousGistsWithFeedFailed));
     public static readonly EventId GettingAllFeedInfosFailed = new(901, nameof(GettingAllFeedInfosFailed));
     public static readonly EventId NoRecapFound = new(902, nameof(NoRecapFound));
     public static readonly EventId GettingLatestRecapFailed = new(903, nameof(GettingLatestRecapFailed));

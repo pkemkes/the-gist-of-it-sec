@@ -38,10 +38,10 @@ public static class MariaDbHandlerTestExtensions
 
     public static async Task<List<Chat>> InsertTestChatsAsync(this IMariaDbHandler handler, int count)
     {
-        var gistLastSent =
-            (await handler.GetPreviousGistsAsync(1, null, [], null, [], CancellationToken.None)).FirstOrDefault();
+        var gistWithFeedLastSent =
+            (await handler.GetPreviousGistsWithFeedAsync(1, null, [], null, [], CancellationToken.None)).FirstOrDefault();
         var chats = Enumerable.Range(0, count)
-            .Select(_ => new Chat(Random.NextInt64(), gistLastSent?.Id!.Value - 5 ?? 0)).ToList();
+            .Select(_ => new Chat(Random.NextInt64(), gistWithFeedLastSent?.Id - 5 ?? 0)).ToList();
         foreach (var chat in chats) await handler.RegisterChatAsync(chat.Id, CancellationToken.None);
         return chats;
     }

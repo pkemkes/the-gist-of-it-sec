@@ -3,6 +3,13 @@ services:
   backend:
     image: pkemkes/gist-backend
     container_name: backend
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+        loki-batch-size: "100"
+        max-size: "10m"
+        labels: "service=backend,container=backend"
     depends_on:
       database:
         condition: service_healthy
@@ -10,6 +17,8 @@ services:
         condition: service_healthy
       prometheus:
         condition: service_healthy
+      loki:
+        condition: service_started
     environment:
       - CORS_ALLOWED_ORIGIN=http://localhost:5173  # NOTE: Change this to your frontend's base URL
       - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
@@ -40,7 +49,7 @@ services:
     networks:
       - database
       - chromadb
-      - prometheus
+      - monitoring
     ports:
       - "8080:8080"
 
@@ -110,8 +119,29 @@ services:
       - prometheus-data:/prometheus
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
-      - prometheus
+      - monitoring
   
+  loki:
+    image: grafana/loki:3.5.3
+    container_name: loki
+    logging:
+      options:
+        max-size: 1g
+    volumes:
+      - loki-data:/loki
+      - ./loki/loki.yml:/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   grafana:
     image: pkemkes/the-gist-of-it-sec-grafana
     container_name: grafana
@@ -123,13 +153,16 @@ services:
       - DB_GRAFANA_PASSWORD=${DB_GRAFANA_PASSWORD}
       - PROMETHEUS_URL=http://prometheus:9090
       - DATABASE_HOST_AND_PORT=database:3306
+      - LOKI_URL=http://loki:3100
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:
       prometheus:
         condition: service_healthy
+      loki:
+        condition: service_started
     networks:
-      - prometheus
+      - monitoring
       - database
     ports:
       - 3000:3000
@@ -137,7 +170,7 @@ services:
 networks:
   database:
   chromadb:
-  prometheus:
+  monitoring:
 
 volumes:
   database-data:
@@ -147,4 +180,6 @@ volumes:
   prometheus-data:
     driver: local
   grafana-data:
+    driver: local
+  loki-data:
     driver: local

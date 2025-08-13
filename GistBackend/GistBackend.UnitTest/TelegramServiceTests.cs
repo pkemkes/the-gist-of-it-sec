@@ -7,7 +7,6 @@ using NSubstitute;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TestUtilities;
-using static TestUtilities.TestData;
 using Chat = GistBackend.Types.Chat;
 using TelegramChat = Telegram.Bot.Types.Chat;
 

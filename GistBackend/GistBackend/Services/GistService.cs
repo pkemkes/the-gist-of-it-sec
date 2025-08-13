@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;

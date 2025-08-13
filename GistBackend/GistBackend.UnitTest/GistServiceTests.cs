@@ -1,7 +1,3 @@
-using System.Net;
-using System.Net.Http;
-using System.ServiceModel.Syndication;
-using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;

@@ -31,7 +31,7 @@ public class GistsController(
     {
         try
         {
-            var gists = await mariaDbHandler.GetPreviousGistsAsync(take, lastGist, ParseTags(tags), q,
+            var gists = await mariaDbHandler.GetPreviousGistsWithFeedAsync(take, lastGist, ParseTags(tags), q,
                 ParseDisabledFeeds(disabledFeeds), ct);
             return Ok(gists);
         }
@@ -48,39 +48,39 @@ public class GistsController(
         GetGistsQueryAsync(1, null, null, null, null, ct);
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetGistByIdAsync(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetGistWithFeedByIdAsync(int id, CancellationToken ct = default)
     {
         try
         {
-            var gist = await mariaDbHandler.GetGistByIdAsync(id, ct);
-            if (gist is null) return NotFound();
-            return Ok(gist);
+            var gistWithFeed = await mariaDbHandler.GetGistWithFeedByIdAsync(id, ct);
+            if (gistWithFeed is null) return NotFound();
+            return Ok(gistWithFeed);
         }
         catch (Exception e)
         {
-            const string message = "Could not get gist by ID from the database";
+            const string message = "Could not get gist with feed by ID from the database";
             logger?.LogError(ErrorInHttpRequest, e, message);
             return Problem(message);
         }
     }
 
     [HttpGet("{id:int}/similar")]
-    public async Task<IActionResult> GetSimilarGistsAsync(int id, [FromQuery] string? disabledFeeds = null,
+    public async Task<IActionResult> GetSimilarGistsWithFeedAsync(int id, [FromQuery] string? disabledFeeds = null,
         CancellationToken ct = default)
     {
         try
         {
-            var gist = await mariaDbHandler.GetGistByIdAsync(id, ct);
-            if (gist is null) return NotFound();
+            var gistWithFeed = await mariaDbHandler.GetGistWithFeedByIdAsync(id, ct);
+            if (gistWithFeed is null) return NotFound();
             var similarityResults =
-                await chromaDbHandler.GetReferenceAndScoreOfSimilarEntriesAsync(gist.Reference, 5,
+                await chromaDbHandler.GetReferenceAndScoreOfSimilarEntriesAsync(gistWithFeed.Reference, 5,
                     ParseDisabledFeeds(disabledFeeds), ct);
-            var gists = new List<SimilarGist>();
+            var gistsWithFeed = new List<SimilarGistWithFeed>();
             foreach (var similarityResult in similarityResults)
             {
-                gists.Add(await GetSimilarGistFromDatabaseAsync(similarityResult, ct));
+                gistsWithFeed.Add(await GetSimilarGistWithFeedFromDatabaseAsync(similarityResult, ct));
             }
-            return Ok(gists);
+            return Ok(gistsWithFeed);
         }
         catch (Exception e)
         {
@@ -90,16 +90,16 @@ public class GistsController(
         }
     }
 
-    private async Task<SimilarGist> GetSimilarGistFromDatabaseAsync(SimilarDocument similarDocument,
+    private async Task<SimilarGistWithFeed> GetSimilarGistWithFeedFromDatabaseAsync(SimilarDocument similarDocument,
         CancellationToken ct)
     {
-        var gist = await mariaDbHandler.GetGistByReferenceAsync(similarDocument.Reference, ct);
-        if (gist is null)
+        var gistWithFeed = await mariaDbHandler.GetGistWithFeedByReference(similarDocument.Reference, ct);
+        if (gistWithFeed is null)
         {
             throw new KeyNotFoundException(
                 $"Similar gist with reference {similarDocument.Reference} not found in database");
         }
-        return new SimilarGist(gist, similarDocument.Similarity);
+        return new SimilarGistWithFeed(gistWithFeed, similarDocument.Similarity);
     }
 
     [HttpGet("{id:int}/searchResults")]
@@ -157,12 +157,15 @@ public class GistsController(
 
     private static List<string> ParseTags(string? tags) => string.IsNullOrWhiteSpace(tags)
         ? []
-        : tags.Split(";;").Select(tag => tag.Trim()).ToList();
+        : tags
+            .Split(";;", StringSplitOptions.RemoveEmptyEntries)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(tag => tag.Trim()).ToList();
 
     private static List<int> ParseDisabledFeeds(string? disabledFeeds) => string.IsNullOrWhiteSpace(disabledFeeds)
         ? []
         : disabledFeeds
-            .Split(',')
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Select(id => id.Trim())
             .Select(int.Parse)

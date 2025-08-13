@@ -1,6 +1,5 @@
 using System.Net;
 using GistBackend.Exceptions;
-using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.RssHandlers;
