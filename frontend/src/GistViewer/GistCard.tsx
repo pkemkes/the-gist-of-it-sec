@@ -84,7 +84,7 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
           Similarity:
         </Typography>
         <Typography> 
-          {Math.round(100 - (similarity*100))}%
+          {Math.round(similarity*100)}%
         </Typography>
       </Box>;
 

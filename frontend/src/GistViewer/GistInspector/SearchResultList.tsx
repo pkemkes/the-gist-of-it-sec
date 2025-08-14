@@ -38,8 +38,8 @@ export const SearchResultList = ({ gistId, searchQuery }: SearchResultListProps)
   const filteredData = data ? data.filter(sr => (
     sr.title != dummyEmptyString 
     && sr.snippet != dummyEmptyString
-    && sr.link != dummyEmptyString
-    && sr.display_link != dummyEmptyString
+    && sr.url != dummyEmptyString
+    && sr.displayUrl != dummyEmptyString
   )) : [];
 
   dataToDisplay = dataToDisplay.concat(filteredData.map((searchResult, i) => (

@@ -6,6 +6,7 @@ using GistBackend.UnitTest.Utils;
 using Google;
 using Google.Apis.CustomSearchAPI.v1.Data;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using static GistBackend.Utils.LogEvents;
@@ -23,14 +24,36 @@ public class GoogleSearchHandlerTests
                 Snippet = "first test snippet",
                 Link = "https://first.test.link.com/",
                 DisplayLink = "first.test.display.link.com",
-                Image = new Result.ImageData { ThumbnailLink = "https://first.test.thumbnail.link.com/" }
+                Pagemap = new Dictionary<string, object> {
+                    {
+                        "cse_thumbnail",
+                        new JArray([
+                            new JObject {{"src", "https://first.test.thumbnail.link.com/"}}
+                        ])
+                    }
+                }
+                // Pagemap = new Dictionary<string, object>{
+                //     {
+                //         "cse_thumbnail",
+                //         new List<object>{
+                //             new Dictionary<string, object>{{"src", "https://first.test.thumbnail.link.com/"}}
+                //         }
+                //     }
+                // }
             },
             new Result {
                 Title = "second test title",
                 Snippet = "second test snippet",
                 Link = "https://second.test.link.com/",
                 DisplayLink = "second.test.display.link.com",
-                Image = new Result.ImageData { ThumbnailLink = "https://second.test.thumbnail.link.com/" }
+                Pagemap = new Dictionary<string, object> {
+                    {
+                        "cse_thumbnail",
+                        new JArray([
+                            new JObject {{"src", "https://second.test.thumbnail.link.com/"}}
+                        ])
+                    }
+                }
             }
         ]
     };

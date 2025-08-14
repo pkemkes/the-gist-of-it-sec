@@ -110,8 +110,13 @@ public class ChromaDbHandler : IChromaDbHandler
 
     private static List<SimilarDocument> ExtractReferencesAndScores(QueryResponse queryResponse) =>
         Enumerable.Range(0, queryResponse.Ids.First().Length).Select(i =>
-            new SimilarDocument(queryResponse.Metadatas.First()[i].Reference, queryResponse.Distances.First()[i]))
+            new SimilarDocument(
+                queryResponse.Metadatas.First()[i].Reference,
+                ConvertCosineDistanceToSimilarity(queryResponse.Distances.First()[i])
+            ))
             .ToList();
+
+    private static float ConvertCosineDistanceToSimilarity(float distance) => (2 - distance) / 2;
 
     public async Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct)
     {
@@ -205,7 +210,7 @@ public class ChromaDbHandler : IChromaDbHandler
         var existingCollectionId = await GetCollectionIdAsync(_collectionName, ct);
         if (existingCollectionId is not null) return existingCollectionId;
 
-        var requestContent = CreateStringContent(new { Name = _collectionName });
+        var requestContent = CreateStringContent(new CollectionDefinition(_collectionName));
         var response =
             await SendPostRequestAsync($"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections",
                 requestContent, ct);

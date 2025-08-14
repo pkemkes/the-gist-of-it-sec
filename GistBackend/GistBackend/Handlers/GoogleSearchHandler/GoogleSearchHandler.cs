@@ -1,9 +1,11 @@
+using System.Globalization;
 using System.Net;
 using GistBackend.Exceptions;
 using GistBackend.Types;
 using Google;
 using Google.Apis.CustomSearchAPI.v1.Data;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Handlers.GoogleSearchHandler;
@@ -46,8 +48,19 @@ public class GoogleSearchHandler(ICustomSearchApiHandler customSearchApiHandler,
         }).ToList();
     }
 
-    private static Uri? ExtractThumbnailUri(Result item) =>
-        item.Image?.ThumbnailLink is null ? null : new Uri(item.Image.ThumbnailLink);
+    private static Uri? ExtractThumbnailUri(Result item)
+    {
+        var hasCseThumbnail = item.Pagemap.TryGetValue("cse_thumbnail", out var cseThumbnail);
+        if (!hasCseThumbnail || cseThumbnail is not JArray { Count: > 0 } thumbnailList) return null;
+        if (thumbnailList[0] is JObject thumbnail
+            && thumbnail.TryGetValue("src", out var src)
+            && src is JValue srcString)
+        {
+            return new Uri(srcString.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return null;
+    }
 
     private async Task<Search?> ExecuteSearchAsync(string searchQuery, CancellationToken ct)
     {

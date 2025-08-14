@@ -26,13 +26,13 @@ export interface SimilarGist {
 
 export interface SearchResult {
   id: number,
-  gist_id: number,
+  gistId: number,
   title: string,
   snippet: string,
-  link: string,
-  display_link: string,
-  thumbnail_link: string | undefined,
-  image_link: string | undefined
+  url: string,
+  displayUrl: string,
+  thumbnailUrl: string | undefined,
+  imageUrl: string | undefined
 }
 
 export interface RecapRelatedGist {
