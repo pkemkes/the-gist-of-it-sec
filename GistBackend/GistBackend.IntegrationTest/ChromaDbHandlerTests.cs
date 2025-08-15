@@ -1,8 +1,10 @@
 using GistBackend.Exceptions;
 using GistBackend.Handlers.ChromaDbHandler;
+using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
 using Microsoft.Extensions.Options;
+using Xunit.Abstractions;
 using static GistBackend.IntegrationTest.Utils.OpenAiHandlerUtils;
 using static TestUtilities.TestData;
 

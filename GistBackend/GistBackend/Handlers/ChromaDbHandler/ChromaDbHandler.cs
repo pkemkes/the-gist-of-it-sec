@@ -116,7 +116,7 @@ public class ChromaDbHandler : IChromaDbHandler
             ))
             .ToList();
 
-    private static float ConvertCosineDistanceToSimilarity(float distance) => (2 - distance) / 2;
+    private static float ConvertCosineDistanceToSimilarity(float distance) => float.Clamp(1 - distance/2, 0, 1);
 
     public async Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct)
     {
