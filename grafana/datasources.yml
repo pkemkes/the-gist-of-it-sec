@@ -43,7 +43,7 @@ datasources:
     version: 1
     editable: false
     jsonData:
-      database: thegistofitsec
+      database: TheGistOfItSec
       maxOpenConns: 100
       maxIdleConns: 100
       maxIdleConnsAuto: true

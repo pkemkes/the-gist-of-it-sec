@@ -1,0 +1,1036 @@
+# HELP process_chats_seconds Time spent to process all chats
+# TYPE process_chats_seconds gauge
+process_chats_seconds 0.003027
+# HELP cleanup_gists_seconds Time spent to cleanup gists
+# TYPE cleanup_gists_seconds gauge
+cleanup_gists_seconds 0
+# HELP check_gist_seconds Time spent to check a gist
+# TYPE check_gist_seconds summary
+check_gist_seconds_sum{feed_title="Krebs on Security"} 68.38212159999999
+check_gist_seconds_count{feed_title="Krebs on Security"} 10
+check_gist_seconds_sum{feed_title="BleepingComputer"} 36.5425315
+check_gist_seconds_count{feed_title="BleepingComputer"} 5
+# HELP gists_checked Number of gists checked in one run
+# TYPE gists_checked gauge
+gists_checked 89
+# HELP dotnet_collection_count_total GC collection count
+# TYPE dotnet_collection_count_total counter
+dotnet_collection_count_total{generation="0"} 9
+dotnet_collection_count_total{generation="1"} 2
+dotnet_collection_count_total{generation="2"} 1
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1755424759.1773272
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 10.892083
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 281559056384
+# HELP process_working_set_bytes Process working set
+# TYPE process_working_set_bytes gauge
+process_working_set_bytes 180666368
+# HELP process_private_memory_bytes Process private memory size
+# TYPE process_private_memory_bytes gauge
+process_private_memory_bytes 228929536
+# HELP process_open_handles Number of open handles
+# TYPE process_open_handles gauge
+process_open_handles 351
+# HELP process_num_threads Total number of threads
+# TYPE process_num_threads gauge
+process_num_threads 18
+# HELP dotnet_total_memory_bytes Total known allocated memory
+# TYPE dotnet_total_memory_bytes gauge
+dotnet_total_memory_bytes 15118064
+# HELP prometheus_net_metric_families Number of metric families currently registered.
+# TYPE prometheus_net_metric_families gauge
+prometheus_net_metric_families{metric_type="counter"} 18
+prometheus_net_metric_families{metric_type="gauge"} 137
+prometheus_net_metric_families{metric_type="summary"} 1
+prometheus_net_metric_families{metric_type="histogram"} 5
+# HELP prometheus_net_metric_instances Number of metric instances currently registered across all metric families.
+# TYPE prometheus_net_metric_instances gauge
+prometheus_net_metric_instances{metric_type="counter"} 20
+prometheus_net_metric_instances{metric_type="gauge"} 186
+prometheus_net_metric_instances{metric_type="summary"} 2
+prometheus_net_metric_instances{metric_type="histogram"} 18
+# HELP prometheus_net_metric_timeseries Number of metric timeseries currently generated from all metric instances.
+# TYPE prometheus_net_metric_timeseries gauge
+prometheus_net_metric_timeseries{metric_type="counter"} 20
+prometheus_net_metric_timeseries{metric_type="gauge"} 186
+prometheus_net_metric_timeseries{metric_type="summary"} 4
+prometheus_net_metric_timeseries{metric_type="histogram"} 504
+# HELP prometheus_net_exemplars_recorded_total Number of exemplars that were accepted into in-memory storage in the prometheus-net SDK.
+# TYPE prometheus_net_exemplars_recorded_total counter
+prometheus_net_exemplars_recorded_total 162
+# HELP prometheus_net_eventcounteradapter_sources_connected_total Number of event sources that are currently connected to the adapter.
+# TYPE prometheus_net_eventcounteradapter_sources_connected_total gauge
+prometheus_net_eventcounteradapter_sources_connected_total 7
+# HELP prometheus_net_meteradapter_instruments_connected Number of instruments that are currently connected to the adapter.
+# TYPE prometheus_net_meteradapter_instruments_connected gauge
+prometheus_net_meteradapter_instruments_connected 82
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_created ({connection}) New connections allocated (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_created gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_created 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_handshake_failures ({connection}) Connections that failed during handshake (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_handshake_failures gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_handshake_failures 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_app_rejected ({connection}) Connections rejected by the application (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_app_rejected gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_app_rejected 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_load_rejected ({connection}) Connections rejected due to worker load. (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_load_rejected gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_load_rejected 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_resumed ({connection}) Connections resumed (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_resumed gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_resumed 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_allocated ({connection}) Connections currently allocated (ObservableGauge`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_allocated gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_allocated 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_connected ({connection}) Connections currently in the connected state (ObservableGauge`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_connected gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_connected 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_protocol_errors ({connection}) Connections shutdown with a protocol error (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_protocol_errors gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_protocol_errors 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_connection_no_alpn ({connection}) Connection attempts with no matching ALPN (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_connection_no_alpn gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_connection_no_alpn 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_stream_allocated ({stream}) Current streams allocated (ObservableGauge`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_stream_allocated gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_stream_allocated 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_packet_suspected_lost ({packet}) Packets suspected lost (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_packet_suspected_lost gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_packet_suspected_lost 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_packet_dropped ({packet}) Packets dropped for any reason (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_packet_dropped gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_packet_dropped 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_packet_decryption_failures ({packet}) Packets with decryption failures (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_packet_decryption_failures gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_packet_decryption_failures 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_datagrams ({datagram}) UDP datagrams received (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_datagrams gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_datagrams 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_datagrams ({datagram}) UDP datagrams sent (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_datagrams gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_datagrams 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_bytes (By) UDP payload bytes received (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_bytes gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_bytes 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_bytes (By) UDP payload bytes sent (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_bytes gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_bytes 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_events ({event}) UDP receive events (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_events gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_udp_recv_events 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_calls ({call}) UDP send API calls (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_calls gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_udp_send_calls 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_app_send_bytes (By) Bytes sent by applications (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_app_send_bytes gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_app_send_bytes 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_app_recv_bytes (By) Bytes received by applications (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_app_recv_bytes gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_app_recv_bytes 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_queue_depth ({connection}) Current connections queued for processing (ObservableGauge`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_queue_depth gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_queue_depth 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_queue_depth ({operation}) Current connection operations queued (ObservableGauge`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_queue_depth gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_queue_depth 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_queued ({operation}) New connection operations queued (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_queued gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_queued 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_completed ({operation}) Connection operations processed (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_completed gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_conn_oper_completed 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_queue_depth ({operation}) Current worker operations queued (ObservableGauge`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_queue_depth gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_queue_depth 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_queued ({operation}) New worker operations queued (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_queued gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_queued 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_completed ({operation}) Worker operations processed (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_completed gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_threadpool_work_oper_completed 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_path_validated ({challenge}) Successful path challenges (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_path_validated gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_path_validated 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_path_failure ({challenge}) Unsuccessful path challenges (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_path_failure gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_path_failure 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_send_stateless_reset ({packet}) Stateless reset packets sent ever (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_send_stateless_reset gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_send_stateless_reset 0
+# HELP private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_send_stateless_retry ({packet}) Stateless retry packets sent (ObservableCounter`1)
+# TYPE private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_send_stateless_retry gauge
+private_internaldiagnostics_system_net_quic_msquic_msquic_datapath_send_stateless_retry 0
+# HELP mysqlconnector_db_client_connections_idle_max ({connection}) The maximum number of idle open connections allowed; this corresponds to MaximumPoolSize in the connection string. (ObservableUpDownCounter`1)
+# TYPE mysqlconnector_db_client_connections_idle_max gauge
+mysqlconnector_db_client_connections_idle_max{pool_name="Server=database;Port=3306;User ID=recapserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_idle_max{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_idle_max{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_idle_max{pool_name="Server=database;Port=3306;User ID=gistserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_idle_max{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 100
+# HELP mysqlconnector_db_client_connections_idle_min ({connection}) The minimum number of idle open connections allowed; this corresponds to MinimumPoolSize in the connection string. (ObservableUpDownCounter`1)
+# TYPE mysqlconnector_db_client_connections_idle_min gauge
+mysqlconnector_db_client_connections_idle_min{pool_name="Server=database;Port=3306;User ID=recapserviceuser;Database=TheGistOfItSec"} 0
+mysqlconnector_db_client_connections_idle_min{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 0
+mysqlconnector_db_client_connections_idle_min{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 0
+mysqlconnector_db_client_connections_idle_min{pool_name="Server=database;Port=3306;User ID=gistserviceuser;Database=TheGistOfItSec"} 0
+mysqlconnector_db_client_connections_idle_min{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 0
+# HELP mysqlconnector_db_client_connections_max ({connection}) The maximum number of open connections allowed; this corresponds to MaximumPoolSize in the connection string. (ObservableUpDownCounter`1)
+# TYPE mysqlconnector_db_client_connections_max gauge
+mysqlconnector_db_client_connections_max{pool_name="Server=database;Port=3306;User ID=recapserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_max{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_max{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_max{pool_name="Server=database;Port=3306;User ID=gistserviceuser;Database=TheGistOfItSec"} 100
+mysqlconnector_db_client_connections_max{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 100
+# HELP system_runtime_dotnet_gc_collections ({collection}) The number of garbage collections that have occurred since the process has started. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_gc_collections gauge
+system_runtime_dotnet_gc_collections{gc_heap_generation="gen2"} 1
+system_runtime_dotnet_gc_collections{gc_heap_generation="gen1"} 1
+system_runtime_dotnet_gc_collections{gc_heap_generation="gen0"} 7
+# HELP system_runtime_dotnet_process_memory_working_set (By) The number of bytes of physical memory mapped to the process context. (ObservableUpDownCounter`1)
+# TYPE system_runtime_dotnet_process_memory_working_set gauge
+system_runtime_dotnet_process_memory_working_set 180666368
+# HELP system_runtime_dotnet_gc_heap_total_allocated (By) The approximate number of bytes allocated on the managed GC heap since the process has started. The returned value does not include any native allocations. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_gc_heap_total_allocated gauge
+system_runtime_dotnet_gc_heap_total_allocated 49037792
+# HELP system_runtime_dotnet_gc_last_collection_memory_committed_size (By) The amount of committed virtual memory in use by the .NET GC, as observed during the latest garbage collection. (ObservableUpDownCounter`1)
+# TYPE system_runtime_dotnet_gc_last_collection_memory_committed_size gauge
+system_runtime_dotnet_gc_last_collection_memory_committed_size 18743296
+# HELP system_runtime_dotnet_gc_last_collection_heap_size (By) The managed GC heap size (including fragmentation), as observed during the latest garbage collection. (ObservableUpDownCounter`1)
+# TYPE system_runtime_dotnet_gc_last_collection_heap_size gauge
+system_runtime_dotnet_gc_last_collection_heap_size{gc_heap_generation="gen0"} 0
+system_runtime_dotnet_gc_last_collection_heap_size{gc_heap_generation="gen1"} 4104720
+system_runtime_dotnet_gc_last_collection_heap_size{gc_heap_generation="gen2"} 6653624
+system_runtime_dotnet_gc_last_collection_heap_size{gc_heap_generation="loh"} 1754824
+system_runtime_dotnet_gc_last_collection_heap_size{gc_heap_generation="poh"} 146344
+# HELP system_runtime_dotnet_gc_last_collection_heap_fragmentation_size (By) The heap fragmentation, as observed during the latest garbage collection. (ObservableUpDownCounter`1)
+# TYPE system_runtime_dotnet_gc_last_collection_heap_fragmentation_size gauge
+system_runtime_dotnet_gc_last_collection_heap_fragmentation_size{gc_heap_generation="gen0"} 0
+system_runtime_dotnet_gc_last_collection_heap_fragmentation_size{gc_heap_generation="gen1"} 65808
+system_runtime_dotnet_gc_last_collection_heap_fragmentation_size{gc_heap_generation="gen2"} 104
+system_runtime_dotnet_gc_last_collection_heap_fragmentation_size{gc_heap_generation="loh"} 1432808
+system_runtime_dotnet_gc_last_collection_heap_fragmentation_size{gc_heap_generation="poh"} 0
+# HELP system_runtime_dotnet_gc_pause_time (s) The total amount of time paused in GC since the process has started. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_gc_pause_time gauge
+system_runtime_dotnet_gc_pause_time 0.099323
+# HELP system_runtime_dotnet_jit_compiled_il_size (By) Count of bytes of intermediate language that have been compiled since the process has started. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_jit_compiled_il_size gauge
+system_runtime_dotnet_jit_compiled_il_size 1761544
+# HELP system_runtime_dotnet_jit_compiled_methods ({method}) The number of times the JIT compiler (re)compiled methods since the process has started. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_jit_compiled_methods gauge
+system_runtime_dotnet_jit_compiled_methods 20610
+# HELP system_runtime_dotnet_jit_compilation_time (s) The number of times the JIT compiler (re)compiled methods since the process has started. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_jit_compilation_time gauge
+system_runtime_dotnet_jit_compilation_time 7.9756291
+# HELP system_runtime_dotnet_monitor_lock_contentions ({contention}) The number of times there was contention when trying to acquire a monitor lock since the process has started. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_monitor_lock_contentions gauge
+system_runtime_dotnet_monitor_lock_contentions 11
+# HELP system_runtime_dotnet_thread_pool_thread_count ({thread}) The number of thread pool threads that currently exist. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_thread_pool_thread_count gauge
+system_runtime_dotnet_thread_pool_thread_count 4
+# HELP system_runtime_dotnet_thread_pool_work_item_count ({work_item}) The number of work items that the thread pool has completed since the process has started. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_thread_pool_work_item_count gauge
+system_runtime_dotnet_thread_pool_work_item_count 4058
+# HELP system_runtime_dotnet_thread_pool_queue_length ({work_item}) The number of work items that are currently queued to be processed by the thread pool. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_thread_pool_queue_length gauge
+system_runtime_dotnet_thread_pool_queue_length 0
+# HELP system_runtime_dotnet_timer_count ({timer}) The number of timer instances that are currently active. An active timer is registered to tick at some point in the future and has not yet been canceled. (ObservableUpDownCounter`1)
+# TYPE system_runtime_dotnet_timer_count gauge
+system_runtime_dotnet_timer_count 82
+# HELP system_runtime_dotnet_assembly_count ({assembly}) The number of .NET assemblies that are currently loaded. (ObservableUpDownCounter`1)
+# TYPE system_runtime_dotnet_assembly_count gauge
+system_runtime_dotnet_assembly_count 158
+# HELP system_runtime_dotnet_process_cpu_count ({cpu}) The number of processors available to the process. (ObservableUpDownCounter`1)
+# TYPE system_runtime_dotnet_process_cpu_count gauge
+system_runtime_dotnet_process_cpu_count 8
+# HELP system_runtime_dotnet_process_cpu_time (s) CPU time used by the process. (ObservableCounter`1)
+# TYPE system_runtime_dotnet_process_cpu_time gauge
+system_runtime_dotnet_process_cpu_time{cpu_mode="user"} 10.080806
+system_runtime_dotnet_process_cpu_time{cpu_mode="system"} 0.809536
+# HELP microsoft_aspnetcore_hosting_http_server_active_requests ({request}) Number of active HTTP server requests. (UpDownCounter`1)
+# TYPE microsoft_aspnetcore_hosting_http_server_active_requests gauge
+microsoft_aspnetcore_hosting_http_server_active_requests{http_request_method="GET",url_scheme="http"} 1
+# HELP microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts ({match_attempt}) Number of requests that were attempted to be matched to an endpoint. (Counter`1)
+# TYPE microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts gauge
+microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts{aspnetcore_routing_is_fallback="False",aspnetcore_routing_match_status="success",http_route="api/v1/gists/recap/daily"} 2
+microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts{aspnetcore_routing_is_fallback="False",aspnetcore_routing_match_status="success",http_route="api/v1/gists/recap/weekly"} 1
+microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts{aspnetcore_routing_is_fallback="False",aspnetcore_routing_match_status="success",http_route="api/v1/gists/{id:int}"} 4
+microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts{aspnetcore_routing_is_fallback="False",aspnetcore_routing_match_status="success",http_route="api/v1/gists/{id:int}/similar"} 4
+microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts{aspnetcore_routing_is_fallback="False",aspnetcore_routing_match_status="success",http_route="api/v1/gists/health"} 3
+microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts{aspnetcore_routing_is_fallback="False",aspnetcore_routing_match_status="success",http_route="api/v1/gists"} 6
+microsoft_aspnetcore_routing_aspnetcore_routing_match_attempts{aspnetcore_routing_is_fallback="False",aspnetcore_routing_match_status="success",http_route="api/v1/gists/feeds"} 2
+# HELP mysqlconnector_db_client_connections_pending_requests ({request}) The number of pending requests for an open connection, cumulative for the entire pool. (UpDownCounter`1)
+# TYPE mysqlconnector_db_client_connections_pending_requests gauge
+mysqlconnector_db_client_connections_pending_requests{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 0
+mysqlconnector_db_client_connections_pending_requests{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 0
+mysqlconnector_db_client_connections_pending_requests{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 0
+# HELP mysqlconnector_db_client_connections_usage ({connection}) The number of connections that are currently in the state described by the state tag. (UpDownCounter`1)
+# TYPE mysqlconnector_db_client_connections_usage gauge
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",state="idle"} 0
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",state="used"} 0
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",state="idle"} 0
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",state="used"} 0
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=recapserviceuser;Database=TheGistOfItSec",state="idle"} 0
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",state="idle"} 0
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",state="used"} 0
+mysqlconnector_db_client_connections_usage{pool_name="Server=database;Port=3306;User ID=gistserviceuser;Database=TheGistOfItSec",state="idle"} 0
+# HELP mysqlconnector_db_client_connections_wait_time (s) The time it took to obtain an open connection from the pool. (Histogram`1)
+# TYPE mysqlconnector_db_client_connections_wait_time histogram
+mysqlconnector_db_client_connections_wait_time_sum{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 0.0213586
+mysqlconnector_db_client_connections_wait_time_count{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.01"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.02"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.04"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.08"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.16"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.32"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.64"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="1.28"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="2.56"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="5.12"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="10.24"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="20.48"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="40.96"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="81.92"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="163.84"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="327.68"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="655.36"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="1310.72"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="2621.44"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="5242.88"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="10485.76"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="20971.52"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="41943.04"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="83886.08"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="167772.16"} 55
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="+Inf"} 55
+mysqlconnector_db_client_connections_wait_time_sum{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 0.013430899999999999
+mysqlconnector_db_client_connections_wait_time_count{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.01"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.02"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.04"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.08"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.16"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.32"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.64"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="1.28"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="2.56"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="5.12"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="10.24"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="20.48"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="40.96"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="81.92"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="163.84"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="327.68"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="655.36"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="1310.72"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="2621.44"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="5242.88"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="10485.76"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="20971.52"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="41943.04"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="83886.08"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="167772.16"} 14
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="+Inf"} 14
+mysqlconnector_db_client_connections_wait_time_sum{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 0.0009377
+mysqlconnector_db_client_connections_wait_time_count{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.01"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.02"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.04"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.08"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.16"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.32"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.64"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="1.28"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="2.56"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="5.12"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="10.24"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="20.48"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="40.96"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="81.92"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="163.84"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="327.68"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="655.36"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="1310.72"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="2621.44"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="5242.88"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="10485.76"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="20971.52"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="41943.04"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="83886.08"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="167772.16"} 1
+mysqlconnector_db_client_connections_wait_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="+Inf"} 1
+# HELP mysqlconnector_db_client_connections_use_time (s) The time between borrowing a connection and returning it to the pool. (Histogram`1)
+# TYPE mysqlconnector_db_client_connections_use_time histogram
+mysqlconnector_db_client_connections_use_time_sum{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 0.0756129
+mysqlconnector_db_client_connections_use_time_count{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.01"} 54
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.02"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.04"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.08"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.16"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.32"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="0.64"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="1.28"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="2.56"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="5.12"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="10.24"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="20.48"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="40.96"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="81.92"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="163.84"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="327.68"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="655.36"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="1310.72"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="2621.44"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="5242.88"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="10485.76"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="20971.52"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="41943.04"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="83886.08"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="167772.16"} 55
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=gistscontrolleruser;Database=TheGistOfItSec",le="+Inf"} 55
+mysqlconnector_db_client_connections_use_time_sum{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 0.0176673
+mysqlconnector_db_client_connections_use_time_count{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.01"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.02"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.04"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.08"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.16"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.32"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="0.64"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="1.28"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="2.56"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="5.12"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="10.24"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="20.48"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="40.96"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="81.92"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="163.84"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="327.68"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="655.36"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="1310.72"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="2621.44"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="5242.88"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="10485.76"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="20971.52"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="41943.04"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="83886.08"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="167772.16"} 14
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=cleanupserviceuser;Database=TheGistOfItSec",le="+Inf"} 14
+mysqlconnector_db_client_connections_use_time_sum{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 0.0015321
+mysqlconnector_db_client_connections_use_time_count{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.01"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.02"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.04"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.08"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.16"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.32"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="0.64"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="1.28"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="2.56"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="5.12"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="10.24"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="20.48"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="40.96"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="81.92"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="163.84"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="327.68"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="655.36"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="1310.72"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="2621.44"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="5242.88"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="10485.76"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="20971.52"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="41943.04"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="83886.08"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="167772.16"} 1
+mysqlconnector_db_client_connections_use_time_bucket{pool_name="Server=database;Port=3306;User ID=telegramserviceuser;Database=TheGistOfItSec",le="+Inf"} 1
+# HELP microsoft_aspnetcore_hosting_http_server_request_duration (s) Duration of HTTP server requests. (Histogram`1)
+# TYPE microsoft_aspnetcore_hosting_http_server_request_duration histogram
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http"} 0.0615703
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="0.01"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="0.02"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="0.04"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="0.08"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="0.16"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="0.32"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="0.64"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="1.28"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="2.56"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="5.12"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="10.24"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="20.48"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="40.96"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="81.92"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="163.84"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="327.68"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="655.36"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/daily",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http"} 0.0200365
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="0.01"} 0
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="0.02"} 0
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="0.04"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="0.08"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="0.16"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="0.32"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="0.64"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="1.28"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="2.56"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="5.12"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="10.24"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="20.48"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="40.96"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="81.92"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="163.84"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="327.68"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="655.36"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/recap/weekly",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http"} 0.019704799999999998
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="0.01"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="0.02"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="0.04"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="0.08"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="0.16"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="0.32"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="0.64"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="1.28"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="2.56"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="5.12"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="10.24"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="20.48"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="40.96"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="81.92"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="163.84"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="327.68"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="655.36"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http"} 0.2763567
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="0.01"} 0
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="0.02"} 0
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="0.04"} 0
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="0.08"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="0.16"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="0.32"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="0.64"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="1.28"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="2.56"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="5.12"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="10.24"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="20.48"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="40.96"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="81.92"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="163.84"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="327.68"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="655.36"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/{id:int}/similar",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 4
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http"} 0.0086312
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="0.01"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="0.02"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="0.04"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="0.08"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="0.16"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="0.32"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="0.64"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="1.28"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="2.56"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="5.12"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="10.24"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="20.48"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="40.96"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="81.92"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="163.84"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="327.68"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="655.36"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/health",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http"} 0.032002100000000006
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="0.01"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="0.02"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="0.04"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="0.08"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="0.16"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="0.32"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="0.64"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="1.28"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="2.56"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="5.12"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="10.24"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="20.48"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="40.96"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="81.92"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="163.84"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="327.68"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="655.36"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http"} 0.041140699999999995
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="0.01"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="0.02"} 1
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="0.04"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="0.08"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="0.16"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="0.32"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="0.64"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="1.28"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="2.56"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="5.12"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="10.24"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="20.48"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="40.96"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="81.92"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="163.84"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="327.68"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="655.36"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",http_route="api/v1/gists/feeds",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http"} 0.10119920000000002
+microsoft_aspnetcore_hosting_http_server_request_duration_count{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="0.01"} 2
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="0.02"} 3
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="0.04"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="0.08"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="0.16"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="0.32"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="0.64"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="1.28"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="2.56"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="5.12"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="10.24"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="20.48"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="40.96"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="81.92"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="163.84"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="327.68"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="655.36"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="1310.72"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="2621.44"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="5242.88"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="10485.76"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="20971.52"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="41943.04"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="83886.08"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="167772.16"} 6
+microsoft_aspnetcore_hosting_http_server_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",url_scheme="http",le="+Inf"} 6
+# HELP system_net_http_http_client_active_requests ({request}) Number of outbound HTTP requests that are currently active on the client. (UpDownCounter`1)
+# TYPE system_net_http_http_client_active_requests gauge
+system_net_http_http_client_active_requests{http_request_method="GET",server_address="chromadb",server_port="8000",url_scheme="http"} 0
+system_net_http_http_client_active_requests{http_request_method="POST",server_address="chromadb",server_port="8000",url_scheme="http"} 0
+system_net_http_http_client_active_requests{http_request_method="POST",server_address="api.telegram.org",server_port="443",url_scheme="https"} 1
+# HELP system_net_http_http_client_request_duration (s) Duration of HTTP client requests. (Histogram`1)
+# TYPE system_net_http_http_client_request_duration histogram
+system_net_http_http_client_request_duration_sum{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http"} 0.34006809999999993
+system_net_http_http_client_request_duration_count{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.01"} 48
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.02"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.04"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.08"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.16"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.32"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.64"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="1.28"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="2.56"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="5.12"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="10.24"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="20.48"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="40.96"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="81.92"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="163.84"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="327.68"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="655.36"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="1310.72"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="2621.44"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="5242.88"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="10485.76"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="20971.52"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="41943.04"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="83886.08"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="167772.16"} 54
+system_net_http_http_client_request_duration_bucket{http_request_method="GET",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="+Inf"} 54
+system_net_http_http_client_request_duration_sum{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http"} 0.2519325
+system_net_http_http_client_request_duration_count{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.01"} 18
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.02"} 25
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.04"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.08"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.16"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.32"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="0.64"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="1.28"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="2.56"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="5.12"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="10.24"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="20.48"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="40.96"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="81.92"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="163.84"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="327.68"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="655.36"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="1310.72"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="2621.44"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="5242.88"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="10485.76"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="20971.52"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="41943.04"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="83886.08"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="167772.16"} 26
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="chromadb",server_port="8000",url_scheme="http",le="+Inf"} 26
+system_net_http_http_client_request_duration_sum{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https"} 50.0175068
+system_net_http_http_client_request_duration_count{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="0.01"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="0.02"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="0.04"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="0.08"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="0.16"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="0.32"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="0.64"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="1.28"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="2.56"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="5.12"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="10.24"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="20.48"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="40.96"} 0
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="81.92"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="163.84"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="327.68"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="655.36"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="1310.72"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="2621.44"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="5242.88"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="10485.76"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="20971.52"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="41943.04"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="83886.08"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="167772.16"} 1
+system_net_http_http_client_request_duration_bucket{http_request_method="POST",http_response_status_code="200",network_protocol_version="1.1",server_address="api.telegram.org",server_port="443",url_scheme="https",le="+Inf"} 1
+# HELP system_runtime_cpu_usage (%) CPU Usage
+# TYPE system_runtime_cpu_usage gauge
+system_runtime_cpu_usage 0.41882338484549814
+# HELP system_runtime_working_set (MB) Working Set
+# TYPE system_runtime_working_set gauge
+system_runtime_working_set 180.535296
+# HELP system_runtime_gc_heap_size (MB) GC Heap Size
+# TYPE system_runtime_gc_heap_size gauge
+system_runtime_gc_heap_size 14.194088
+# HELP system_runtime_gen_0_gc_count_total Gen 0 GC Count
+# TYPE system_runtime_gen_0_gc_count_total counter
+system_runtime_gen_0_gc_count_total 5
+# HELP system_runtime_gen_1_gc_count_total Gen 1 GC Count
+# TYPE system_runtime_gen_1_gc_count_total counter
+system_runtime_gen_1_gc_count_total 1
+# HELP system_runtime_gen_2_gc_count_total Gen 2 GC Count
+# TYPE system_runtime_gen_2_gc_count_total counter
+system_runtime_gen_2_gc_count_total 1
+# HELP system_runtime_gen_0_gc_budget (MB) Gen 0 GC Budget
+# TYPE system_runtime_gen_0_gc_budget gauge
+system_runtime_gen_0_gc_budget 6
+# HELP system_runtime_threadpool_thread_count ThreadPool Thread Count
+# TYPE system_runtime_threadpool_thread_count gauge
+system_runtime_threadpool_thread_count 4
+# HELP system_runtime_monitor_lock_contention_count_total Monitor Lock Contention Count
+# TYPE system_runtime_monitor_lock_contention_count_total counter
+system_runtime_monitor_lock_contention_count_total 4
+# HELP system_runtime_threadpool_queue_length ThreadPool Queue Length
+# TYPE system_runtime_threadpool_queue_length gauge
+system_runtime_threadpool_queue_length 0
+# HELP system_runtime_threadpool_completed_items_count_total ThreadPool Completed Work Item Count
+# TYPE system_runtime_threadpool_completed_items_count_total counter
+system_runtime_threadpool_completed_items_count_total 2659
+# HELP system_runtime_alloc_total (B) Allocation Rate
+# TYPE system_runtime_alloc_total counter
+system_runtime_alloc_total 22657256
+# HELP system_runtime_active_timer_count Number of Active Timers
+# TYPE system_runtime_active_timer_count gauge
+system_runtime_active_timer_count 82
+# HELP system_runtime_gc_fragmentation (%) GC Fragmentation
+# TYPE system_runtime_gc_fragmentation gauge
+system_runtime_gc_fragmentation 11.838686988882351
+# HELP system_runtime_gc_committed (MB) GC Committed Bytes
+# TYPE system_runtime_gc_committed gauge
+system_runtime_gc_committed 18.743296
+# HELP system_runtime_exception_count_total Exception Count
+# TYPE system_runtime_exception_count_total counter
+system_runtime_exception_count_total 48
+# HELP system_runtime_time_in_gc (%) % Time in GC since last GC
+# TYPE system_runtime_time_in_gc gauge
+system_runtime_time_in_gc 0
+# HELP system_runtime_total_pause_time_by_gc_total (ms) Time paused by GC
+# TYPE system_runtime_total_pause_time_by_gc_total counter
+system_runtime_total_pause_time_by_gc_total 64.709
+# HELP system_runtime_gen_0_size (B) Gen 0 Size
+# TYPE system_runtime_gen_0_size gauge
+system_runtime_gen_0_size 0
+# HELP system_runtime_gen_1_size (B) Gen 1 Size
+# TYPE system_runtime_gen_1_size gauge
+system_runtime_gen_1_size 4104720
+# HELP system_runtime_gen_2_size (B) Gen 2 Size
+# TYPE system_runtime_gen_2_size gauge
+system_runtime_gen_2_size 6653624
+# HELP system_runtime_loh_size (B) LOH Size
+# TYPE system_runtime_loh_size gauge
+system_runtime_loh_size 1754824
+# HELP system_runtime_poh_size (B) POH (Pinned Object Heap) Size
+# TYPE system_runtime_poh_size gauge
+system_runtime_poh_size 146344
+# HELP system_runtime_assembly_count Number of Assemblies Loaded
+# TYPE system_runtime_assembly_count gauge
+system_runtime_assembly_count 158
+# HELP system_runtime_il_bytes_jitted (B) IL Bytes Jitted
+# TYPE system_runtime_il_bytes_jitted gauge
+system_runtime_il_bytes_jitted 1750255
+# HELP system_runtime_methods_jitted_count Number of Methods Jitted
+# TYPE system_runtime_methods_jitted_count gauge
+system_runtime_methods_jitted_count 20521
+# HELP system_runtime_time_in_jit_total (ms) Time spent in JIT
+# TYPE system_runtime_time_in_jit_total counter
+system_runtime_time_in_jit_total 4081.3774999999996
+# HELP system_net_http_requests_started Requests Started
+# TYPE system_net_http_requests_started gauge
+system_net_http_requests_started 78
+# HELP system_net_http_requests_started_total Requests Started Rate
+# TYPE system_net_http_requests_started_total counter
+system_net_http_requests_started_total 78
+# HELP system_net_http_requests_failed Requests Failed
+# TYPE system_net_http_requests_failed gauge
+system_net_http_requests_failed 0
+# HELP system_net_http_requests_failed_total Requests Failed Rate
+# TYPE system_net_http_requests_failed_total counter
+system_net_http_requests_failed_total 0
+# HELP system_net_http_current_requests Current Requests
+# TYPE system_net_http_current_requests gauge
+system_net_http_current_requests 1
+# HELP system_net_http_http11_connections_current_total Current Http 1.1 Connections
+# TYPE system_net_http_http11_connections_current_total gauge
+system_net_http_http11_connections_current_total 0
+# HELP system_net_http_http20_connections_current_total Current Http 2.0 Connections
+# TYPE system_net_http_http20_connections_current_total gauge
+system_net_http_http20_connections_current_total 0
+# HELP system_net_http_http30_connections_current_total Current Http 3.0 Connections
+# TYPE system_net_http_http30_connections_current_total gauge
+system_net_http_http30_connections_current_total 0
+# HELP system_net_http_http11_requests_queue_duration (ms) HTTP 1.1 Requests Queue Duration
+# TYPE system_net_http_http11_requests_queue_duration gauge
+system_net_http_http11_requests_queue_duration 0
+# HELP system_net_http_http20_requests_queue_duration (ms) HTTP 2.0 Requests Queue Duration
+# TYPE system_net_http_http20_requests_queue_duration gauge
+system_net_http_http20_requests_queue_duration 0
+# HELP system_net_http_http30_requests_queue_duration (ms) HTTP 3.0 Requests Queue Duration
+# TYPE system_net_http_http30_requests_queue_duration gauge
+system_net_http_http30_requests_queue_duration 0
+# HELP system_net_sockets_current_outgoing_connect_attempts Current Outgoing Connect Attempts
+# TYPE system_net_sockets_current_outgoing_connect_attempts gauge
+system_net_sockets_current_outgoing_connect_attempts 0
+# HELP system_net_sockets_outgoing_connections_established Outgoing Connections Established
+# TYPE system_net_sockets_outgoing_connections_established gauge
+system_net_sockets_outgoing_connections_established 19
+# HELP system_net_sockets_incoming_connections_established Incoming Connections Established
+# TYPE system_net_sockets_incoming_connections_established gauge
+system_net_sockets_incoming_connections_established 6
+# HELP system_net_sockets_bytes_received Bytes Received
+# TYPE system_net_sockets_bytes_received gauge
+system_net_sockets_bytes_received 667496
+# HELP system_net_sockets_bytes_sent Bytes Sent
+# TYPE system_net_sockets_bytes_sent gauge
+system_net_sockets_bytes_sent 1183804
+# HELP system_net_sockets_datagrams_received Datagrams Received
+# TYPE system_net_sockets_datagrams_received gauge
+system_net_sockets_datagrams_received 0
+# HELP system_net_sockets_datagrams_sent Datagrams Sent
+# TYPE system_net_sockets_datagrams_sent gauge
+system_net_sockets_datagrams_sent 0
+# HELP system_net_nameresolution_dns_lookups_requested DNS Lookups Requested
+# TYPE system_net_nameresolution_dns_lookups_requested gauge
+system_net_nameresolution_dns_lookups_requested 0
+# HELP system_net_nameresolution_current_dns_lookups Current DNS Lookups
+# TYPE system_net_nameresolution_current_dns_lookups gauge
+system_net_nameresolution_current_dns_lookups 0
+# HELP system_net_nameresolution_dns_lookups_duration (ms) Average DNS Lookup Duration
+# TYPE system_net_nameresolution_dns_lookups_duration gauge
+system_net_nameresolution_dns_lookups_duration 0
+# HELP system_net_security_tls_handshake_total TLS handshakes completed
+# TYPE system_net_security_tls_handshake_total counter
+system_net_security_tls_handshake_total 0
+# HELP system_net_security_total_tls_handshakes Total TLS handshakes completed
+# TYPE system_net_security_total_tls_handshakes gauge
+system_net_security_total_tls_handshakes 0
+# HELP system_net_security_current_tls_handshakes Current TLS handshakes
+# TYPE system_net_security_current_tls_handshakes gauge
+system_net_security_current_tls_handshakes 0
+# HELP system_net_security_failed_tls_handshakes Total TLS handshakes failed
+# TYPE system_net_security_failed_tls_handshakes gauge
+system_net_security_failed_tls_handshakes 0
+# HELP system_net_security_all_tls_sessions_open All TLS Sessions Active
+# TYPE system_net_security_all_tls_sessions_open gauge
+system_net_security_all_tls_sessions_open 0
+# HELP system_net_security_tls10_sessions_open TLS 1.0 Sessions Active
+# TYPE system_net_security_tls10_sessions_open gauge
+system_net_security_tls10_sessions_open 0
+# HELP system_net_security_tls11_sessions_open TLS 1.1 Sessions Active
+# TYPE system_net_security_tls11_sessions_open gauge
+system_net_security_tls11_sessions_open 0
+# HELP system_net_security_tls12_sessions_open TLS 1.2 Sessions Active
+# TYPE system_net_security_tls12_sessions_open gauge
+system_net_security_tls12_sessions_open 0
+# HELP system_net_security_tls13_sessions_open TLS 1.3 Sessions Active
+# TYPE system_net_security_tls13_sessions_open gauge
+system_net_security_tls13_sessions_open 0
+# HELP system_net_security_all_tls_handshake_duration (ms) TLS Handshake Duration
+# TYPE system_net_security_all_tls_handshake_duration gauge
+system_net_security_all_tls_handshake_duration 0
+# HELP system_net_security_tls10_handshake_duration (ms) TLS 1.0 Handshake Duration
+# TYPE system_net_security_tls10_handshake_duration gauge
+system_net_security_tls10_handshake_duration 0
+# HELP system_net_security_tls11_handshake_duration (ms) TLS 1.1 Handshake Duration
+# TYPE system_net_security_tls11_handshake_duration gauge
+system_net_security_tls11_handshake_duration 0
+# HELP system_net_security_tls12_handshake_duration (ms) TLS 1.2 Handshake Duration
+# TYPE system_net_security_tls12_handshake_duration gauge
+system_net_security_tls12_handshake_duration 0
+# HELP system_net_security_tls13_handshake_duration (ms) TLS 1.3 Handshake Duration
+# TYPE system_net_security_tls13_handshake_duration gauge
+system_net_security_tls13_handshake_duration 0
+# HELP microsoft_aspnetcore_hosting_requests_per_second_total Request Rate
+# TYPE microsoft_aspnetcore_hosting_requests_per_second_total counter
+microsoft_aspnetcore_hosting_requests_per_second_total 28
+# HELP microsoft_aspnetcore_hosting_total_requests Total Requests
+# TYPE microsoft_aspnetcore_hosting_total_requests gauge
+microsoft_aspnetcore_hosting_total_requests 28
+# HELP microsoft_aspnetcore_hosting_current_requests Current Requests
+# TYPE microsoft_aspnetcore_hosting_current_requests gauge
+microsoft_aspnetcore_hosting_current_requests 0
+# HELP microsoft_aspnetcore_hosting_failed_requests Failed Requests
+# TYPE microsoft_aspnetcore_hosting_failed_requests gauge
+microsoft_aspnetcore_hosting_failed_requests 0
+# HELP microsoft_aspnetcore_server_kestrel_connections_per_second_total Connection Rate
+# TYPE microsoft_aspnetcore_server_kestrel_connections_per_second_total counter
+microsoft_aspnetcore_server_kestrel_connections_per_second_total 3
+# HELP microsoft_aspnetcore_server_kestrel_total_connections Total Connections
+# TYPE microsoft_aspnetcore_server_kestrel_total_connections gauge
+microsoft_aspnetcore_server_kestrel_total_connections 6
+# HELP microsoft_aspnetcore_server_kestrel_tls_handshakes_per_second_total TLS Handshake Rate
+# TYPE microsoft_aspnetcore_server_kestrel_tls_handshakes_per_second_total counter
+microsoft_aspnetcore_server_kestrel_tls_handshakes_per_second_total 0
+# HELP microsoft_aspnetcore_server_kestrel_total_tls_handshakes Total TLS Handshakes
+# TYPE microsoft_aspnetcore_server_kestrel_total_tls_handshakes gauge
+microsoft_aspnetcore_server_kestrel_total_tls_handshakes 0
+# HELP microsoft_aspnetcore_server_kestrel_current_tls_handshakes Current TLS Handshakes
+# TYPE microsoft_aspnetcore_server_kestrel_current_tls_handshakes gauge
+microsoft_aspnetcore_server_kestrel_current_tls_handshakes 0
+# HELP microsoft_aspnetcore_server_kestrel_failed_tls_handshakes Failed TLS Handshakes
+# TYPE microsoft_aspnetcore_server_kestrel_failed_tls_handshakes gauge
+microsoft_aspnetcore_server_kestrel_failed_tls_handshakes 0
+# HELP microsoft_aspnetcore_server_kestrel_current_connections Current Connections
+# TYPE microsoft_aspnetcore_server_kestrel_current_connections gauge
+microsoft_aspnetcore_server_kestrel_current_connections 2
+# HELP microsoft_aspnetcore_server_kestrel_connection_queue_length Connection Queue Length
+# TYPE microsoft_aspnetcore_server_kestrel_connection_queue_length gauge
+microsoft_aspnetcore_server_kestrel_connection_queue_length 0
+# HELP microsoft_aspnetcore_server_kestrel_request_queue_length Request Queue Length
+# TYPE microsoft_aspnetcore_server_kestrel_request_queue_length gauge
+microsoft_aspnetcore_server_kestrel_request_queue_length 0
+# HELP microsoft_aspnetcore_server_kestrel_current_upgraded_requests Current Upgraded Requests (WebSockets)
+# TYPE microsoft_aspnetcore_server_kestrel_current_upgraded_requests gauge
+microsoft_aspnetcore_server_kestrel_current_upgraded_requests 0
+# HELP microsoft_aspnetcore_server_kestrel_kestrel_queued_connections ({connection}) Number of connections that are currently queued and are waiting to start. (UpDownCounter`1)
+# TYPE microsoft_aspnetcore_server_kestrel_kestrel_queued_connections gauge
+microsoft_aspnetcore_server_kestrel_kestrel_queued_connections{network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080"} 0
+# HELP microsoft_aspnetcore_server_kestrel_kestrel_active_connections ({connection}) Number of connections that are currently active on the server. (UpDownCounter`1)
+# TYPE microsoft_aspnetcore_server_kestrel_kestrel_active_connections gauge
+microsoft_aspnetcore_server_kestrel_kestrel_active_connections{network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080"} 1
+# HELP microsoft_aspnetcore_server_kestrel_kestrel_connection_duration (s) The duration of connections on the server. (Histogram`1)
+# TYPE microsoft_aspnetcore_server_kestrel_kestrel_connection_duration histogram
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_sum{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080"} 0.012722399999999998
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_count{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="0.01"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="0.02"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="0.04"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="0.08"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="0.16"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="0.32"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="0.64"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="1.28"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="2.56"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="5.12"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="10.24"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="20.48"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="40.96"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="81.92"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="163.84"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="327.68"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="655.36"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="1310.72"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="2621.44"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="5242.88"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="10485.76"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="20971.52"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="41943.04"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="83886.08"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="167772.16"} 3
+microsoft_aspnetcore_server_kestrel_kestrel_connection_duration_bucket{network_protocol_name="http",network_protocol_version="1.1",network_transport="tcp",network_type="ipv6",server_address="::ffff:127.0.0.1",server_port="8080",le="+Inf"} 3
+# HELP system_runtime_dotnet_exceptions ({exception}) The number of exceptions that have been thrown in managed code. (Counter`1)
+# TYPE system_runtime_dotnet_exceptions gauge
+system_runtime_dotnet_exceptions{error_type="IOException"} 48

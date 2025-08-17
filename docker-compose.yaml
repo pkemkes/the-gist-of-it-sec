@@ -1,7 +1,7 @@
 services:
   
   backend:
-    image: pkemkes/gist-backend
+    image: pkemkes/the-gist-of-it-sec-backend
     container_name: backend
     depends_on:
       database:
@@ -126,12 +126,11 @@ services:
         tag: "{{.Name}}"
     volumes:
       - prometheus-data:/prometheus
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - monitoring
   
   loki:
-    image: grafana/loki:3.5.3
+    image: pkemkes/the-gist-of-it-sec-loki
     container_name: loki
     logging:
       driver: json-file
@@ -140,18 +139,10 @@ services:
         tag: "{{.Name}}"
     volumes:
       - loki-data:/loki
-      - ./loki/loki.yml:/etc/loki/local-config.yaml
     networks:
       - monitoring
     ports:
       - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
   
   promtail:
     image: grafana/promtail:3.5.3
