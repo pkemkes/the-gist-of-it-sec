@@ -38,7 +38,7 @@ export const backendApi = createApi({
         params.push(`take=${pageSize}`);
         params.push(`q=${encodeURIComponent(searchQuery)}`);
         params.push(`tags=${encodeURIComponent(tags.join(";;"))}`);
-        params.push(`disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`);
+        params.push(`disabledFeeds=${JoinDisabledFeedsParam(disabledFeeds)}`);
         return `?${params.join("&")}`;
       },
       // taken from: https://redux-toolkit.js.org/rtk-query/api/createApi#merge
@@ -70,7 +70,7 @@ export const backendApi = createApi({
       query: ({ id }) => `${id}`,
     }),
     getSimilarGists: builder.query<SimilarGist[], SimilarGistsQueryParameters>({
-      query: ({ id, disabledFeeds }) => `${id}/similar?disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`,
+      query: ({ id, disabledFeeds }) => `${id}/similar?disabledFeeds=${JoinDisabledFeedsParam(disabledFeeds)}`,
     }),
     getSearchResults: builder.query<SearchResult[], { id: number }>({
       query: ({ id }) => `${id}/searchResults`,
