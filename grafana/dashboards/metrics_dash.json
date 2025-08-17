@@ -22,6 +22,19 @@
   "links": [],
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 32,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "mysql",
         "uid": "028fb935-0e9c-4a1f-8f65-c31f3401d3b2"
@@ -48,7 +61,7 @@
         "h": 5,
         "w": 7,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 23,
       "options": {
@@ -79,7 +92,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = FALSE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
+          "rawSql": "SELECT COUNT(*) FROM Gists WHERE Disabled = FALSE AND Published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -135,7 +148,7 @@
         "h": 10,
         "w": 9,
         "x": 7,
-        "y": 0
+        "y": 1
       },
       "id": 24,
       "options": {
@@ -173,7 +186,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = FALSE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY) GROUP BY feed_id;",
+          "rawSql": "SELECT \n  (SELECT Title FROM Feeds WHERE Id = FeedId) AS \"Feed\", \n  COUNT(FeedId) AS \"# Gists\" FROM Gists WHERE Disabled = FALSE AND Published > (UTC_TIMESTAMP() - INTERVAL 7 DAY) \nGROUP BY FeedId;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -260,7 +273,7 @@
         "h": 15,
         "w": 8,
         "x": 16,
-        "y": 0
+        "y": 1
       },
       "id": 26,
       "options": {
@@ -292,7 +305,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \r\n  CONCAT(\r\n    '{',\r\n    REGEXP_REPLACE(\r\n      CONCAT('\"', REPLACE(tags, ';;', '\", \"'), '\"'),\r\n      '\"([^\"]+)\"',\r\n      '\"\\\\1\": 1'\r\n    ),\r\n    '}'\r\n  ) AS 'Tags'\r\n  FROM thegistofitsec.gists \r\n  WHERE disabled = FALSE \r\n    AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
+          "rawSql": "SELECT \r\n  CONCAT(\r\n    '{',\r\n    REGEXP_REPLACE(\r\n      CONCAT('\"', REPLACE(Tags, ';;', '\", \"'), '\"'),\r\n      '\"([^\"]+)\"',\r\n      '\"\\\\1\": 1'\r\n    ),\r\n    '}'\r\n  ) AS 'Tags'\r\n  FROM Gists \r\n  WHERE Disabled = FALSE \r\n    AND Published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -371,7 +384,7 @@
         "h": 5,
         "w": 7,
         "x": 0,
-        "y": 5
+        "y": 6
       },
       "id": 27,
       "options": {
@@ -402,7 +415,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.gists WHERE disabled = TRUE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
+          "rawSql": "SELECT COUNT(*) FROM Gists WHERE Disabled = TRUE AND Published > (UTC_TIMESTAMP() - INTERVAL 7 DAY);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -464,7 +477,7 @@
         "h": 5,
         "w": 7,
         "x": 0,
-        "y": 10
+        "y": 11
       },
       "id": 25,
       "options": {
@@ -495,7 +508,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) FROM thegistofitsec.chats;",
+          "rawSql": "SELECT COUNT(*) FROM Chats;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -553,7 +566,7 @@
         "h": 5,
         "w": 9,
         "x": 7,
-        "y": 10
+        "y": 11
       },
       "id": 28,
       "options": {
@@ -584,7 +597,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT (SELECT title FROM thegistofitsec.feeds WHERE id = feed_id) AS \"Feed\", COUNT(feed_id) AS \"# Gists\" FROM thegistofitsec.gists WHERE disabled = TRUE AND published > (UTC_TIMESTAMP() - INTERVAL 7 DAY) GROUP BY feed_id;",
+          "rawSql": "SELECT \n  (SELECT Title FROM Feeds WHERE Id = FeedId) AS \"Feed\", \n  COUNT(FeedId) AS \"# Gists\" FROM Gists WHERE Disabled = TRUE AND Published > (UTC_TIMESTAMP() - INTERVAL 7 DAY) \nGROUP BY FeedId;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -639,11 +652,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 16
       },
       "id": 4,
       "panels": [],
-      "title": "Gists Bot",
+      "title": "GistService",
       "type": "row"
     },
     {
@@ -714,7 +727,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 17
       },
       "id": 1,
       "options": {
@@ -738,11 +751,11 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "process_all_entries_seconds",
+          "expr": "process_feeds_seconds",
           "fullMetaSearch": false,
           "includeNullMetadata": false,
           "instant": false,
-          "legendFormat": "{{job}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -816,7 +829,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 23
       },
       "id": 8,
       "options": {
@@ -839,7 +852,7 @@
             "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
+          "editorMode": "builder",
           "expr": "rate(process_entry_seconds_sum[1m]) / rate(process_entry_seconds_count[1m])",
           "fullMetaSearch": false,
           "hide": false,
@@ -852,221 +865,6 @@
         }
       ],
       "title": "Time spent to process a single gist by feed",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisGridShow": true,
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 5,
-            "pointSize": 7,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 28
-      },
-      "id": 2,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "rate(upsert_gist_seconds_sum[1m]) / rate(upsert_gist_seconds_count[1m])",
-          "fullMetaSearch": false,
-          "hide": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{feed_title}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "Time spent to upsert a gist by feed",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisGridShow": true,
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 5,
-            "pointSize": 7,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 12,
-        "y": 28
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "rate(upsert_search_result_seconds_sum[1m]) / rate(upsert_search_result_seconds_count[1m])",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "{{feed_title}}",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "Time spent to upsert a search result by feed",
       "type": "timeseries"
     },
     {
@@ -1134,7 +932,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 29
       },
       "id": 9,
       "options": {
@@ -1237,7 +1035,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 29
       },
       "id": 10,
       "options": {
@@ -1260,8 +1058,8 @@
             "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "rate(get_search_results_seconds_sum[1m]) / rate(get_search_results_seconds_count[1m])",
+          "editorMode": "builder",
+          "expr": "rate(google_search_results_seconds_sum[1m]) / rate(google_search_results_seconds_count[1m])",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -1281,11 +1079,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 34
       },
       "id": 12,
       "panels": [],
-      "title": "REST Server",
+      "title": "GistsController",
       "type": "row"
     },
     {
@@ -1336,7 +1134,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1352,7 +1151,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 35
       },
       "id": 13,
       "options": {
@@ -1376,11 +1175,11 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "rate(flask_http_request_duration_seconds_sum{path!=\"/health\"}[5m]) / rate(flask_http_request_duration_seconds_count{path!=\"/health\"}[5m])",
+          "expr": "rate(microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_route!=\"api/v1/gists/health\", http_route!=\"\"}[5m]) / rate(microsoft_aspnetcore_hosting_http_server_request_duration_count{http_route!=\"api/v1/gists/health\", http_route!=\"\"}[5m])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "{{path}} - {{status}}",
+          "legendFormat": "{{http_route}} - {{http_response_status_code}}",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -1404,7 +1203,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           }
@@ -1415,7 +1215,7 @@
         "h": 5,
         "w": 16,
         "x": 0,
-        "y": 46
+        "y": 42
       },
       "id": 14,
       "options": {
@@ -1444,11 +1244,11 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "(sum(flask_http_request_duration_seconds_count{path!=\"/health\"}) by (path)) - (sum(flask_http_request_duration_seconds_count{path!=\"/health\"} offset 24h) by (path))",
+          "expr": "(sum(microsoft_aspnetcore_hosting_http_server_request_duration_count{http_route!=\"api/v1/gists/health\", http_route!=\"\"}) by (http_route)) - (sum(microsoft_aspnetcore_hosting_http_server_request_duration_count{http_route!=\"api/v1/gists/health\", http_route!=\"\"} offset 24h) by (http_route))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "{{path}}",
+          "legendFormat": "{{http_route}}",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -1472,7 +1272,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           }
@@ -1483,7 +1284,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 46
+        "y": 42
       },
       "id": 15,
       "options": {
@@ -1512,11 +1313,11 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "(sum(flask_http_request_duration_seconds_count{path!=\"/health\"}) by (status)) - (sum(flask_http_request_duration_seconds_count{path!=\"/health\"} offset 24h) by (status))",
+          "expr": "(sum(microsoft_aspnetcore_hosting_http_server_request_duration_count{http_route!=\"api/v1/gists/health\", http_route!=\"\"}) by (http_response_status_code)) - (sum(microsoft_aspnetcore_hosting_http_server_request_duration_count{http_route!=\"api/v1/gists/health\", http_route!=\"\"} offset 24h) by (http_response_status_code))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "{{status}}",
+          "legendFormat": "{{http_response_status_code}}",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -1573,7 +1374,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1589,7 +1391,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 47
       },
       "id": 30,
       "options": {
@@ -1613,11 +1415,11 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "rate(flask_http_request_duration_seconds_sum{path=\"/health\"}[5m]) / rate(flask_http_request_duration_seconds_count{path=\"/health\"}[5m])",
+          "expr": "rate(microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_route=\"api/v1/gists/health\", http_route!=\"\"}[5m]) / rate(microsoft_aspnetcore_hosting_http_server_request_duration_sum{http_route=\"api/v1/gists/health\", http_route!=\"\"}[5m])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "{{path}} - {{status}}",
+          "legendFormat": "{{http_route}} - {{http_response_status_code}}",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -1627,519 +1429,430 @@
       "type": "timeseries"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 54
       },
       "id": 16,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+      "panels": [],
+      "title": "CleanupService",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
           },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "s"
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 7,
-            "w": 24,
-            "x": 0,
-            "y": 59
-          },
-          "id": 17,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": false
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
             },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
           },
-          "pluginVersion": "11.4.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
               },
-              "disableTextWrap": false,
-              "editorMode": "builder",
-              "expr": "cleanup_gists_seconds",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "Time spent",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "Time spent to cleanup all gists",
-          "type": "timeseries"
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
         },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 7,
-            "w": 24,
-            "x": 0,
-            "y": 72
-          },
-          "id": 29,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": false
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.4.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-              },
-              "disableTextWrap": false,
-              "editorMode": "builder",
-              "expr": "gists_checked",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "Gists checked",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "Number of gists that have been checked in a single cleanup run",
-          "type": "timeseries"
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
         },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
           },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 5,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 0,
-            "y": 79
-          },
-          "id": 18,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.4.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-              },
-              "disableTextWrap": false,
-              "editorMode": "builder",
-              "expr": "rate(check_gist_seconds_sum[1m]) / rate(check_gist_seconds_count[1m])",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "{{feed_title}}",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "Time spent to check a single gist",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 5,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 12,
-            "y": 79
-          },
-          "id": 19,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.4.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-              },
-              "disableTextWrap": false,
-              "editorMode": "code",
-              "expr": "rate(ensure_correct_disabled_seconds_sum[1m]) / rate(ensure_correct_disabled_seconds_count[1m])",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "{{feed_title}} - Should be disabled: {{should_be_disabled}}; Is disabled: {{is_disabled}}",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "Time spent to cleanup gist in database",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 5,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 7,
-            "w": 24,
-            "x": 0,
-            "y": 85
-          },
-          "id": 20,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.4.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-              },
-              "disableTextWrap": false,
-              "editorMode": "builder",
-              "expr": "rate(ensure_chromadb_seconds_sum[1m]) / rate(ensure_chromadb_seconds_count[1m])",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "{{feed_title}} - Should be disabled: {{should_be_disabled}}; Is disabled: {{is_disabled}}, Feed id in DB: {{feed_id_in_db}}",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "Time spent to cleanup gist in chromadb",
-          "type": "timeseries"
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "cleanup_gists_seconds",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Time spent",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
         }
       ],
-      "title": "Clean Up",
+      "title": "Time spent to cleanup all gists",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 62
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "gists_checked",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Gists checked",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Number of gists that have been checked in a single cleanup run",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 5,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 69
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "rate(check_gist_seconds_sum[1m]) / rate(check_gist_seconds_count[1m])",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{feed_title}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Time spent to check a single gist",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 21,
+      "panels": [],
+      "title": "TelegramService",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 76
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+          },
+          "editorMode": "code",
+          "expr": "process_chats_seconds",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Time spent to process all chats",
+      "type": "timeseries"
     },
     {
       "collapsed": true,
@@ -2147,110 +1860,228 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 59
+        "y": 82
       },
-      "id": 21,
-      "panels": [
+      "id": 33,
+      "panels": [],
+      "title": "Errors",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "ff6b8cf6-e41d-47e5-b915-ce202fe7f7e3"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 176
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 83
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
+            "type": "loki",
+            "uid": "ff6b8cf6-e41d-47e5-b915-ce202fe7f7e3"
           },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 24,
-            "x": 0,
-            "y": 60
-          },
-          "id": 22,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": false
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.4.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "2178de4d-8506-49c7-bbab-9c72f102e76a"
-              },
-              "editorMode": "code",
-              "expr": "process_chats",
-              "instant": false,
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Time spent to process all chats",
-          "type": "timeseries"
+          "editorMode": "code",
+          "expr": "{container_name=\"backend\"} | json | Level=\"Error\" | line_format \"{{.Properties_EventId_Name}}\"",
+          "queryType": "range",
+          "refId": "A"
         }
       ],
-      "title": "Telegram Bot",
-      "type": "row"
+      "title": "Errors",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "Time",
+                "Line"
+              ]
+            }
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "Line",
+            "renamePattern": "EventId.Name"
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "ff6b8cf6-e41d-47e5-b915-ce202fe7f7e3"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 176
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 8,
+        "y": 83
+      },
+      "id": 34,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "ff6b8cf6-e41d-47e5-b915-ce202fe7f7e3"
+          },
+          "editorMode": "builder",
+          "expr": "{container_name=\"backend\"} | json | Properties_EventId_Name = `FetchingPageContentFailed` | line_format `{{.Properties_SourceContext}} - {{.Properties_Url}}`",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "FetchingPageContentFailed",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "Time",
+                "Line"
+              ]
+            }
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "Line",
+            "renamePattern": "Service - URL"
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "preload": false,
@@ -2268,6 +2099,6 @@
   "timezone": "browser",
   "title": "The Gist of IT Sec - Metrics",
   "uid": "deaokso813f28f",
-  "version": 3,
+  "version": 14,
   "weekStart": ""
 }

@@ -1,26 +1,8 @@
 services:
-    
-  telegram_bot:
-    image: pkemkes/the-gist-of-it-sec-telegram-bot
-    container_name: telegram_bot
-    depends_on:
-      database:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
-    environment:
-      - DB_HOSTNAME=database
-      - DB_USERNAME=${DB_TELEGRAMBOT_USERNAME}
-      - DB_PASSWORD=${DB_TELEGRAMBOT_PASSWORD}
-      - TELEGRAM_API_KEY=${TELEGRAM_API_KEY}
-      - APP_BASE_URL=http://localhost:8081  # NOTE: Change this to your base URL
-    networks:
-      - database
-      - prometheus
-
-  gists_bot:  
-    image: pkemkes/the-gist-of-it-sec-gists-bot
-    container_name: gists_bot
+  
+  backend:
+    image: pkemkes/the-gist-of-it-sec-backend
+    container_name: backend
     depends_on:
       database:
         condition: service_healthy
@@ -28,77 +10,58 @@ services:
         condition: service_healthy
       prometheus:
         condition: service_healthy
+      loki:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
     environment:
-      - LANGCHAIN_TRACING_V2=true
-      - LANGCHAIN_PROJECT=the-gist-of-it-sec
-      - LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
-      - DB_HOSTNAME=database
-      - DB_USERNAME=${DB_GISTSBOT_USERNAME}
-      - DB_PASSWORD=${DB_GISTSBOT_PASSWORD}
-      - CHROMA_HOST=chromadb
-      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
-      - APP_MODE=dev  # NOTE: remove this for production use
+      - CORS_ALLOWED_ORIGIN=http://localhost:8081  # NOTE: Change this to your frontend's base URL
+      - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
+      - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
+      - ChatClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
+      - ChatClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
+      - ChromaDbHandlerOptions__Server=chromadb
+      - ChromaDbHandlerOptions__ServerAuthnCredentials=${CHROMA_SERVER_AUTHN_CREDENTIALS}
+      - CustomSearchApiHandlerOptions__ApiKey=${GOOGLE_API_KEY}
+      - CustomSearchApiHandlerOptions__EngineId=${GOOGLE_SEARCH_ENGINE_ID}
+      - TelegramBotClientHandlerOptions__BotToken=${TELEGRAM_API_KEY}
+      - TelegramServiceOptions__AppBaseUrl=http://localhost:8081  # NOTE: Change this to your base URL
+      - GistMariaDbHandlerOptions__Server=database
+      - GistMariaDbHandlerOptions__User=${DB_GISTSERVICE_USERNAME}
+      - GistMariaDbHandlerOptions__Password=${DB_GISTSERVICE_PASSWORD}
+      - RecapMariaDbHandlerOptions__Server=database
+      - RecapMariaDbHandlerOptions__User=${DB_RECAPSERVICE_USERNAME}
+      - RecapMariaDbHandlerOptions__Password=${DB_RECAPSERVICE_PASSWORD}
+      - CleanupMariaDbHandlerOptions__Server=database
+      - CleanupMariaDbHandlerOptions__User=${DB_CLEANUPSERVICE_USERNAME}
+      - CleanupMariaDbHandlerOptions__Password=${DB_CLEANUPSERVICE_PASSWORD}
+      - TelegramMariaDbHandlerOptions__Server=database
+      - TelegramMariaDbHandlerOptions__User=${DB_TELEGRAMSERVICE_USERNAME}
+      - TelegramMariaDbHandlerOptions__Password=${DB_TELEGRAMSERVICE_PASSWORD}
+      - GistsControllerMariaDbHandlerOptions__Server=database
+      - GistsControllerMariaDbHandlerOptions__User=${DB_GISTSCONTROLLER_USERNAME}
+      - GistsControllerMariaDbHandlerOptions__Password=${DB_GISTSCONTROLLER_PASSWORD}
     networks:
       - database
       - chromadb
-      - prometheus
-
-  rest_server:  
-    image: pkemkes/the-gist-of-it-sec-rest-server
-    container_name: rest_server
-    depends_on:
-      database:
-        condition: service_healthy
-      chromadb:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
-    environment:
-      - SERVER_ORIGINS=http://localhost:8081,http://localhost:5173  # NOTE: Change this to your base URL
-      - DB_HOSTNAME=database
-      - DB_USERNAME=${DB_GISTSBOT_USERNAME}
-      - DB_PASSWORD=${DB_GISTSBOT_PASSWORD}
-      - CHROMA_HOST=chromadb
-      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
-    networks:
-      - database
-      - chromadb
-      - prometheus
+      - monitoring
     ports:
       - "8080:8080"
-
-  cleanup_bot:  
-    image: pkemkes/the-gist-of-it-sec-cleanup-bot
-    container_name: cleanup_bot
-    depends_on:
-      database:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
-    environment:
-      - DB_HOSTNAME=database
-      - DB_USERNAME=${DB_CLEANUPBOT_USERNAME}
-      - DB_PASSWORD=${DB_CLEANUPBOT_PASSWORD}
-      - CHROMA_HOST=chromadb
-      - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
-    networks:
-      - database
-      - chromadb
-      - prometheus
 
   frontend:
     image: pkemkes/the-gist-of-it-sec-frontend
     container_name: frontend
     depends_on:
-      rest_server:
+      backend:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
     environment:
       VITE_BACKEND_URL: http://localhost:8080/  # NOTE: Change this to your base URL
       # NOTE: either remove or update the following three variables
@@ -113,18 +76,22 @@ services:
     image: pkemkes/the-gist-of-it-sec-database
     container_name: database
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     environment:
       - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      - DB_GISTSBOT_USERNAME=${DB_GISTSBOT_USERNAME}
-      - DB_GISTSBOT_PASSWORD=${DB_GISTSBOT_PASSWORD}
-      - DB_RESTAPI_USERNAME=${DB_RESTAPI_USERNAME}
-      - DB_RESTAPI_PASSWORD=${DB_RESTAPI_PASSWORD}
-      - DB_TELEGRAMBOT_USERNAME=${DB_TELEGRAMBOT_USERNAME}
-      - DB_TELEGRAMBOT_PASSWORD=${DB_TELEGRAMBOT_PASSWORD}
-      - DB_CLEANUPBOT_USERNAME=${DB_CLEANUPBOT_USERNAME}
-      - DB_CLEANUPBOT_PASSWORD=${DB_CLEANUPBOT_PASSWORD}
+      - DB_GISTSERVICE_USERNAME=${DB_GISTSERVICE_USERNAME}
+      - DB_GISTSERVICE_PASSWORD=${DB_GISTSERVICE_PASSWORD}
+      - DB_RECAPSERVICE_USERNAME=${DB_RECAPSERVICE_USERNAME}
+      - DB_RECAPSERVICE_PASSWORD=${DB_RECAPSERVICE_PASSWORD}
+      - DB_GISTSCONTROLLER_USERNAME=${DB_GISTSCONTROLLER_USERNAME}
+      - DB_GISTSCONTROLLER_PASSWORD=${DB_GISTSCONTROLLER_PASSWORD}
+      - DB_TELEGRAMSERVICE_USERNAME=${DB_TELEGRAMSERVICE_USERNAME}
+      - DB_TELEGRAMSERVICE_PASSWORD=${DB_TELEGRAMSERVICE_PASSWORD}
+      - DB_CLEANUPSERVICE_USERNAME=${DB_CLEANUPSERVICE_USERNAME}
+      - DB_CLEANUPSERVICE_PASSWORD=${DB_CLEANUPSERVICE_PASSWORD}
       - DB_GRAFANA_USERNAME=${DB_GRAFANA_USERNAME}
       - DB_GRAFANA_PASSWORD=${DB_GRAFANA_PASSWORD}
     volumes:
@@ -136,13 +103,13 @@ services:
     image: pkemkes/the-gist-of-it-sec-chromadb
     container_name: chromadb
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     environment:
       - IS_PERSISTENT=TRUE
-      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.token_authn.TokenAuthenticationServerProvider
       - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
       - PERSIST_DIRECTORY=/chroma/chroma
     volumes:
       - chromadb-data:/chroma/chroma
@@ -153,32 +120,71 @@ services:
     image: pkemkes/the-gist-of-it-sec-prometheus
     container_name: prometheus
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     volumes:
       - prometheus-data:/prometheus
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
-      - prometheus
+      - monitoring
   
+  loki:
+    image: pkemkes/the-gist-of-it-sec-loki
+    container_name: loki
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
+    volumes:
+      - loki-data:/loki
+    networks:
+      - monitoring
+    ports:
+      - "3100:3100"
+  
+  promtail:
+    image: grafana/promtail:3.5.3
+    container_name: promtail
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      loki:
+        condition: service_started
+    networks:
+      - monitoring
+
   grafana:
     image: pkemkes/the-gist-of-it-sec-grafana
     container_name: grafana
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     environment:
       - DB_GRAFANA_USERNAME=${DB_GRAFANA_USERNAME}
       - DB_GRAFANA_PASSWORD=${DB_GRAFANA_PASSWORD}
       - PROMETHEUS_URL=http://prometheus:9090
       - DATABASE_HOST_AND_PORT=database:3306
+      - LOKI_URL=http://loki:3100
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:
       prometheus:
         condition: service_healthy
+      loki:
+        condition: service_started
     networks:
-      - prometheus
+      - monitoring
       - database
     ports:
       - 3000:3000
@@ -186,7 +192,7 @@ services:
 networks:
   database:
   chromadb:
-  prometheus:
+  monitoring:
 
 volumes:
   database-data:
@@ -196,4 +202,6 @@ volumes:
   prometheus-data:
     driver: local
   grafana-data:
+    driver: local
+  loki-data:
     driver: local

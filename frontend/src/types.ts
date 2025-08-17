@@ -1,21 +1,21 @@
 export interface Gist {
   id: number,
-  feed_title: string,
-  feed_link: string,
+  feedTitle: string,
+  feedUrl: string,
   title: string,
   author: string,
-  link: string,
+  url: string,
   published: string,
   updated: string,
   summary: string,
   tags: string[],
-  search_query: string,
+  searchQuery: string,
 }
 
 export interface FeedInfo {
   id: number,
   title: string,
-  link: string,
+  rssUrl: string,
   language: string,
 }
 
@@ -26,13 +26,13 @@ export interface SimilarGist {
 
 export interface SearchResult {
   id: number,
-  gist_id: number,
+  gistId: number,
   title: string,
   snippet: string,
-  link: string,
-  display_link: string,
-  thumbnail_link: string | undefined,
-  image_link: string | undefined
+  url: string,
+  displayUrl: string,
+  thumbnailUrl: string | undefined,
+  imageUrl: string | undefined
 }
 
 export interface RecapRelatedGist {
@@ -40,7 +40,7 @@ export interface RecapRelatedGist {
   title: string,
 }
 
-export interface RecapCategory {
+export interface RecapSection {
   heading: string,
   recap: string,
   related: RecapRelatedGist[],
@@ -48,5 +48,6 @@ export interface RecapCategory {
 
 export interface Recap {
   created: string,
-  recap: RecapCategory[],
+  recapSections: RecapSection[],
+  id: number,
 }

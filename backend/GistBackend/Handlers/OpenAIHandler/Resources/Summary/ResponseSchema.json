@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "search_query": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "summary",
+    "tags",
+    "search_query"
+  ],
+  "additionalProperties": false
+}

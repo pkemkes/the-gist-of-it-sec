@@ -1,68 +1,67 @@
-CREATE DATABASE IF NOT EXISTS thegistofitsec;
+CREATE DATABASE IF NOT EXISTS TheGistOfItSec;
 
-USE thegistofitsec;
+USE TheGistOfItSec;
 
-CREATE TABLE IF NOT EXISTS feeds (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title TEXT NOT NULL,
-    link MEDIUMTEXT NOT NULL,
-    rss_link MEDIUMTEXT NOT NULL,
-    language TINYTEXT
+CREATE TABLE IF NOT EXISTS Feeds (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Title TEXT NOT NULL,
+    RssUrl MEDIUMTEXT NOT NULL,
+    Language TINYTEXT,
+    UNIQUE(RssUrl)
 );
 
-CREATE INDEX IF NOT EXISTS feeds_by_link ON feeds(link);
+CREATE INDEX IF NOT EXISTS FeedsByRssUrl ON Feeds(RssUrl);
 
-CREATE TABLE IF NOT EXISTS gists (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    reference TEXT NOT NULL,
-    feed_id INT NOT NULL,
-    author TEXT NOT NULL,
-    title TEXT NOT NULL,
-    published DATETIME NOT NULL,
-    updated DATETIME NOT NULL,
-    link MEDIUMTEXT NOT NULL,
-    summary LONGTEXT NOT NULL,
-    tags LONGTEXT NOT NULL,
-    search_query MEDIUMTEXT NOT NULL,
-    disabled BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (feed_id) REFERENCES feeds(id),
-    FULLTEXT(summary),
-    FULLTEXT(tags)
+CREATE TABLE IF NOT EXISTS Gists (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Reference TEXT NOT NULL,
+    FeedId INT NOT NULL,
+    Author TEXT NOT NULL,
+    Title TEXT NOT NULL,
+    Published DATETIME NOT NULL,
+    Updated DATETIME NOT NULL,
+    Url MEDIUMTEXT NOT NULL,
+    Summary LONGTEXT NOT NULL,
+    Tags LONGTEXT NOT NULL,
+    SearchQuery MEDIUMTEXT NOT NULL,
+    Disabled BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (FeedId) REFERENCES Feeds(Id),
+    FULLTEXT(Summary),
+    FULLTEXT(Tags),
+    UNIQUE(Reference)
 );
 
-CREATE INDEX IF NOT EXISTS gists_by_reference ON gists(reference);
-CREATE INDEX IF NOT EXISTS gists_by_updated ON gists(updated);
+CREATE INDEX IF NOT EXISTS GistsByReference ON Gists(Reference);
+CREATE INDEX IF NOT EXISTS GistsByUpdated ON Gists(Updated);
 
-CREATE TABLE IF NOT EXISTS chats (
-    id INT PRIMARY KEY,
-    gist_id_last_sent INT,
-    FOREIGN KEY (gist_id_last_sent) REFERENCES gists(id)
+CREATE TABLE IF NOT EXISTS Chats (
+    Id BIGINT PRIMARY KEY,
+    GistIdLastSent INT
 );
 
-CREATE TABLE IF NOT EXISTS search_results (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    gist_id INT NOT NULL,
-    title TEXT NOT NULL,
-    snippet MEDIUMTEXT NOT NULL,
-    link MEDIUMTEXT NOT NULL,
-    display_link TEXT NOT NULL,
-    thumbnail_link MEDIUMTEXT,
-    image_link MEDIUMTEXT,
-    FOREIGN KEY (gist_id) REFERENCES gists(id)
+CREATE TABLE IF NOT EXISTS SearchResults (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    GistId INT NOT NULL,
+    Title TEXT NOT NULL,
+    Snippet MEDIUMTEXT NOT NULL,
+    Url MEDIUMTEXT NOT NULL,
+    DisplayUrl TEXT NOT NULL,
+    ThumbnailUrl MEDIUMTEXT,
+    FOREIGN KEY (GistId) REFERENCES Gists(Id)
 );
 
-CREATE TABLE IF NOT EXISTS recaps_daily (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    created DATETIME NOT NULL,
-    recap LONGTEXT NOT NULL
+CREATE TABLE IF NOT EXISTS RecapsDaily (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Created DATETIME NOT NULL,
+    Recap LONGTEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS recaps_daily_by_created ON recaps_daily(created);
+CREATE INDEX IF NOT EXISTS RecapsDailyByCreated ON RecapsDaily(Created);
 
-CREATE TABLE IF NOT EXISTS recaps_weekly (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    created DATETIME NOT NULL,
-    recap LONGTEXT NOT NULL
+CREATE TABLE IF NOT EXISTS RecapsWeekly (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Created DATETIME NOT NULL,
+    Recap LONGTEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS recaps_weekly_by_created ON recaps_weekly(created);
+CREATE INDEX IF NOT EXISTS RecapsWeeklyByCreated ON RecapsWeekly(Created);

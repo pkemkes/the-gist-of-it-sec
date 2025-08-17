@@ -79,7 +79,7 @@ export const GistInspector = ({ gistId }: GistInspectorProps) => {
     { 
       mode == "similar" 
         ? <SimilarGistList gistId={ gistId } />
-        : <SearchResultList gistId={ gistId } searchQuery={ data.search_query } /> 
+        : <SearchResultList gistId={ gistId } searchQuery={ data.searchQuery } /> 
     }
   </GistViewerBody>
 }

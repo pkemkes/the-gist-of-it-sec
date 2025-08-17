@@ -11,11 +11,11 @@ export const SearchResultCard = ({ searchResult }: SearchResultCardProps) => {
   }}>
     <CardActionArea
       component="a"
-      href={ searchResult.link }
+      href={ searchResult.url }
       target="_blank"
     >
       {
-        searchResult.thumbnail_link != undefined 
+        searchResult.thumbnailUrl != undefined 
           ? <CardMedia
               component="img"
               sx={{
@@ -26,7 +26,7 @@ export const SearchResultCard = ({ searchResult }: SearchResultCardProps) => {
                 float: "right",
                 ml: "1rem",
               }}
-              image={ searchResult.thumbnail_link }
+              image={ searchResult.thumbnailUrl }
             />
           : undefined
       }
@@ -44,7 +44,7 @@ export const SearchResultCard = ({ searchResult }: SearchResultCardProps) => {
             mt: "1rem",
           }}
         >
-          { searchResult.display_link.toLocaleUpperCase() }
+          { searchResult.displayUrl.toLocaleUpperCase() }
         </Typography>
       </CardContent>
     </CardActionArea>

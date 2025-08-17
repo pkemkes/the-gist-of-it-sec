@@ -24,45 +24,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push gists bot
+      - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
           context: "{{defaultContext}}:backend"
-          file: "Dockerfile.gists_bot"
           push: true
           tags: |
-            pkemkes/the-gist-of-it-sec-gists-bot:latest
-            pkemkes/the-gist-of-it-sec-gists-bot:${{ github.ref_name }}
-
-      - name: Build and push telegram bot
-        uses: docker/build-push-action@v6
-        with:
-          context: "{{defaultContext}}:backend"
-          file: "Dockerfile.telegram_bot"
-          push: true
-          tags: |
-            pkemkes/the-gist-of-it-sec-telegram-bot:latest
-            pkemkes/the-gist-of-it-sec-telegram-bot:${{ github.ref_name }}
-
-      - name: Build and push rest server
-        uses: docker/build-push-action@v6
-        with:
-          context: "{{defaultContext}}:backend"
-          file: "Dockerfile.rest_server"
-          push: true
-          tags: |
-            pkemkes/the-gist-of-it-sec-rest-server:latest
-            pkemkes/the-gist-of-it-sec-rest-server:${{ github.ref_name }}
-
-      - name: Build and push rest server
-        uses: docker/build-push-action@v6
-        with:
-          context: "{{defaultContext}}:backend"
-          file: "Dockerfile.cleanup_bot"
-          push: true
-          tags: |
-            pkemkes/the-gist-of-it-sec-rest-server:latest
-            pkemkes/the-gist-of-it-sec-cleanup-bot:${{ github.ref_name }}
+            pkemkes/the-gist-of-it-sec-backend:latest
+            pkemkes/the-gist-of-it-sec-backend:${{ github.ref_name }}
 
       - name: Build and push database
         uses: docker/build-push-action@v6
@@ -90,6 +59,15 @@ jobs:
           tags: |
             pkemkes/the-gist-of-it-sec-prometheus:latest
             pkemkes/the-gist-of-it-sec-prometheus:${{ github.ref_name }}
+
+      - name: Build and push loki
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:loki"
+          push: true
+          tags: |
+            pkemkes/the-gist-of-it-sec-loki:latest
+            pkemkes/the-gist-of-it-sec-loki:${{ github.ref_name }}
 
       - name: Build and push grafana
         uses: docker/build-push-action@v6

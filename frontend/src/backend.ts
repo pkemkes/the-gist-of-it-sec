@@ -15,9 +15,10 @@ interface SimilarGistsQueryParameters {
 
 const pageSize = 20;
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL == undefined 
-  ? "http://localhost:8080/" 
+const backendHostname = import.meta.env.VITE_BACKEND_URL == undefined 
+  ? "http://localhost:8080" 
   : import.meta.env.VITE_BACKEND_URL;
+const backendUrl = `${backendHostname}${backendHostname.endsWith("/") ? "" : "/"}api/v1/gists`;
 
 const JoinDisabledFeedsParam = (disabledFeeds: number[]) => 
   encodeURIComponent(disabledFeeds.join(","));
@@ -30,15 +31,15 @@ export const backendApi = createApi({
   endpoints: builder => ({
     getGists: builder.query<Gist[], GistsQueryParameters>({
       query: ({ lastGist, searchQuery, tags, disabledFeeds }) => {
-        let pathAndParams = "gists?";
+        const params = [];
         if (lastGist != undefined) {
-          pathAndParams += `last_gist=${lastGist}&`
+          params.push(`last_gist=${lastGist}`);
         }
-        pathAndParams += `take=${pageSize}&`;
-        pathAndParams += `q=${encodeURIComponent(searchQuery)}&`
-        pathAndParams += `tags=${encodeURIComponent(tags.join(";;"))}&`;
-        pathAndParams += `disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`;
-        return pathAndParams;
+        params.push(`take=${pageSize}`);
+        params.push(`q=${encodeURIComponent(searchQuery)}`);
+        params.push(`tags=${encodeURIComponent(tags.join(";;"))}`);
+        params.push(`disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`);
+        return `?${params.join("&")}`;
       },
       // taken from: https://redux-toolkit.js.org/rtk-query/api/createApi#merge
       serializeQueryArgs: ({ queryArgs }) => {
@@ -66,21 +67,16 @@ export const backendApi = createApi({
       query: () => "feeds",
     }),
     getGistById: builder.query<Gist, { id: number }>({
-      query: ({ id }) => `gists/by_id?id=${id}`,
+      query: ({ id }) => `${id}`,
     }),
     getSimilarGists: builder.query<SimilarGist[], SimilarGistsQueryParameters>({
-      query: ({ id, disabledFeeds }) => {
-        let pathAndParams = "gists/similar?";
-        pathAndParams += `id=${id}&`;
-        pathAndParams += `disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`;
-        return pathAndParams
-      },
+      query: ({ id, disabledFeeds }) => `${id}/similar?disabled_feeds=${JoinDisabledFeedsParam(disabledFeeds)}`,
     }),
     getSearchResults: builder.query<SearchResult[], { id: number }>({
-      query: ({ id }) => `gists/search_results?id=${id}`,
+      query: ({ id }) => `${id}/searchResults`,
     }),
     getRecap: builder.query<Recap, { type: string }>({
-      query: ({ type }) => `recap?type=${type}`,
+      query: ({ type }) => `recap/${type}`,
     }),
   }),
 });
