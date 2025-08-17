@@ -105,7 +105,7 @@ public class GistService(
             stopwatch.Stop();
             ProcessEntrySummary.WithLabels(feed.Title!).Observe(stopwatch.Elapsed.Seconds);
         }
-        catch (PlaywrightException e)
+        catch (Exception e) when (e is PlaywrightException or TimeoutException)
         {
             logger?.LogError(FetchingPageContentFailed, e, "Skipping entry, failed to fetch page content for {Url}",
                 entry.Url.AbsoluteUri);

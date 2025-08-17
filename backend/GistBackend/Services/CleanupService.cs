@@ -84,7 +84,7 @@ public class CleanupService(
                 await chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct);
             if (!wasAlreadyCorrect) gistDebouncer.ResetDebounceState(gist.Id!.Value);
         }
-        catch (PlaywrightException e)
+        catch (Exception e) when (e is PlaywrightException or TimeoutException)
         {
             logger?.LogError(FetchingPageContentFailed, e, "Skipping gist, failed to fetch page content for {Url}",
                 gist.Url.AbsoluteUri);
