@@ -18,15 +18,28 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
     public async Task<string> FetchPageContentAsync(string url)
     {
         var (page, _) = await FetchPageAndResponseAsync(url);
-        var textContent = await page.ContentAsync();
-        await page.CloseAsync();
-        return textContent;
+        try
+        {
+            var textContent = await page.ContentAsync();
+            return textContent;
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
     }
 
     public async Task<IResponse?> FetchResponseAsync(string url)
     {
-        var (_, response) = await FetchPageAndResponseAsync(url);
-        return response;
+        var (page, response) = await FetchPageAndResponseAsync(url);
+        try
+        {
+            return response;
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
     }
 
     private async Task<(IPage, IResponse?)> FetchPageAndResponseAsync(string url)
