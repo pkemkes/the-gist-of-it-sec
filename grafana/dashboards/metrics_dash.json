@@ -1947,7 +1947,7 @@
             "uid": "ff6b8cf6-e41d-47e5-b915-ce202fe7f7e3"
           },
           "editorMode": "code",
-          "expr": "{container_name~=\".+backend\"} | json | Level=\"Error\" | line_format \"{{.Properties_EventId_Name}}\"",
+          "expr": "{container_name=~\".+backend\"} | json | Level=\"Error\" | line_format \"{{.Properties_EventId_Name}}\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -2055,7 +2055,7 @@
             "uid": "ff6b8cf6-e41d-47e5-b915-ce202fe7f7e3"
           },
           "editorMode": "builder",
-          "expr": "{container_name~=\".+backend\"} | json | Properties_EventId_Name = `FetchingPageContentFailed` | line_format `{{.Properties_SourceContext}} - {{.Properties_Url}}`",
+          "expr": "{container_name=~\".+backend\"} | json | Properties_EventId_Name = `FetchingPageContentFailed` | line_format `{{.Properties_SourceContext}} - {{.Properties_Url}}`",
           "queryType": "range",
           "refId": "A"
         }
