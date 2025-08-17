@@ -1,6 +1,6 @@
 using System.Net;
 using System.ServiceModel.Syndication;
-using GistBackend.Handlers.RssHandlers;
+using GistBackend.Handlers;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
 
@@ -100,13 +100,13 @@ public static class TestData
     public static List<List<GoogleSearchResult>> CreateMultipleTestSearchResults(int count) =>
         Enumerable.Range(0, count).Select(_ => CreateTestSearchResults(10)).ToList();
 
-    public static List<CategoryRecap> CreateTestRecap() => Enumerable.Range(0, 5).Select(_ =>
-        new CategoryRecap(
+    public static Recap CreateTestRecap() => new (Enumerable.Range(0, 5).Select(_ =>
+        new RecapSection(
             Random.NextString(),
             Random.NextString(),
-            Enumerable.Range(0, 3).Select(_ => Random.Next(10000))
+            Enumerable.Range(0, 3).Select(_ => Random.Next(10000)).ToList()
         )
-    ).ToList();
+    ).ToList());
 
     public static readonly Dictionary<string, float[]> TestTextsAndEmbeddings = new() {
         { "test text", Enumerable.Repeat(0.1f, 100).ToArray() },

@@ -1,3 +1,4 @@
+using System.Net;
 using System.ServiceModel.Syndication;
 using System.Xml;
 using GistBackend.Utils;
@@ -42,7 +43,7 @@ public record RssFeed(Uri RssUrl, Func<string, string> ExtractText, IEnumerable<
             item.Id.Trim(),
             Id!.Value,
             item.ExtractAuthor(),
-            item.Title.Text.Trim(),
+            WebUtility.HtmlDecode(item.Title.Text.Trim()),
             item.PublishDate.UtcDateTime,
             item.ExtractUpdated(),
             item.ExtractUrl(),

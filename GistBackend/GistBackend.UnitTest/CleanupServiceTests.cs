@@ -1,12 +1,13 @@
 using System.Net;
 using GistBackend.Exceptions;
+using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
-using GistBackend.Handlers.RssHandlers;
 using GistBackend.Services;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Options;
+using Microsoft.Playwright;
 using NSubstitute;
 using TestUtilities;
 using static TestUtilities.TestData;
@@ -155,12 +156,12 @@ public class CleanupServiceTests
          var testFeed = new TestFeedData(feedId: 0);
          var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed]);
          var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
-         var httpClientFactoryMock = CreateHttpClientFactoryMock(statusCode);
+         var webCrawlHandlerMock = CreateWebCrawlHandlerMock((int)statusCode);
          var service = CreateCleanupService(
              [testFeed],
              mariaDbHandlerMock,
              chromaDbHandlerMock,
-             httpClientFactoryMock: httpClientFactoryMock);
+             webCrawlHandlerMock: webCrawlHandlerMock);
 
          await service.StartAsync(CancellationToken.None);
          await Task.Delay(TimeSpan.FromSeconds(2));
@@ -186,12 +187,12 @@ public class CleanupServiceTests
          var testGists = testFeed.Gists.Concat([redirectedGist]).ToList();
          var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed], testGists);
          var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
-         var httpClientFactoryMock = CreateHttpClientFactoryMock(HttpStatusCode.OK, "another different url");
+         var webCrawlHandlerMock = CreateWebCrawlHandlerMock(200, "another different url");
          var service = CreateCleanupService(
              [testFeed],
              mariaDbHandlerMock,
              chromaDbHandlerMock,
-             httpClientFactoryMock: httpClientFactoryMock);
+             webCrawlHandlerMock: webCrawlHandlerMock);
 
          await service.StartAsync(CancellationToken.None);
          await Task.Delay(TimeSpan.FromSeconds(2));
@@ -267,7 +268,7 @@ public class CleanupServiceTests
         IMariaDbHandler? mariaDbHandlerMock = null,
         IChromaDbHandler? chromaDbHandlerMock = null,
         IGistDebouncer? gistDebouncerMock = null,
-        IHttpClientFactory? httpClientFactoryMock = null,
+        IWebCrawlHandler? webCrawlHandlerMock = null,
         IOptions<CleanupServiceOptions>? options = null)
     {
         return new CleanupService(
@@ -275,17 +276,10 @@ public class CleanupServiceTests
             gistDebouncerMock ?? Substitute.For<IGistDebouncer>(),
             mariaDbHandlerMock ?? CreateDefaultMariaDbHandlerMock(testFeeds),
             chromaDbHandlerMock ?? CreateDefaultChromaDbHandlerMock(),
-            httpClientFactoryMock ?? CreateHttpClientFactoryMock(HttpStatusCode.OK),
+            webCrawlHandlerMock ?? CreateWebCrawlHandlerMock(200),
             options ?? Options.Create(new CleanupServiceOptions { DomainsToIgnore = [] }),
             null
         );
-    }
-
-    private static IRssFeedHandler CreateDefaultRssFeedHandlerMock(List<RssFeed>? testRssFeeds = null)
-    {
-        var rssFeedHandlerMock = Substitute.For<IRssFeedHandler>();
-        rssFeedHandlerMock.Definitions.Returns(testRssFeeds ?? CreateTestRssFeeds(5));
-        return rssFeedHandlerMock;
     }
 
     private static IMariaDbHandler CreateDefaultMariaDbHandlerMock(List<TestFeedData> testFeeds,
@@ -311,19 +305,24 @@ public class CleanupServiceTests
         return chromaDbHandlerMock;
     }
 
-    private static IHttpClientFactory CreateHttpClientFactoryMock(HttpStatusCode returnedStatusCode, string? urlInResponse = null)
+    private static IWebCrawlHandler CreateWebCrawlHandlerMock(int returnedStatusCode, string? urlInResponse = null)
     {
-        var httpClientFactoryMock = Substitute.For<IHttpClientFactory>();
-        var httpClientMock = Substitute.For<HttpClient>();
-        var response = new HttpResponseMessage { StatusCode = returnedStatusCode };
-        if (urlInResponse is not null)
-        {
-            response.RequestMessage = new HttpRequestMessage(HttpMethod.Get, urlInResponse);
-        }
-        httpClientMock.SendAsync(Arg.Any<HttpRequestMessage>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(response));
-        httpClientFactoryMock.CreateClient(StartUp.RetryingHttpClientName)
-            .Returns(httpClientMock);
-        return httpClientFactoryMock;
+        var webCrawlHandlerMock = Substitute.For<IWebCrawlHandler>();
+        var response = CreateFakePlaywrightResponse(returnedStatusCode, urlInResponse);
+        webCrawlHandlerMock.FetchResponseAsync(Arg.Any<string>()).Returns(Task.FromResult(response));
+        return webCrawlHandlerMock;
+    }
+
+    private static IResponse? CreateFakePlaywrightResponse(int statusCode, string? urlInResponse = null)
+    {
+        var responseMock = Substitute.For<IResponse?>();
+        responseMock!.Status.Returns(statusCode);
+
+        if (urlInResponse is null) return responseMock;
+
+        var requestMock = Substitute.For<IRequest>();
+        requestMock.Url.Returns(urlInResponse);
+        responseMock.Request.Returns(requestMock);
+        return responseMock;
     }
 }

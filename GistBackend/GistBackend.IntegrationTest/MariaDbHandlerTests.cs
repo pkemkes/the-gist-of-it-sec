@@ -1,8 +1,10 @@
+using System.Text.Json;
 using GistBackend.Exceptions;
 using GistBackend.Handlers;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.IntegrationTest.Utils;
 using GistBackend.Types;
+using GistBackend.Utils;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 using NSubstitute;
@@ -845,16 +847,18 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     {
         var dateTimeHandler = Substitute.For<IDateTimeHandler>();
         var recapHandler = CreateRecapHandler(dateTimeHandler);
-        var expectedCategoryRecaps = CreateTestRecap();
+        var expectedRecap = CreateTestRecap();
         var now = DateTime.UtcNow;
         dateTimeHandler.GetUtcNow().Returns(now.AddDays(-2));
         await recapHandler.InsertDailyRecapAsync(CreateTestRecap(), CancellationToken.None);
         dateTimeHandler.GetUtcNow().Returns(now);
-        await recapHandler.InsertDailyRecapAsync(expectedCategoryRecaps, CancellationToken.None);
+        var recapId = await recapHandler.InsertDailyRecapAsync(expectedRecap, CancellationToken.None);
         dateTimeHandler.GetUtcNow().Returns(now.AddDays(-1));
         await recapHandler.InsertDailyRecapAsync(CreateTestRecap(), CancellationToken.None);
         dateTimeHandler.GetUtcNow().Returns(now);
-        var expected = new Recap(now, expectedCategoryRecaps);
+        var truncatedNow = new DateTime(now.Ticks - now.Ticks % TimeSpan.TicksPerSecond, DateTimeKind.Utc);
+        var expectedRecapString = JsonSerializer.Serialize(expectedRecap, SerializerDefaults.JsonOptions);
+        var expected = new SerializedRecap(truncatedNow, expectedRecapString, recapId);
         var gistsControllerHandler = CreateGistControllerHandler(dateTimeHandler);
 
         var actual = await gistsControllerHandler.GetLatestRecapAsync(RecapType.Daily, CancellationToken.None);
@@ -868,16 +872,18 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     {
         var dateTimeHandler = Substitute.For<IDateTimeHandler>();
         var recapHandler = CreateRecapHandler(dateTimeHandler);
-        var expectedCategoryRecaps = CreateTestRecap();
+        var expectedRecap = CreateTestRecap();
         var now = DateTime.UtcNow;
         dateTimeHandler.GetUtcNow().Returns(now.AddDays(-2));
         await recapHandler.InsertWeeklyRecapAsync(CreateTestRecap(), CancellationToken.None);
         dateTimeHandler.GetUtcNow().Returns(now);
-        await recapHandler.InsertWeeklyRecapAsync(expectedCategoryRecaps, CancellationToken.None);
+        var recapId = await recapHandler.InsertWeeklyRecapAsync(expectedRecap, CancellationToken.None);
         dateTimeHandler.GetUtcNow().Returns(now.AddDays(-1));
         await recapHandler.InsertWeeklyRecapAsync(CreateTestRecap(), CancellationToken.None);
         dateTimeHandler.GetUtcNow().Returns(now);
-        var expected = new Recap(now, expectedCategoryRecaps);
+        var truncatedNow = new DateTime(now.Ticks - now.Ticks % TimeSpan.TicksPerSecond, DateTimeKind.Utc);
+        var expectedRecapString = JsonSerializer.Serialize(expectedRecap, SerializerDefaults.JsonOptions);
+        var expected = new SerializedRecap(truncatedNow, expectedRecapString, recapId);
         var gistsControllerHandler = CreateGistControllerHandler(dateTimeHandler);
 
         var actual = await gistsControllerHandler.GetLatestRecapAsync(RecapType.Weekly, CancellationToken.None);
@@ -1059,7 +1065,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     {
         var handler = CreateTelegramHandler();
 
-        var actual = await handler.GetNextFiveGistsAsync(0, CancellationToken.None);
+        var actual = await handler.GetNextFiveGistsWithFeedAsync(0, CancellationToken.None);
 
         Assert.Empty(actual);
     }
@@ -1068,47 +1074,30 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     public async Task GetNextFiveGistsAsync_LessThanFiveGistsExist_EmptyList()
     {
         var gistHandler = CreateGistHandler();
-        var firstGist = (await gistHandler.InsertTestGistsAsync(1)).Single();
-        var expected = await gistHandler.InsertTestGistsAsync(3);
+        var testFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var firstGist = (await gistHandler.InsertTestGistsAsync(1, testFeed.Id)).Single();
+        var expected = (await gistHandler.InsertTestGistsAsync(3, testFeed.Id))
+            .Select(g => GistWithFeed.FromGistAndFeed(g, testFeed)).OrderBy(g => g.Id).ToList();
         var telegramHandler = CreateTelegramHandler();
 
-        var actual = await telegramHandler.GetNextFiveGistsAsync(firstGist.Id!.Value, CancellationToken.None);
+        var actual = await telegramHandler.GetNextFiveGistsWithFeedAsync(firstGist.Id!.Value, CancellationToken.None);
 
-        Assert.Equal(expected.OrderBy(g => g.Id), actual.OrderBy(g => g.Id));
+        Assert.Equivalent(expected, actual);
     }
 
     [Fact]
     public async Task GetNextFiveGistsAsync_MoreThanFiveGistsExist_EmptyList()
     {
         var gistHandler = CreateGistHandler();
-        var firstGist = (await gistHandler.InsertTestGistsAsync(1)).Single();
-        var expected = (await gistHandler.InsertTestGistsAsync(6)).OrderBy(gist => gist.Id).Take(5);
+        var testFeed = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
+        var firstGist = (await gistHandler.InsertTestGistsAsync(1, testFeed.Id)).Single();
+        var expected = (await gistHandler.InsertTestGistsAsync(6, testFeed.Id)).OrderBy(gist => gist.Id).Take(5)
+            .Select(g => GistWithFeed.FromGistAndFeed(g, testFeed));
         var telegramHandler = CreateTelegramHandler();
 
-        var actual = await telegramHandler.GetNextFiveGistsAsync(firstGist.Id!.Value, CancellationToken.None);
+        var actual = await telegramHandler.GetNextFiveGistsWithFeedAsync(firstGist.Id!.Value, CancellationToken.None);
 
-        Assert.Equal(expected, actual);
-    }
-
-    [Fact]
-    public async Task GetFeedInfoByIdAsync_FeedInfoDoesNotExist_DatabaseOperationException()
-    {
-        var handler = CreateTelegramHandler();
-
-        await Assert.ThrowsAsync<DatabaseOperationException>(() =>
-            handler.GetFeedInfoByIdAsync(_random.Next(), CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task GetFeedInfoByIdAsync_FeedInfoExists_CorrectFeedInfo()
-    {
-        var gistHandler = CreateGistHandler();
-        var expectedFeedInfo = (await gistHandler.InsertTestFeedInfosAsync(1)).Single();
-        var telegramHandler = CreateTelegramHandler();
-
-        var actual = await telegramHandler.GetFeedInfoByIdAsync(expectedFeedInfo.Id!.Value, CancellationToken.None);
-
-        Assert.Equal(expectedFeedInfo, actual);
+        Assert.Equivalent(expected, actual);
     }
 
     [Fact]

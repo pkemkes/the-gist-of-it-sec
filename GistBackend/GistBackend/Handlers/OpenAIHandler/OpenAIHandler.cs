@@ -14,8 +14,8 @@ namespace GistBackend.Handlers.OpenAiHandler;
 public interface IOpenAIHandler {
     public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct);
     public Task<SummaryAIResponse> GenerateSummaryTagsAndQueryAsync(string title, string text, CancellationToken ct);
-    public Task<List<CategoryRecap>> GenerateDailyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct);
-    public Task<List<CategoryRecap>> GenerateWeeklyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct);
+    public Task<Recap> GenerateDailyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct);
+    public Task<Recap> GenerateWeeklyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct);
 }
 
 public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChatClientHandler chatClientHandler,
@@ -110,13 +110,13 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         };
     }
 
-    public Task<List<CategoryRecap>> GenerateDailyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct) =>
+    public Task<Recap> GenerateDailyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct) =>
         GenerateRecapAsync(RecapType.Daily, gists, ct);
 
-    public Task<List<CategoryRecap>> GenerateWeeklyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct) =>
+    public Task<Recap> GenerateWeeklyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct) =>
         GenerateRecapAsync(RecapType.Weekly, gists, ct);
 
-    private async Task<List<CategoryRecap>> GenerateRecapAsync(RecapType recapType, IEnumerable<Gist> gists,
+    private async Task<Recap> GenerateRecapAsync(RecapType recapType, IEnumerable<Gist> gists,
         CancellationToken ct)
     {
         var messages = await CreateRecapChatMessagesAsync(recapType, gists, ct);
@@ -124,9 +124,9 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         var result = await chatClientHandler.CompleteChatAsync(messages, completionOptions, ct);
         try
         {
-            var aiResponse = JsonSerializer.Deserialize<List<CategoryRecap>>(result, SerializerDefaults.JsonOptions);
-            if (aiResponse is null) throw new ExternalServiceException("Could not parse recap AI response");
-            return aiResponse;
+            var recap = JsonSerializer.Deserialize<Recap>(result, SerializerDefaults.JsonOptions);
+            if (recap is null) throw new ExternalServiceException("Could not parse recap AI response");
+            return recap;
         }
         catch (JsonException e)
         {
@@ -136,7 +136,7 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         }
     }
 
-    private async Task<IEnumerable<ChatMessage>> CreateRecapChatMessagesAsync(RecapType recapType,
+    private static async Task<IEnumerable<ChatMessage>> CreateRecapChatMessagesAsync(RecapType recapType,
         IEnumerable<Gist> gists, CancellationToken ct)
     {
         var messages = new List<ChatMessage> {

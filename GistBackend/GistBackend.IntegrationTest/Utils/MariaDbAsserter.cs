@@ -67,7 +67,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         Assert.Equal(expectedSearchResults, searchResultsInDb);
     }
 
-    public async Task AssertRecapIsInDbAsync(List<CategoryRecap> expectedRecap, DateTime expectedCreated,
+    public async Task AssertRecapIsInDbAsync(Recap expectedRecap, DateTime expectedCreated,
         RecapType recapType)
     {
         var query = $"SELECT Created, Recap, Id FROM Recaps{recapType.ToTypeString()} WHERE Created = @Created";
@@ -79,8 +79,8 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         Assert.Single(recapsInDb);
         var actualRecap = recapsInDb.Single();
         var deserializedActualRecap =
-            JsonSerializer.Deserialize<List<CategoryRecap>>(actualRecap.Recap, SerializerDefaults.JsonOptions);
-        Assert.Equal(expectedRecap, deserializedActualRecap);
+            JsonSerializer.Deserialize<Recap>(actualRecap.Recap, SerializerDefaults.JsonOptions);
+        Assert.Equivalent(expectedRecap, deserializedActualRecap);
     }
 
     public Task AssertGistIsEnabledAsync(int gistId) => AssertGistDisabledStateIsAsExpectedAsync(gistId, false);

@@ -2,7 +2,7 @@ using GistBackend.Types;
 using HtmlAgilityPack;
 using static System.Net.WebUtility;
 
-namespace GistBackend.Handlers.RssHandlers;
+namespace GistBackend.Handlers;
 
 public interface IRssFeedHandler
 {
@@ -13,31 +13,31 @@ public interface IRssFeedHandler
 public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
 {
     public List<RssFeed> Definitions { get; set; } = [
-        new(
-            new Uri("https://krebsonsecurity.com/feed"),
-            ExtractTextKrebsOnSecurity
-        ),
-        new(
-            new Uri("https://www.bleepingcomputer.com/feed/"),
-            ExtractTextBleepingComputer,
-            [ "Security" ]
-        ),
-        new(
-            new Uri("https://www.darkreading.com/rss.xml"),
-            ExtractTextDarkReading
-        ),
-        new(
-            new Uri("https://www.theverge.com/rss/cyber-security/index.xml"),
-            ExtractTextTheVerge
-        ),
-        new(
-            new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"),
-            ExtractTextGData
-        ),
-        new(
-            new Uri("https://therecord.media/feed"),
-            ExtractTextTheRecord
-        ),
+        // new(
+        //     new Uri("https://krebsonsecurity.com/feed"),
+        //     ExtractTextKrebsOnSecurity
+        // ),
+        // new(
+        //     new Uri("https://www.bleepingcomputer.com/feed/"),
+        //     ExtractTextBleepingComputer,
+        //     [ "Security" ]
+        // ),
+        // new(
+        //     new Uri("https://www.darkreading.com/rss.xml"),
+        //     ExtractTextDarkReading
+        // ),
+        // new(
+        //     new Uri("https://www.theverge.com/rss/cyber-security/index.xml"),
+        //     ExtractTextTheVerge
+        // ),
+        // new(
+        //     new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"),
+        //     ExtractTextGData
+        // ),
+        // new(
+        //     new Uri("https://therecord.media/feed"),
+        //     ExtractTextTheRecord
+        // ),
         new(
             new Uri("https://feeds.arstechnica.com/arstechnica/technology-lab"),
             ExtractTextArsTechnica,

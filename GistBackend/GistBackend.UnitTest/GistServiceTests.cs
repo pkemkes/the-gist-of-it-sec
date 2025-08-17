@@ -1,8 +1,8 @@
+using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
-using GistBackend.Handlers.RssHandlers;
 using GistBackend.Services;
 using GistBackend.Types;
 using Microsoft.Extensions.Logging;
@@ -239,19 +239,16 @@ public class GistServiceTests
             .UpdateSearchResultsAsync(Arg.Any<IEnumerable<GoogleSearchResult>>(), Arg.Any<CancellationToken>());
     }
 
-    private static IRssEntryHandler CreateMockedRssEntryHandler(
+    private static IWebCrawlHandler CreateMockedRssEntryHandler(
         List<TestFeedData> testFeeds,
         List<string> testTexts
     )
     {
-        var rssEntryHandlerMock = Substitute.For<IRssEntryHandler>();
+        var rssEntryHandlerMock = Substitute.For<IWebCrawlHandler>();
         var testEntries = testFeeds.SelectMany(feed => feed.Entries);
         foreach (var (entry, text) in testEntries.Zip(testTexts))
         {
-            rssEntryHandlerMock
-                .FetchTextContentAsync(Arg.Is<RssEntry>(requestedEntry => requestedEntry.Title == entry.Title),
-                    Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(text));
+            rssEntryHandlerMock.FetchPageContentAsync(entry.Url.AbsoluteUri).Returns(Task.FromResult(text));
         }
         return rssEntryHandlerMock;
     }
@@ -295,7 +292,7 @@ public class GistServiceTests
         List<TestFeedData> testFeeds,
         List<List<GoogleSearchResult>>? testSearchResults = null,
         List<string>? testTexts = null,
-        IRssEntryHandler? rssEntryHandlerMock = null,
+        IWebCrawlHandler? webCrawlHandler = null,
         IMariaDbHandler? mariaDbHandlerMock = null,
         IOpenAIHandler? openAIHandlerMock = null,
         IChromaDbHandler? chromaDbHandlerMock = null,
@@ -308,7 +305,7 @@ public class GistServiceTests
         testTexts ??= CreateTestStrings(entryCount);
         return new GistService(
             CreateRssFeedHandler(CreateMockedHttpClient(testFeeds), testFeeds),
-            rssEntryHandlerMock ?? CreateMockedRssEntryHandler(testFeeds, testTexts),
+            webCrawlHandler ?? CreateMockedRssEntryHandler(testFeeds, testTexts),
             mariaDbHandlerMock ?? Substitute.For<IMariaDbHandler>(),
             openAIHandlerMock ?? CreateMockedOpenAIHandler(testFeeds, testTexts, testAIResponses),
             chromaDbHandlerMock ?? Substitute.For<IChromaDbHandler>(),

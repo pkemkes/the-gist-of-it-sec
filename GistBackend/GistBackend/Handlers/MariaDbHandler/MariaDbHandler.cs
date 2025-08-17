@@ -25,21 +25,20 @@ public interface IMariaDbHandler {
     Task<bool> WeeklyRecapExistsAsync(CancellationToken ct);
     Task<List<Gist>> GetGistsOfLastDayAsync(CancellationToken ct);
     Task<List<Gist>> GetGistsOfLastWeekAsync(CancellationToken ct);
-    Task InsertDailyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct);
-    Task InsertWeeklyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct);
+    Task<int> InsertDailyRecapAsync(Recap recap, CancellationToken ct);
+    Task<int> InsertWeeklyRecapAsync(Recap recap, CancellationToken ct);
     Task<List<Gist>> GetAllGistsAsync(CancellationToken ct);
     Task<bool> EnsureCorrectDisabledStateForGistAsync(int gistId, bool disabled, CancellationToken ct);
     Task<List<GistWithFeed>> GetPreviousGistsWithFeedAsync(int take, int? lastGistId, IEnumerable<string> tags,
         string? searchQuery, IEnumerable<int> disabledFeeds, CancellationToken ct);
     Task<GistWithFeed?> GetGistWithFeedByIdAsync(int id, CancellationToken ct);
     Task<List<RssFeedInfo>> GetAllFeedInfosAsync(CancellationToken ct);
-    Task<Recap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct);
+    Task<SerializedRecap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct);
     Task<bool> IsChatRegisteredAsync(long chatId, CancellationToken ct);
     Task RegisterChatAsync(long chatId, CancellationToken ct);
     Task DeregisterChatAsync(long chatId, CancellationToken ct);
     Task<List<Chat>> GetAllChatsAsync(CancellationToken ct);
-    Task<List<Gist>> GetNextFiveGistsAsync(int lastGistId, CancellationToken ct);
-    Task<RssFeedInfo> GetFeedInfoByIdAsync(int feedId, CancellationToken ct);
+    Task<List<GistWithFeed>> GetNextFiveGistsWithFeedAsync(int lastGistId, CancellationToken ct);
     Task SetGistIdLastSentForChatAsync(long chatId, int gistId, CancellationToken ct);
 }
 
@@ -137,7 +136,7 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task<GistWithFeed?> GetGistWithFeedByReference(string reference, CancellationToken ct)
     {
-        var query = $"""
+        const string query = """
             SELECT
                 g.Id as Id,
                 g.Reference as Reference,
@@ -345,15 +344,18 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public Task InsertDailyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct) =>
+    public Task<int> InsertDailyRecapAsync(Recap recap, CancellationToken ct) =>
         InsertRecapAsync(RecapType.Daily, recap, ct);
 
-    public Task InsertWeeklyRecapAsync(IEnumerable<CategoryRecap> recap, CancellationToken ct) =>
+    public Task<int> InsertWeeklyRecapAsync(Recap recap, CancellationToken ct) =>
         InsertRecapAsync(RecapType.Weekly, recap, ct);
 
-    private async Task InsertRecapAsync(RecapType recapType, IEnumerable<CategoryRecap> recap, CancellationToken ct)
+    private async Task<int> InsertRecapAsync(RecapType recapType, Recap recap, CancellationToken ct)
     {
-        var query = $"INSERT INTO Recaps{recapType.ToTypeString()} (created, recap) VALUES (@Created, @Recap)";
+        var query = $"""
+            INSERT INTO Recaps{recapType.ToTypeString()} (created, recap) VALUES (@Created, @Recap);
+            SELECT LAST_INSERT_ID();
+        """;
         var serializedRecap = new SerializedRecap(
             _dateTimeHandler.GetUtcNow(),
             JsonSerializer.Serialize(recap, SerializerDefaults.JsonOptions)
@@ -363,7 +365,7 @@ public class MariaDbHandler : IMariaDbHandler
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
+            return await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
@@ -577,7 +579,7 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public async Task<Recap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct)
+    public async Task<SerializedRecap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct)
     {
         var query = $"SELECT Created, Recap, Id FROM Recaps{recapType.ToTypeString()} ORDER BY Created DESC LIMIT 1";
         var command = new CommandDefinition(query, cancellationToken: ct);
@@ -587,15 +589,10 @@ public class MariaDbHandler : IMariaDbHandler
             await using var connection = await GetOpenConnectionAsync(ct);
             var serializedRecap = await connection.QuerySingleOrDefaultAsync<SerializedRecap>(command)
                 .WithDeadlockRetry(_logger);
-            if (serializedRecap is null)
-            {
-                _logger?.LogInformation(NoRecapFound, "No {RecapType} recap found in database",
-                    recapType.ToTypeString());
-                return null;
-            }
-            var categoryRecaps = JsonSerializer.Deserialize<IEnumerable<CategoryRecap>>(serializedRecap.Recap,
-                SerializerDefaults.JsonOptions);
-            return new Recap(serializedRecap.Created, categoryRecaps!);
+            if (serializedRecap is not null) return serializedRecap;
+            _logger?.LogInformation(NoRecapFound, "No {RecapType} recap found in database",
+                recapType.ToTypeString());
+            return null;
         }
         catch (MySqlException e)
         {
@@ -704,43 +701,37 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public async Task<List<Gist>> GetNextFiveGistsAsync(int lastGistId, CancellationToken ct)
+    public async Task<List<GistWithFeed>> GetNextFiveGistsWithFeedAsync(int lastGistId, CancellationToken ct)
     {
         const string query = """
-            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
-            FROM Gists WHERE Id > @LastGistId AND Disabled IS FALSE ORDER BY Id ASC LIMIT 5
+            SELECT
+                g.Id as Id,
+                g.Reference as Reference,
+                f.Title as FeedTitle,
+                f.RssUrl as FeedUrl,
+                g.Title as Title,
+                g.Author as Author,
+                g.Url as Url,
+                DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
+                DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
+                g.Summary as Summary,
+                g.Tags as Tags,
+                g.SearchQuery as SearchQuery
+            FROM Gists g
+            INNER JOIN Feeds f ON g.FeedId = f.Id
+            WHERE g.Id > @LastGistId AND g.Disabled IS FALSE ORDER BY g.Id ASC LIMIT 5
         """;
         var command = new CommandDefinition(query, new { LastGistId = lastGistId }, cancellationToken: ct);
 
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(_logger)).ToList();
+            return (await connection.QueryAsync<GistWithFeed>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
-            _logger?.LogError(GettingNextFiveGistsFailed, e, "Getting next gists with lastGistId {LastGistId} failed",
-                lastGistId);
-            throw;
-        }
-    }
-
-    public async Task<RssFeedInfo> GetFeedInfoByIdAsync(int feedId, CancellationToken ct)
-    {
-        const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds WHERE Id = @FeedId";
-        var command = new CommandDefinition(query, new { FeedId = feedId }, cancellationToken: ct);
-
-        try
-        {
-            await using var connection = await GetOpenConnectionAsync(ct);
-            var feedInfo = await connection.QuerySingleOrDefaultAsync<RssFeedInfo>(command).WithDeadlockRetry(_logger);
-            if (feedInfo is not null) return feedInfo;
-            _logger?.LogInformation(FeedInfoNotFound, "No feed info found for ID {FeedId}", feedId);
-            throw new DatabaseOperationException($"No feed info found for ID {feedId}");
-        }
-        catch (MySqlException e)
-        {
-            _logger?.LogError(GettingFeedInfoByIdFailed, e, "Getting feed info by ID {FeedId} failed", feedId);
+            _logger?.LogError(GettingNextFiveGistsWithFeedFailed, e,
+                "Getting next gists with feed with lastGistId {LastGistId} failed", lastGistId);
             throw;
         }
     }

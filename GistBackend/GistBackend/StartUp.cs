@@ -3,7 +3,6 @@ using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
-using GistBackend.Handlers.RssHandlers;
 using GistBackend.Handlers.TelegramBotClientHandler;
 using GistBackend.Services;
 using GistBackend.Utils;
@@ -26,13 +25,7 @@ public class StartUp(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services)
     {
         // CORS Configuration
-        var corsOrigin = configuration.GetValue<string>("CORS_ALLOWED_ORIGIN")
-            ?? Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGIN") ?? "http://localhost:8081";
-
-        if (string.IsNullOrEmpty(corsOrigin))
-        {
-            throw new InvalidOperationException("CORS_ALLOWED_ORIGIN environment variable is required");
-        }
+        var corsOrigin = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGIN") ?? "https://dummy-origin.com";
 
         services.AddCors(options =>
         {
@@ -84,7 +77,7 @@ public class StartUp(IConfiguration configuration)
             });
 
         services.AddTransient<IRssFeedHandler, RssFeedHandler>();
-        services.AddTransient<IRssEntryHandler, RssEntryHandler>();
+        services.AddTransient<IWebCrawlHandler, WebCrawlHandler>();
         services.AddTransient<IMariaDbHandler, MariaDbHandler>();
         services.AddTransient<IEmbeddingClientHandler, EmbeddingClientHandler>();
         services.AddTransient<IChatClientHandler, ChatClientHandler>();

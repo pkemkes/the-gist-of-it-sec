@@ -1,3 +1,4 @@
+using System.Globalization;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.TelegramBotClientHandler;
 using GistBackend.Types;
@@ -135,10 +136,10 @@ public class TelegramService : BackgroundService
     private async Task ProcessAllChatsAsync(CancellationToken ct)
     {
         var chats = await _mariaDbHandler.GetAllChatsAsync(ct);
-        var gistsToSendByGistIdLastSent = new Dictionary<int, List<Gist>>();
+        var gistsToSendByGistIdLastSent = new Dictionary<int, List<GistWithFeed>>();
         foreach (var gistId in chats.Select(chat => chat.GistIdLastSent).Distinct())
         {
-            gistsToSendByGistIdLastSent[gistId] = await _mariaDbHandler.GetNextFiveGistsAsync(gistId, ct);
+            gistsToSendByGistIdLastSent[gistId] = await _mariaDbHandler.GetNextFiveGistsWithFeedAsync(gistId, ct);
         }
         foreach (var chat in chats)
         {
@@ -146,19 +147,19 @@ public class TelegramService : BackgroundService
         }
     }
 
-    private async Task SendGistsToChatAsync(long chatId, IEnumerable<Gist> gists, CancellationToken ct)
+    private async Task SendGistsToChatAsync(long chatId, IEnumerable<GistWithFeed> gists, CancellationToken ct)
     {
         foreach (var gist in gists) await SendGistToChatAsync(chatId, gist, ct);
     }
 
-    private async Task SendGistToChatAsync(long chatId, Gist gist, CancellationToken ct)
+    private async Task SendGistToChatAsync(long chatId, GistWithFeed gist, CancellationToken ct)
     {
         try
         {
             _logger?.LogInformation(SendingGistToChat, "Sending gist {GistId} to chat {ChatId}", gist.Id, chatId);
-            var gistMessage = await BuildGistMessageAsync(gist, ct);
-            await _telegramBotClientHandler.SendMessageAsync(chatId, gistMessage, ParseMode.Html);
-            await _mariaDbHandler.SetGistIdLastSentForChatAsync(chatId, gist.Id!.Value, ct);
+            var message = BuildGistMessage(gist);
+            await _telegramBotClientHandler.SendMessageAsync(chatId, message, ParseMode.Html);
+            await _mariaDbHandler.SetGistIdLastSentForChatAsync(chatId, gist.Id, ct);
         }
         catch (Exception ex)
         {
@@ -167,16 +168,17 @@ public class TelegramService : BackgroundService
         }
     }
 
-    private async Task<string> BuildGistMessageAsync(Gist gist, CancellationToken ct)
+    private string BuildGistMessage(GistWithFeed gist)
     {
-        var feed = await _mariaDbHandler.GetFeedInfoByIdAsync(gist.FeedId, ct);
-        var updatedString = gist.Updated.ToString("dd.MM.YYYY HH:mm 'UTC'");
+        var updatedString = DateTime
+            .ParseExact(gist.Updated, "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ", CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal).ToString("dd.MM.yyyy HH:mm 'UTC'");
         var gistUrl = $"{_appBaseUrl}/?gist={gist.Id}";
-        return $"<b>{HtmlEncode(gist.Title)}</b><br>" +
-               $"{HtmlEncode(updatedString)}<br><br>" +
-               $"{HtmlEncode(gist.Summary)}<br><br>" +
-               $"Tags: <i>{HtmlEncode(string.Join(", ", gist.Tags))}</i><br><br>" +
-               $"{HtmlEncode(feed.Title)} - {HtmlEncode(gist.Author)}" +
+        return $"<b>{HtmlEncode(gist.Title)}</b>\n" +
+               $"{HtmlEncode(updatedString)}\n\n" +
+               $"{HtmlEncode(gist.Summary)}\n\n" +
+               $"Tags: <i>{HtmlEncode(string.Join(", ", gist.Tags))}</i>\n\n" +
+               $"{HtmlEncode(gist.FeedTitle)} - {HtmlEncode(gist.Author)}\n" +
                $"More details: {HtmlEncode(gistUrl)}";
     }
 }

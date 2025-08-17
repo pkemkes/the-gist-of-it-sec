@@ -49,7 +49,7 @@ public static class LogEvents {
     public static readonly EventId SentTelegramMessage = new(1108, nameof(SentTelegramMessage));
     public static readonly EventId UnexpectedTelegramError = new(1109, nameof(UnexpectedTelegramError));
     public static readonly EventId GettingAllChatsFailed = new(1110, nameof(GettingAllChatsFailed));
-    public static readonly EventId GettingNextFiveGistsFailed = new(1111, nameof(GettingNextFiveGistsFailed));
+    public static readonly EventId GettingNextFiveGistsWithFeedFailed = new(1111, nameof(GettingNextFiveGistsWithFeedFailed));
     public static readonly EventId GettingFeedInfoByIdFailed = new(1112, nameof(GettingFeedInfoByIdFailed));
     public static readonly EventId SendingGistToChatFailed = new(1113, nameof(SendingGistToChatFailed));
     public static readonly EventId SettingGistIdLastSentFailed = new(1114, nameof(SettingGistIdLastSentFailed));

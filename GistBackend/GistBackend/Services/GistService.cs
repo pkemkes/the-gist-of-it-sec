@@ -1,9 +1,9 @@
 using System.Diagnostics;
+using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
-using GistBackend.Handlers.RssHandlers;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
@@ -16,7 +16,7 @@ namespace GistBackend.Services;
 
 public class GistService(
     IRssFeedHandler rssFeedHandler,
-    IRssEntryHandler rssEntryHandler,
+    IWebCrawlHandler webCrawlHandler,
     IMariaDbHandler mariaDbHandler,
     IOpenAIHandler openAIHandler,
     IChromaDbHandler chromaDbHandler,
@@ -89,11 +89,12 @@ public class GistService(
             return;
         }
 
-        var text = await rssEntryHandler.FetchTextContentAsync(entry, ct);
-        var aiResponse = await GenerateAIResponse(entry.Title, text, ct);
+        var pageText = await webCrawlHandler.FetchPageContentAsync(entry.Url.AbsoluteUri);
+        var entryText = entry.ExtractText(pageText);
+        var aiResponse = await GenerateAIResponse(entry.Title, entryText, ct);
         var gist = new Gist(entry, aiResponse);
 
-        await chromaDbHandler.InsertEntryAsync(entry, text, ct);
+        await chromaDbHandler.InsertEntryAsync(entry, entryText, ct);
 
         if (existingGist is null) await InsertDataIntoDatabaseAsync(gist, ct);
         else await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);

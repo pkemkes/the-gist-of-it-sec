@@ -24,30 +24,30 @@ export const Recap = () => {
     </GistViewerBody>
   }
 
-  const recapCard = isFetching 
+  const recapCard = isFetching || data == undefined
     ? undefined 
     : <Box>
         <Typography variant="h4" sx={{ ml: "1rem" }}>
           News of { recapType == "daily" ? "yesterday" : "last 7 days" }
         </Typography>
         <Typography variant="subtitle1" sx={{ ml: "1rem", mb: "1rem" }}>
-          Created: { ToLocaleString(data!.created, timezone) }
+          Created: { ToLocaleString(data.created, timezone) }
         </Typography>
         { 
-          data?.recap.map(( category, i ) =>
+          data.recapSections.map(( section, i ) =>
             <Card elevation={ 3 } sx={{ mb: "1rem" }} key={ i }> 
               <CardContent>
                 <Typography variant="h5" sx={{ mb: "0.5rem" }}>
-                  { category.heading }
+                  { section.heading }
                 </Typography>
                 <Typography variant="body2" sx={{ mb: "0.5rem" }}>
-                  { category.recap }
+                  { section.recap }
                 </Typography>
                 <Typography variant="subtitle1">
                   Related gists:
                 </Typography>
                 <List sx={{ p: 0 }}>
-                  { category.related.map(
+                  { section.related.map(
                     ({ id, title }, i) => <RelatedGist id={ id } title={ title } key={ i } />
                   ) }
                 </List>

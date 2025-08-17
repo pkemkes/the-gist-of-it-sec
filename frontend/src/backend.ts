@@ -15,9 +15,10 @@ interface SimilarGistsQueryParameters {
 
 const pageSize = 20;
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL == undefined 
-  ? "http://localhost:8080/api/v1/gists" 
+const backendHostname = import.meta.env.VITE_BACKEND_URL == undefined 
+  ? "http://localhost:8080" 
   : import.meta.env.VITE_BACKEND_URL;
+const backendUrl = `${backendHostname}${backendHostname.endsWith("/") ? "" : "/"}api/v1/gists`;
 
 const JoinDisabledFeedsParam = (disabledFeeds: number[]) => 
   encodeURIComponent(disabledFeeds.join(","));

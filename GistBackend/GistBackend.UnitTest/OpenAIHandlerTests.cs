@@ -14,10 +14,10 @@ public class OpenAIHandlerTests
         new("test summary", ["test tag 1", "test tag 2", "test tag 3"], "test search query");
     private const string TestTitle = "test title";
     private const string TestText = "test text";
-    private readonly List<CategoryRecap> _testRecap = [
-        new("first test heading", "first test recap", new List<int> { 11, 12, 13 }),
-        new("second test heading", "second test recap", new List<int> { 21, 22, 23 })
-    ];
+    private readonly Recap _testRecap = new([
+        new RecapSection("first test heading", "first test recap", new List<int> { 11, 12, 13 }),
+        new RecapSection("second test heading", "second test recap", new List<int> { 21, 22, 23 })
+    ]);
     private readonly List<Gist> _testGists = [
         new(
             "test reference",

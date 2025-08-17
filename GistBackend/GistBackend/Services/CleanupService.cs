@@ -1,12 +1,13 @@
 using GistBackend.Exceptions;
+using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
-using GistBackend.Handlers.RssHandlers;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Playwright;
 using Prometheus;
 using static GistBackend.Utils.LogEvents;
 
@@ -17,7 +18,7 @@ public class CleanupService(
     IGistDebouncer gistDebouncer,
     IMariaDbHandler mariaDbHandler,
     IChromaDbHandler chromaDbHandler,
-    IHttpClientFactory httpClientFactory,
+    IWebCrawlHandler webCrawlHandler,
     IOptions<CleanupServiceOptions> options,
     ILogger<CleanupService>? logger)
     : BackgroundService
@@ -28,7 +29,6 @@ public class CleanupService(
         Metrics.CreateSummary("check_gist_seconds", "Time spent to check a gist", "feed_title");
     private static readonly Gauge GistsCheckedGauge =
         Metrics.CreateGauge("gists_checked", "Number of gists checked in one run");
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(StartUp.RetryingHttpClientName);
     private Dictionary<int, RssFeed> _feedsByFeedId = new();
 
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -42,7 +42,7 @@ public class CleanupService(
                 await ParseFeedsAsync(ct);
                 await CleanupGistsAsync(ct);
             }
-            await ServiceUtils.DelayUntilNextExecutionAsync(startTime, 10, logger, ct);
+            await ServiceUtils.DelayUntilNextExecutionAsync(startTime, 15, logger, ct);
         }
     }
 
@@ -76,23 +76,23 @@ public class CleanupService(
     private async Task CheckGistAsync(Gist gist, CancellationToken ct)
     {
         if (gistDebouncer.IsDebounced(gist.Id!.Value)) return;
-        var shouldBeDisabled = await GistShouldBeDisabledAsync(gist, ct);
+        var shouldBeDisabled = await GistShouldBeDisabledAsync(gist);
         var wasAlreadyCorrect =
             await mariaDbHandler.EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, shouldBeDisabled, ct) &&
             await chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct);
         if (!wasAlreadyCorrect) gistDebouncer.ResetDebounceState(gist.Id!.Value);
     }
 
-    private async Task<bool> GistShouldBeDisabledAsync(Gist gist, CancellationToken ct)
+    private async Task<bool> GistShouldBeDisabledAsync(Gist gist)
     {
         if (options.Value.DomainsToIgnore.Any(domain => gist.Url.Host.Equals(domain))) return false;
         var feedTitle = GetFeedTitleByFeedId(gist.FeedId);
         using (new SelfReportingStopwatch(elapsed => CheckGistSummary.WithLabels(feedTitle).Observe(elapsed)))
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, gist.Url);
-            var response = await _httpClient.SendAsync(request, ct);
+            var response = await webCrawlHandler.FetchResponseAsync(gist.Url.AbsoluteUri);
 
-            if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500) return true;
+            if (response is null) return true;
+            if (response.Status is >= 400 and < 500) return true;
             return WasRedirectedAndNotPresentInFeedAnymore(gist, response);
         }
     }
@@ -106,9 +106,9 @@ public class CleanupService(
         return feed.Title ?? throw new InvalidOperationException($"Feed with ID {feedId} has no title");
     }
 
-    private bool WasRedirectedAndNotPresentInFeedAnymore(Gist gist, HttpResponseMessage response)
+    private bool WasRedirectedAndNotPresentInFeedAnymore(Gist gist, IResponse response)
     {
-        var wasRedirected = gist.Url != response.RequestMessage?.RequestUri;
+        var wasRedirected = gist.Url.AbsoluteUri != response.Request.Url;
         var isPresentInFeed = _feedsByFeedId[gist.FeedId].Entries!.Any(entry => entry.Url == gist.Url);
         return wasRedirected && !isPresentInFeed;
     }

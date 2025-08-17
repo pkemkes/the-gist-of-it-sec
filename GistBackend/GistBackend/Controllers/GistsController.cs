@@ -1,6 +1,8 @@
+using System.Text.Json;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Types;
+using GistBackend.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -144,8 +146,28 @@ public class GistsController(
     {
         try
         {
-            var recap = await mariaDbHandler.GetLatestRecapAsync(type, ct);
-            return Ok(recap);
+            var serializedRecap = await mariaDbHandler.GetLatestRecapAsync(type, ct);
+            if (serializedRecap is null) return NotFound("No recap found in the database");
+            var recap = JsonSerializer.Deserialize<Recap>(serializedRecap.Recap, SerializerDefaults.JsonOptions);
+            if (recap is null)
+            {
+                throw new JsonException($"Could not deserialize recap from this JSON: {serializedRecap.Recap}");
+            }
+            var gistTitlesById = new Dictionary<int, string>();
+            var gistIds = recap.RecapSections.SelectMany(s => s.Related).Distinct().ToList();
+            foreach (var gistId in gistIds)
+            {
+                var gistWithFeed = await mariaDbHandler.GetGistWithFeedByIdAsync(gistId, ct);
+                if (gistWithFeed is not null) gistTitlesById[gistId] = gistWithFeed.Title;
+            }
+
+            var deserializedRecapSections = recap.RecapSections.Select(s => new DeserializedRecapSection(s.Heading,
+                s.Recap,
+                s.Related.Where(r => gistTitlesById.ContainsKey(r))
+                    .Select(r => new RelatedGistInfo(r, gistTitlesById[r]))));
+            var deserializedRecap = new DeserializedRecap(serializedRecap.Created, deserializedRecapSections,
+                serializedRecap.Id ?? -1);
+            return Ok(deserializedRecap);
         }
         catch (Exception e)
         {

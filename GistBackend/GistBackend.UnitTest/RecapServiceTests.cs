@@ -11,10 +11,8 @@ namespace GistBackend.UnitTest;
 public class RecapServiceTests
 {
     [Theory]
-    [InlineData("2025-01-01 06:00:00")]
+    [InlineData("2025-01-01 00:00:00")]
     [InlineData("2025-04-01 03:03:03")]
-    [InlineData("2025-05-21 21:03:03")]
-    [InlineData("2021-10-28 17:44:55")]
     public async Task StartAsync_NotUtcHourToCreateRecapAt_NoRecapCreated(string dateTimeString)
     {
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
@@ -29,9 +27,9 @@ public class RecapServiceTests
         await mariaDbHandlerMock.DidNotReceive().DailyRecapExistsAsync(Arg.Any<CancellationToken>());
         await mariaDbHandlerMock.DidNotReceive().WeeklyRecapExistsAsync(Arg.Any<CancellationToken>());
         await mariaDbHandlerMock.DidNotReceive()
-            .InsertDailyRecapAsync(Arg.Any<IEnumerable<CategoryRecap>>(), Arg.Any<CancellationToken>());
+            .InsertDailyRecapAsync(Arg.Any<Recap>(), Arg.Any<CancellationToken>());
         await mariaDbHandlerMock.DidNotReceive()
-            .InsertWeeklyRecapAsync(Arg.Any<IEnumerable<CategoryRecap>>(), Arg.Any<CancellationToken>());
+            .InsertWeeklyRecapAsync(Arg.Any<Recap>(), Arg.Any<CancellationToken>());
         await openAIHandlerMock.DidNotReceive()
             .GenerateDailyRecapAsync(Arg.Any<IEnumerable<Gist>>(), Arg.Any<CancellationToken>());
         await openAIHandlerMock.DidNotReceive()
@@ -51,11 +49,11 @@ public class RecapServiceTests
         await Task.Delay(TimeSpan.FromSeconds(2));
 
         await mariaDbHandlerMock.DidNotReceive()
-            .InsertDailyRecapAsync(Arg.Any<IEnumerable<CategoryRecap>>(), Arg.Any<CancellationToken>());
+            .InsertDailyRecapAsync(Arg.Any<Recap>(), Arg.Any<CancellationToken>());
         await openAIHandlerMock.DidNotReceive()
             .GenerateDailyRecapAsync(Arg.Any<IEnumerable<Gist>>(), Arg.Any<CancellationToken>());
         await mariaDbHandlerMock.DidNotReceive()
-            .InsertWeeklyRecapAsync(Arg.Any<IEnumerable<CategoryRecap>>(), Arg.Any<CancellationToken>());
+            .InsertWeeklyRecapAsync(Arg.Any<Recap>(), Arg.Any<CancellationToken>());
         await openAIHandlerMock.DidNotReceive()
             .GenerateWeeklyRecapAsync(Arg.Any<IEnumerable<Gist>>(), Arg.Any<CancellationToken>());
     }
@@ -75,7 +73,7 @@ public class RecapServiceTests
         await Task.Delay(TimeSpan.FromSeconds(2));
 
         await mariaDbHandlerMock.DidNotReceive()
-            .InsertDailyRecapAsync(Arg.Any<IEnumerable<CategoryRecap>>(), Arg.Any<CancellationToken>());
+            .InsertDailyRecapAsync(Arg.Any<Recap>(), Arg.Any<CancellationToken>());
         await openAIHandlerMock.DidNotReceive()
             .GenerateDailyRecapAsync(Arg.Any<IEnumerable<Gist>>(), Arg.Any<CancellationToken>());
     }
@@ -95,7 +93,7 @@ public class RecapServiceTests
         await Task.Delay(TimeSpan.FromSeconds(2));
 
         await mariaDbHandlerMock.DidNotReceive()
-            .InsertWeeklyRecapAsync(Arg.Any<IEnumerable<CategoryRecap>>(), Arg.Any<CancellationToken>());
+            .InsertWeeklyRecapAsync(Arg.Any<Recap>(), Arg.Any<CancellationToken>());
         await openAIHandlerMock.DidNotReceive()
             .GenerateWeeklyRecapAsync(Arg.Any<IEnumerable<Gist>>(), Arg.Any<CancellationToken>());
     }

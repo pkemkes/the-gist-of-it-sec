@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GistBackend.Handlers;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
@@ -55,10 +56,10 @@ public class RecapService(
     }
 
     private async Task<bool> DailyRecapIsNecessaryAsync(DateTimeOffset now, CancellationToken ct) =>
-        now.Hour == UtcHourToCreateRecapAt && !await mariaDbHandler.DailyRecapExistsAsync(ct);
+        now.Hour >= UtcHourToCreateRecapAt && !await mariaDbHandler.DailyRecapExistsAsync(ct);
 
     private async Task<bool> WeeklyRecapIsNecessaryAsync(DateTimeOffset now, CancellationToken ct) =>
-        now.Hour == UtcHourToCreateRecapAt && !await mariaDbHandler.WeeklyRecapExistsAsync(ct);
+        now.Hour >= UtcHourToCreateRecapAt && !await mariaDbHandler.WeeklyRecapExistsAsync(ct);
 
     private async Task CreateDailyRecapAsync(CancellationToken ct)
     {

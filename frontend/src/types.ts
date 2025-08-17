@@ -40,7 +40,7 @@ export interface RecapRelatedGist {
   title: string,
 }
 
-export interface RecapCategory {
+export interface RecapSection {
   heading: string,
   recap: string,
   related: RecapRelatedGist[],
@@ -48,5 +48,6 @@ export interface RecapCategory {
 
 export interface Recap {
   created: string,
-  recap: RecapCategory[],
+  recapSections: RecapSection[],
+  id: number,
 }

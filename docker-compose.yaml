@@ -15,9 +15,10 @@ services:
     logging:
       driver: json-file
       options:
+        max-size: 1g
         tag: "{{.Name}}"
     environment:
-      - CORS_ALLOWED_ORIGIN=http://localhost:5173  # NOTE: Change this to your frontend's base URL
+      - CORS_ALLOWED_ORIGIN=http://localhost:8081  # NOTE: Change this to your frontend's base URL
       - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
       - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
       - ChatClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
@@ -56,6 +57,11 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
     environment:
       VITE_BACKEND_URL: http://localhost:8080/  # NOTE: Change this to your base URL
       # NOTE: either remove or update the following three variables
@@ -70,8 +76,10 @@ services:
     image: pkemkes/the-gist-of-it-sec-database
     container_name: database
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     environment:
       - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - DB_GISTSERVICE_USERNAME=${DB_GISTSERVICE_USERNAME}
@@ -95,8 +103,10 @@ services:
     image: pkemkes/the-gist-of-it-sec-chromadb
     container_name: chromadb
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     environment:
       - IS_PERSISTENT=TRUE
       - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
@@ -110,8 +120,10 @@ services:
     image: pkemkes/the-gist-of-it-sec-prometheus
     container_name: prometheus
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     volumes:
       - prometheus-data:/prometheus
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -122,8 +134,10 @@ services:
     image: grafana/loki:3.5.3
     container_name: loki
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     volumes:
       - loki-data:/loki
       - ./loki/loki.yml:/etc/loki/local-config.yaml
@@ -142,6 +156,11 @@ services:
   promtail:
     image: grafana/promtail:3.5.3
     container_name: promtail
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
     volumes:
       - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -156,8 +175,10 @@ services:
     image: pkemkes/the-gist-of-it-sec-grafana
     container_name: grafana
     logging:
+      driver: json-file
       options:
         max-size: 1g
+        tag: "{{.Name}}"
     environment:
       - DB_GRAFANA_USERNAME=${DB_GRAFANA_USERNAME}
       - DB_GRAFANA_PASSWORD=${DB_GRAFANA_PASSWORD}
