@@ -51,7 +51,7 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
     dateString += " — updated: " + ToLocaleString(gist.updated, timezone)
   }
 
-  let feedTitle = gist.feed_title;
+  let feedTitle = gist.feedTitle;
   if (gist.author) {
     feedTitle += " — " + gist.author;
   }
@@ -84,7 +84,7 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
           Similarity:
         </Typography>
         <Typography> 
-          {Math.round(100 - (similarity*100))}%
+          {Math.round(similarity*100)}%
         </Typography>
       </Box>;
 
@@ -125,7 +125,7 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
         >
           <Button
             component="a"
-            href={ gist.link }
+            href={ gist.url }
             target="_blank"
             variant="outlined"
             size="small"

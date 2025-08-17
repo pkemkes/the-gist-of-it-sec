@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "recap_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "recap": {
+            "type": "string"
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "heading",
+          "recap",
+          "related"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["recap_sections"],
+  "additionalProperties": false
+}

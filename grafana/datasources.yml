@@ -43,10 +43,18 @@ datasources:
     version: 1
     editable: false
     jsonData:
-      database: thegistofitsec
+      database: TheGistOfItSec
       maxOpenConns: 100
       maxIdleConns: 100
       maxIdleConnsAuto: true
       connMaxLifetime: 14400
     secureJsonData:
       password: ${DB_GRAFANA_PASSWORD}
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    uid: ff6b8cf6-e41d-47e5-b915-ce202fe7f7e3
+    url: ${LOKI_URL}
+    version: 1
+    editable: false

@@ -1,0 +1,5 @@
+TITLE:
+{title}
+
+ARTICLE:
+{article}

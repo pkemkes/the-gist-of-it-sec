@@ -1,5 +1,0 @@
-python-telegram-bot == 21.6
-prometheus-client == 0.21.1
-prometheus-async == 22.2.0
-aiohttp == 3.11.11
--e ../gists_utils/
