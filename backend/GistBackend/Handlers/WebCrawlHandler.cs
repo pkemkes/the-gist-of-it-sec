@@ -44,12 +44,11 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
 
     private async Task<(IPage, IResponse?)> FetchPageAndResponseAsync(string url)
     {
+
         try
         {
             await EnsureBrowserInitializedAsync();
-
             var page = await _browser!.NewPageAsync();
-
             try
             {
                 // Set up Cloudflare bypass techniques
@@ -76,7 +75,23 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         catch (Exception e)
         {
             logger?.LogError(e, "Failed to fetch text content for entry with URL {EntryUrl}", url);
+            // If this is the first attempt, try to recover browser and retry
+            await DisposeBrowserAsync();
             throw;
+        }
+    }
+
+    private async Task DisposeBrowserAsync()
+    {
+        if (_browser != null)
+        {
+            await _browser.CloseAsync();
+            _browser = null;
+        }
+        if (_playwright != null)
+        {
+            _playwright.Dispose();
+            _playwright = null;
         }
     }
 
@@ -271,15 +286,7 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
 
     public async ValueTask DisposeAsync()
     {
-        if (_browser != null)
-        {
-            await _browser.CloseAsync();
-            _browser = null;
-        }
-
-        _playwright?.Dispose();
-        _playwright = null;
-
+        await DisposeBrowserAsync();
         SuppressFinalize(this);
     }
 }
