@@ -33,7 +33,7 @@ export const backendApi = createApi({
       query: ({ lastGist, searchQuery, tags, disabledFeeds }) => {
         const params = [];
         if (lastGist != undefined) {
-          params.push(`last_gist=${lastGist}`);
+          params.push(`lastGist=${lastGist}`);
         }
         params.push(`take=${pageSize}`);
         params.push(`q=${encodeURIComponent(searchQuery)}`);
