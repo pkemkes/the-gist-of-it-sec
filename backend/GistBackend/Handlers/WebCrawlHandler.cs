@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using static System.GC;
+using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Handlers;
 
@@ -14,41 +15,102 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
 {
     private IPlaywright? _playwright;
     private IBrowser? _browser;
+    private readonly SemaphoreSlim _crawlSemaphore = new(1, 1);
 
     public async Task<string> FetchPageContentAsync(string url)
     {
-        var (page, _) = await FetchPageAndResponseAsync(url);
-        try
+        using (logger?.BeginScope("Fetching page content for URL: {Url}", url))
         {
-            var textContent = await page.ContentAsync();
-            return textContent;
-        }
-        finally
-        {
-            await page.CloseAsync();
+            logger?.LogInformation(WebCrawlSemaphoreWait, "Waiting for crawl semaphore for FetchPageContentAsync");
+            await _crawlSemaphore.WaitAsync();
+            logger?.LogInformation(WebCrawlSemaphoreAcquired, "Acquired crawl semaphore for FetchPageContentAsync");
+            try
+            {
+                var (page, _) = await FetchPageAndResponseAsync(url);
+                try
+                {
+                    var textContent = await page.ContentAsync();
+                    return textContent;
+                }
+                finally
+                {
+                    await page.CloseAsync();
+                }
+            }
+            finally
+            {
+                _crawlSemaphore.Release();
+                logger?.LogInformation(WebCrawlSemaphoreReleased, "Released crawl semaphore for FetchPageContentAsync");
+            }
         }
     }
 
     public async Task<IResponse?> FetchResponseAsync(string url)
     {
-        var (page, response) = await FetchPageAndResponseAsync(url);
+        using (logger?.BeginScope("Fetching response for URL: {Url}", url))
+        {
+            logger?.LogInformation(WebCrawlSemaphoreWait, "Waiting for crawl semaphore for FetchResponseAsync");
+            await _crawlSemaphore.WaitAsync();
+            logger?.LogInformation(WebCrawlSemaphoreAcquired, "Acquired crawl semaphore for FetchResponseAsync");
+            try
+            {
+                var (page, response) = await FetchPageAndResponseAsync(url);
+                try
+                {
+                    return response;
+                }
+                finally
+                {
+                    await page.CloseAsync();
+                }
+            }
+            finally
+            {
+                _crawlSemaphore.Release();
+                logger?.LogInformation(WebCrawlSemaphoreReleased, "Released crawl semaphore for FetchResponseAsync");
+            }
+        }
+    }
+
+    private async Task<bool> IsBrowserHealthyAsync()
+    {
+        if (_browser == null) return false;
         try
         {
-            return response;
-        }
-        finally
-        {
+            var page = await _browser.NewPageAsync();
             await page.CloseAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 
     private async Task<(IPage, IResponse?)> FetchPageAndResponseAsync(string url)
     {
-
+        logger?.LogInformation(WebCrawlStarted, "Starting crawl request");
         try
         {
             await EnsureBrowserInitializedAsync();
             var page = await _browser!.NewPageAsync();
+            // Disable image loading using Playwright request interception
+            await page.RouteAsync("**/*", route =>
+            {
+                try
+                {
+                    if (route.Request.ResourceType != "image") return route.ContinueAsync();
+                    logger?.LogInformation(WebCrawlRequestIntercepted,
+                        "Aborting request: {Method} {Url} ({ResourceType})", route.Request.Method, route.Request.Url,
+                        route.Request.ResourceType);
+                    return route.AbortAsync();
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(WebCrawlRequestInterceptionError, ex, "Error in request interception");
+                    return route.ContinueAsync();
+                }
+            });
             try
             {
                 // Set up Cloudflare bypass techniques
@@ -74,7 +136,7 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         }
         catch (Exception e)
         {
-            logger?.LogError(e, "Failed to fetch text content for entry with URL {EntryUrl}", url);
+            logger?.LogError(WebCrawlFailed, e, "Failed to fetch text content for entry");
             // If this is the first attempt, try to recover browser and retry
             await DisposeBrowserAsync();
             throw;
@@ -83,20 +145,39 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
 
     private async Task DisposeBrowserAsync()
     {
-        if (_browser != null)
+        try
         {
-            await _browser.CloseAsync();
-            _browser = null;
+            if (_browser != null)
+            {
+                await _browser.CloseAsync();
+                _browser = null;
+            }
         }
-        if (_playwright != null)
+        catch (Exception ex)
         {
-            _playwright.Dispose();
-            _playwright = null;
+            logger?.LogError(WebCrawlDisposeError, ex, "Error disposing browser");
+        }
+        try
+        {
+            if (_playwright != null)
+            {
+                _playwright.Dispose();
+                _playwright = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(WebCrawlDisposeError, ex, "Error disposing Playwright");
         }
     }
 
     private async Task EnsureBrowserInitializedAsync()
     {
+        // Restart browser if unhealthy or after N crawls
+        if (!await IsBrowserHealthyAsync())
+        {
+            await DisposeBrowserAsync();
+        }
         if (_playwright == null)
         {
             _playwright = await Playwright.CreateAsync();
@@ -106,9 +187,9 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
                 Args = [
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
-                    "--disable-blink-features=AutomationControlled", // Hide automation
+                    "--disable-blink-features=AutomationControlled",
                     "--disable-web-security",
-                    "--disable-features=VizDisplayCompositor",
+                    "--disable-features=VizDisplayCompositor,site-per-process,TranslateUI",
                     "--disable-background-timer-throttling",
                     "--disable-backgrounding-occluded-windows",
                     "--disable-renderer-backgrounding",
@@ -124,12 +205,20 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
                     "--no-first-run",
                     "--disable-extensions",
                     "--disable-plugins",
-                    "--disable-images",
-                    "--disable-javascript-harmony-shipping",
+                    // "--disable-images", // Not officially documented; use Playwright request interception for reliability
                     "--disable-background-mode",
                     "--disable-domain-reliability",
-                    "--disable-client-side-phishing-detection",
-                    "--disable-component-extensions-with-background-pages"
+                    "--disable-component-extensions-with-background-pages",
+                    "--disable-breakpad",
+                    "--disable-translate",
+                    "--disable-device-discovery-notifications",
+                    "--disable-print-preview",
+                    "--disable-webgl",
+                    "--disable-software-rasterizer",
+                    "--disable-accelerated-2d-canvas",
+                    "--disable-accelerated-video-decode",
+                    "--disable-gpu",
+                    "--no-zygote"
                 ]
             });
 

@@ -15,6 +15,7 @@ public static class LogEvents {
     public static readonly EventId UpdatingGistFailed = new(207, nameof(UpdatingGistFailed));
     public static readonly EventId DatabaseOperationRetry = new(208, nameof(DatabaseOperationRetry));
     public static readonly EventId FetchingPageContentFailed = new(209, nameof(FetchingPageContentFailed));
+    public static readonly EventId ExtractingPageContentFailed = new(210, nameof(ExtractingPageContentFailed));
     public static readonly EventId SearchResultsInserted = new(300, nameof(SearchResultsInserted));
     public static readonly EventId SearchResultsUpdated = new(301, nameof(SearchResultsUpdated));
     public static readonly EventId NoSearchResults = new(302, nameof(NoSearchResults));
@@ -51,10 +52,8 @@ public static class LogEvents {
     public static readonly EventId UnexpectedTelegramError = new(1109, nameof(UnexpectedTelegramError));
     public static readonly EventId GettingAllChatsFailed = new(1110, nameof(GettingAllChatsFailed));
     public static readonly EventId GettingNextFiveGistsWithFeedFailed = new(1111, nameof(GettingNextFiveGistsWithFeedFailed));
-    public static readonly EventId GettingFeedInfoByIdFailed = new(1112, nameof(GettingFeedInfoByIdFailed));
     public static readonly EventId SendingGistToChatFailed = new(1113, nameof(SendingGistToChatFailed));
     public static readonly EventId SettingGistIdLastSentFailed = new(1114, nameof(SettingGistIdLastSentFailed));
-    public static readonly EventId FeedInfoNotFound = new(1115, nameof(FeedInfoNotFound));
     public static readonly EventId TelegramCommandNotRecognized = new(1200, nameof(TelegramCommandNotRecognized));
     public static readonly EventId StartCommandButAlreadyRegistered = new(1201, nameof(StartCommandButAlreadyRegistered));
     public static readonly EventId StartCommandForNewChat = new(1201, nameof(StartCommandForNewChat));
@@ -62,4 +61,12 @@ public static class LogEvents {
     public static readonly EventId StopCommandForExistingChat = new(1202, nameof(StopCommandForExistingChat));
     public static readonly EventId SendingGistToChat = new(1203, nameof(SendingGistToChat));
     public static readonly EventId DidNotFindExpectedFeedInDb = new(1300, nameof(DidNotFindExpectedFeedInDb));
+    public static readonly EventId WebCrawlSemaphoreWait = new(2000, nameof(WebCrawlSemaphoreWait));
+    public static readonly EventId WebCrawlSemaphoreAcquired = new(2001, nameof(WebCrawlSemaphoreAcquired));
+    public static readonly EventId WebCrawlSemaphoreReleased = new(2002, nameof(WebCrawlSemaphoreReleased));
+    public static readonly EventId WebCrawlStarted = new(2003, nameof(WebCrawlStarted));
+    public static readonly EventId WebCrawlRequestIntercepted = new(2004, nameof(WebCrawlRequestIntercepted));
+    public static readonly EventId WebCrawlRequestInterceptionError = new(2005, nameof(WebCrawlRequestInterceptionError));
+    public static readonly EventId WebCrawlFailed = new(2006, nameof(WebCrawlFailed));
+    public static readonly EventId WebCrawlDisposeError = new(2007, nameof(WebCrawlDisposeError));
 }
