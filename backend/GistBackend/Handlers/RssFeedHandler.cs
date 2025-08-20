@@ -1,3 +1,4 @@
+using GistBackend.Exceptions;
 using GistBackend.Types;
 using HtmlAgilityPack;
 using static System.Net.WebUtility;
@@ -56,13 +57,13 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         var entryContent = doc.DocumentNode.SelectSingleNode("//div[@class='entry-content']");
         if (entryContent == null)
         {
-            throw new InvalidOperationException("Missing container element");
+            throw new ExtractingEntryTextException("Missing container element");
         }
 
         var textContent = entryContent.InnerText;
         if (string.IsNullOrWhiteSpace(textContent))
         {
-            throw new InvalidOperationException("No text found in container");
+            throw new ExtractingEntryTextException("No text found in container");
         }
 
         var decodedText = HtmlDecode(textContent);
@@ -77,13 +78,13 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         var entryContent = doc.DocumentNode.SelectSingleNode("//div[@class='articleBody']");
         if (entryContent == null)
         {
-            throw new InvalidOperationException("Missing container element");
+            throw new ExtractingEntryTextException("Missing container element");
         }
 
         var textContent = entryContent.InnerText;
         if (string.IsNullOrWhiteSpace(textContent))
         {
-            throw new InvalidOperationException("No text found in container");
+            throw new ExtractingEntryTextException("No text found in container");
         }
 
         var decodedText = HtmlDecode(textContent);
@@ -98,16 +99,32 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         doc.LoadHtml(content);
 
         // Use contains() to match elements that have ArticleBase-BodyContent as one of their classes
-        var entryContent = doc.DocumentNode.SelectSingleNode("//div[contains(@class, 'ArticleBase-BodyContent')]");
-        if (entryContent == null)
-        {
-            throw new InvalidOperationException("Missing container element");
-        }
+        var entryContentSingleNode = doc.DocumentNode.SelectSingleNode("//div[contains(@class, 'ArticleBase-BodyContent')]");
+        string textContent;
 
-        var textContent = entryContent.InnerText;
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (entryContentSingleNode == null)
+        {
+            var entryContentMultiNode =
+                doc.DocumentNode.SelectNodes("//div[contains(@class, 'ArticleMultiSectionBody-SectionContainer')]");
+            if (entryContentMultiNode == null || entryContentMultiNode.Count == 0)
+            {
+                throw new ExtractingEntryTextException("Missing single and multi node container elements");
+            }
+
+            textContent = string.Join("", entryContentMultiNode.Select(node => node.InnerText));
+            if (string.IsNullOrWhiteSpace(textContent))
+            {
+                throw new ExtractingEntryTextException("No text found in multi node container");
+            }
+        }
+        else
+        {
+            textContent = entryContentSingleNode.InnerText;
+        }
         if (string.IsNullOrWhiteSpace(textContent))
         {
-            throw new InvalidOperationException("No text found in container");
+            throw new ExtractingEntryTextException("No text found in container");
         }
 
         var decodedText = HtmlDecode(textContent);
@@ -122,13 +139,13 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         var entryContents = doc.DocumentNode.SelectNodes("//div[@class='duet--article--article-body-component']");
         if (entryContents == null || entryContents.Count == 0)
         {
-            throw new InvalidOperationException("Missing container element");
+            throw new ExtractingEntryTextException("Missing container element");
         }
 
         var combinedText = string.Join("", entryContents.Select(node => node.InnerText));
         if (string.IsNullOrWhiteSpace(combinedText))
         {
-            throw new InvalidOperationException("No text found in container");
+            throw new ExtractingEntryTextException("No text found in container");
         }
 
         var decodedText = HtmlDecode(combinedText);
@@ -143,13 +160,13 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         var entryContent = doc.DocumentNode.SelectSingleNode("//div[@class='nm-article-blog']");
         if (entryContent == null)
         {
-            throw new InvalidOperationException("Missing container element");
+            throw new ExtractingEntryTextException("Missing container element");
         }
 
         var textContent = entryContent.InnerText;
         if (string.IsNullOrWhiteSpace(textContent))
         {
-            throw new InvalidOperationException("No text found in container");
+            throw new ExtractingEntryTextException("No text found in container");
         }
 
         var decodedText = HtmlDecode(textContent);
@@ -164,19 +181,19 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         var articleContent = doc.DocumentNode.SelectSingleNode("//div[@class='article__content']");
         if (articleContent == null)
         {
-            throw new InvalidOperationException("Missing container element");
+            throw new ExtractingEntryTextException("Missing container element");
         }
 
         var entryContents = articleContent.SelectNodes(".//span[@class='wysiwyg-parsed-content']");
         if (entryContents == null || entryContents.Count == 0)
         {
-            throw new InvalidOperationException("Missing container element");
+            throw new ExtractingEntryTextException("Missing container element");
         }
 
         var textContent = entryContents.First().InnerText;
         if (string.IsNullOrWhiteSpace(textContent))
         {
-            throw new InvalidOperationException("No text found in container");
+            throw new ExtractingEntryTextException("No text found in container");
         }
 
         var decodedText = HtmlDecode(textContent);
@@ -191,13 +208,13 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         var entryContents = doc.DocumentNode.SelectNodes("//div[contains(@class, 'post-content')]");
         if (entryContents == null || entryContents.Count == 0)
         {
-            throw new InvalidOperationException("Missing container element");
+            throw new ExtractingEntryTextException("Missing container element");
         }
 
         var combinedText = string.Join("", entryContents.Select(node => node.InnerText));
         if (string.IsNullOrWhiteSpace(combinedText))
         {
-            throw new InvalidOperationException("No text found in container");
+            throw new ExtractingEntryTextException("No text found in container");
         }
 
         var decodedText = HtmlDecode(combinedText);

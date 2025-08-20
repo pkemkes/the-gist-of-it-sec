@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using GistBackend.Exceptions;
 using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.GoogleSearchHandler;
@@ -104,6 +105,12 @@ public class GistService(
             else await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);
             stopwatch.Stop();
             ProcessEntrySummary.WithLabels(feed.Title!).Observe(stopwatch.Elapsed.Seconds);
+        }
+        catch (ExtractingEntryTextException e)
+        {
+            logger?.LogError(ExtractingPageContentFailed, e, "Failed to extract text from page content for {Url}",
+                entry.Url.AbsoluteUri);
+            throw;
         }
         catch (Exception e) when (e is PlaywrightException or TimeoutException)
         {
