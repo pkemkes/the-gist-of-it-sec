@@ -77,7 +77,7 @@ public class StartUp(IConfiguration configuration)
             });
 
         services.AddTransient<IRssFeedHandler, RssFeedHandler>();
-        services.AddTransient<IWebCrawlHandler, WebCrawlHandler>();
+        services.AddSingleton<IWebCrawlHandler, WebCrawlHandler>();
         services.AddTransient<IMariaDbHandler, MariaDbHandler>();
         services.AddTransient<IEmbeddingClientHandler, EmbeddingClientHandler>();
         services.AddTransient<IChatClientHandler, ChatClientHandler>();
