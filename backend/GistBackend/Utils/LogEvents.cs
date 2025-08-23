@@ -66,13 +66,7 @@ public static class LogEvents {
     public static readonly EventId WebCrawlSemaphoreAcquired = new(1401, nameof(WebCrawlSemaphoreAcquired));
     public static readonly EventId WebCrawlSemaphoreReleased = new(1402, nameof(WebCrawlSemaphoreReleased));
     public static readonly EventId WebCrawlStarted = new(1403, nameof(WebCrawlStarted));
-    public static readonly EventId WebCrawlRequestIntercepted = new(1404, nameof(WebCrawlRequestIntercepted));
-    public static readonly EventId WebCrawlRequestInterceptionError = new(1405, nameof(WebCrawlRequestInterceptionError));
-    public static readonly EventId WebCrawlFailed = new(1406, nameof(WebCrawlFailed));
-    public static readonly EventId WebCrawlDisposeError = new(1407, nameof(WebCrawlDisposeError));
-    public static readonly EventId WebCrawlMaxCrawlsReached = new(1408, nameof(WebCrawlMaxCrawlsReached));
-    public static readonly EventId BrowserDisposed = new(1409, nameof(BrowserDisposed));
-    public static readonly EventId PlaywrightDisposed = new(1410, nameof(PlaywrightDisposed));
-    public static readonly EventId CreatedNewPlaywrightAndBrowser = new(1411, nameof(CreatedNewPlaywrightAndBrowser));
-    public static readonly EventId WebCrawlTimeout = new(1412, nameof(WebCrawlTimeout));
+    public static readonly EventId WebCrawlFailed = new(1404, nameof(WebCrawlFailed));
+    public static readonly EventId WebCrawlMaxCrawlsReached = new(1405, nameof(WebCrawlMaxCrawlsReached));
+    public static readonly EventId WebCrawlRestartingBrowser = new(1406, nameof(WebCrawlRestartingBrowser));
 }

@@ -72,17 +72,24 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
     {
         using (logger?.BeginScope("Fetching page content for URL: {Url}", url))
         {
-            await WaitForSemaphoreAsync(nameof(FetchPageContentAsync));
-            var (page, _) = await FetchPageAndResponseWithTimeoutAsync(url);
             try
             {
-                return await page.ContentAsync();
+                await WaitForSemaphoreAsync(nameof(FetchPageContentAsync));
+                var (page, _) = await FetchPageAndResponseWithTimeoutAsync(url);
+                try
+                {
+                    return await page.ContentAsync();
+                }
+                finally
+                {
+                    await CleanupPageAsync(page);
+                }
             }
             finally
             {
-                await CleanupPageAsync(page);
                 _crawlSemaphore.Release();
-                logger?.LogInformation(WebCrawlSemaphoreReleased, "Released crawl semaphore for FetchPageContentAsync");
+                logger?.LogInformation(WebCrawlSemaphoreReleased,
+                    "Released crawl semaphore for FetchPageContentAsync");
             }
         }
     }
@@ -91,17 +98,24 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
     {
         using (logger?.BeginScope("Fetching response for URL: {Url}", url))
         {
-            await WaitForSemaphoreAsync(nameof(FetchResponseAsync));
-            var (page, response) = await FetchPageAndResponseWithTimeoutAsync(url);
             try
             {
-                return response;
+                await WaitForSemaphoreAsync(nameof(FetchResponseAsync));
+                var (page, response) = await FetchPageAndResponseWithTimeoutAsync(url);
+                try
+                {
+                    return response;
+                }
+                finally
+                {
+                    await CleanupPageAsync(page);
+                }
             }
             finally
             {
-                await CleanupPageAsync(page);
                 _crawlSemaphore.Release();
-                logger?.LogInformation(WebCrawlSemaphoreReleased, "Released crawl semaphore for FetchResponseAsync");
+                logger?.LogInformation(WebCrawlSemaphoreReleased,
+                    "Released crawl semaphore for FetchResponseAsync");
             }
         }
     }
@@ -113,10 +127,16 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         logger?.LogInformation(WebCrawlSemaphoreAcquired, "Acquired crawl semaphore for {OperationName}", operationName);
     }
 
-    private async Task<(IPage, IResponse?)> FetchPageAndResponseWithTimeoutAsync(string url, int timeoutSeconds = 120, int maxAttempts = 3)
+    private async Task<(IPage, IResponse?)> FetchPageAndResponseWithTimeoutAsync(string url, int timeoutSeconds = 120, int maxAttempts = 5)
     {
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
+            if (attempt >= 4)
+            {
+                logger?.LogInformation(WebCrawlRestartingBrowser, "Restarting browser before attempt {Attempt}",
+                    attempt);
+                await RestartBrowserAsync();
+            }
             var fetchTask = FetchPageAndResponseAsync(url);
             try
             {
@@ -148,7 +168,6 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         {
             logger?.LogInformation(WebCrawlMaxCrawlsReached, "Maximum crawls reached. Restarting browser...");
             await RestartBrowserAsync();
-            _crawlCount = 0;
         }
         logger?.LogInformation(WebCrawlStarted, "Starting crawl request");
         await EnsureBrowserInitializedAsync();
@@ -184,7 +203,8 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         await DisposeCoreAsync();
 
         _playwright = await Playwright.CreateAsync();
-        _context = await _playwright.Chromium.LaunchPersistentContextAsync("/tmp/playwright-profile", new BrowserTypeLaunchPersistentContextOptions
+        _context = await _playwright.Chromium.LaunchPersistentContextAsync("/tmp/playwright-profile",
+            new BrowserTypeLaunchPersistentContextOptions
         {
             Headless = true,
             Args = _browserArgs,
@@ -195,6 +215,7 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
 
         await _context.AddInitScriptAsync(ScriptToRemoveWebdriver);
         logger?.LogInformation("Created new persistent browser context");
+        _crawlCount = 0;
     }
 
     private async Task<bool> IsBrowserHealthyAsync()
