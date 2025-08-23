@@ -108,13 +108,12 @@ public class GistService(
         }
         catch (ExtractingEntryTextException e)
         {
-            logger?.LogError(ExtractingPageContentFailed, e, "Failed to extract text from page content for {Url}",
+            logger?.LogWarning(ExtractingPageContentFailed, e, "Skipping entry, failed to extract text from page content for {Url}",
                 entry.Url.AbsoluteUri);
-            throw;
         }
         catch (Exception e) when (e is PlaywrightException or TimeoutException)
         {
-            logger?.LogError(FetchingPageContentFailed, e, "Skipping entry, failed to fetch page content for {Url}",
+            logger?.LogWarning(FetchingPageContentFailed, e, "Skipping entry, failed to fetch page content for {Url}",
                 entry.Url.AbsoluteUri);
         }
     }

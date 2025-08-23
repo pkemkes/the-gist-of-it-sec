@@ -126,14 +126,15 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
                     // Success within timeout
                     return await fetchTask;
                 }
+
+                logger?.LogWarning(WebCrawlFailed, "Timeout ({Timeout}s) reached for attempt {Attempt}", timeoutSeconds,
+                    attempt);
             }
             catch (Exception e)
             {
-                logger?.LogWarning(WebCrawlFailed, e, "Attempt failed with exception");
+                logger?.LogWarning(WebCrawlFailed, e, "Attempt failed with exception for attempt {Attempt}", attempt);
             }
 
-            logger?.LogWarning(WebCrawlFailed, "Timeout ({Timeout}s) reached for attempt {Attempt}", timeoutSeconds,
-                attempt);
             await RestartBrowserAsync();
             _crawlCount = 0;
             await Task.Delay(1000);
@@ -145,7 +146,7 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
     {
         if (_crawlCount >= MaxCrawls)
         {
-            logger?.LogWarning(WebCrawlMaxCrawlsReached, "Maximum crawls reached. Restarting browser...");
+            logger?.LogInformation(WebCrawlMaxCrawlsReached, "Maximum crawls reached. Restarting browser...");
             await RestartBrowserAsync();
             _crawlCount = 0;
         }
