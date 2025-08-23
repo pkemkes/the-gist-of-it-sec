@@ -28,13 +28,13 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
     private ChromaDbAsserter Asserter => new(_handlerOptions);
 
     [Fact]
-    public async Task InsertEntryAsync_EntryNotInChromaDb_EntryInserted()
+    public async Task UpsertEntryAsync_EntryNotInChromaDb_EntryInserted()
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
 
-        await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
 
         var expectedDocument = new Document([entry.Reference], [new Metadata(entry.Reference, entry.FeedId)])
             { Embeddings = [embedding] };
@@ -42,37 +42,42 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
     }
 
     [Fact]
-    public async Task InsertEntryAsync_EntryIsAlreadyInDb_ThrowsDatabaseOperationException()
+    public async Task UpsertEntryAsync_EntryIsAlreadyInDb_EntryUpdated()
     {
         var handler = CreateChromaDbHandler();
-        var entry = CreateTestEntry();
-        var (text, _) = TestTextsAndEmbeddings.First();
-        await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        var oldEntry = CreateTestEntry();
+        var (oldText, _) = TestTextsAndEmbeddings.First();
+        await handler.UpsertEntryAsync(oldEntry, oldText, CancellationToken.None);
+        var newEntry = CreateTestEntry() with { Reference = oldEntry.Reference};
+        var (newText, newEmbedding) = TestTextsAndEmbeddings.Skip(1).First();
 
-        await Assert.ThrowsAsync<DatabaseOperationException>(() =>
-            handler.InsertEntryAsync(entry, text, CancellationToken.None));
+        await handler.UpsertEntryAsync(newEntry, newText, CancellationToken.None);
+
+        var expectedDocument = new Document([newEntry.Reference], [new Metadata(newEntry.Reference, newEntry.FeedId)])
+            { Embeddings = [newEmbedding] };
+        await Asserter.AssertDocumentInDbAsync(expectedDocument);
     }
 
     [Fact]
-    public async Task InsertEntryAsync_ReferenceIsEmptyString_ThrowsArgumentException()
+    public async Task UpsertEntryAsync_ReferenceIsEmptyString_ThrowsArgumentException()
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry() with { Reference = "" };
         var (text, _) = TestTextsAndEmbeddings.First();
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            handler.InsertEntryAsync(entry, text, CancellationToken.None));
+            handler.UpsertEntryAsync(entry, text, CancellationToken.None));
     }
 
     [Fact]
-    public async Task InsertEntryAsync_ReferenceIsTooLong_ThrowsArgumentException()
+    public async Task UpsertEntryAsync_ReferenceIsTooLong_ThrowsArgumentException()
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry() with { Reference = new string('A', 1000000) };
         var (text, _) = TestTextsAndEmbeddings.First();
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            handler.InsertEntryAsync(entry, text, CancellationToken.None));
+            handler.UpsertEntryAsync(entry, text, CancellationToken.None));
     }
 
     [Fact]
@@ -81,7 +86,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
-        await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         var gist = new Gist(entry, TestSummaryAIResponse);
 
         var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
@@ -98,7 +103,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
-        await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         var gist = new Gist(entry, TestSummaryAIResponse);
         await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
@@ -116,7 +121,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
-        await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         var gist = new Gist(entry, TestSummaryAIResponse);
         await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
@@ -134,7 +139,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
-        await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+        await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         var gist = new Gist(entry, TestSummaryAIResponse);
 
         var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, false, CancellationToken.None);
@@ -192,7 +197,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         const int nResults = 10;
         foreach (var ((text, _), entry) in TestTextsAndEmbeddings.Zip(entries))
         {
-            await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+            await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         }
         var testReference = entries.First().Reference;
         var expectedReferences = entries.Select(entry => entry.Reference)
@@ -213,7 +218,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         const int nResults = 1;
         foreach (var ((text, _), entry) in TestTextsAndEmbeddings.Zip(entries))
         {
-            await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+            await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         }
 
         var actual = await handler.GetReferenceAndScoreOfSimilarEntriesAsync(entries.First().Reference,
@@ -239,7 +244,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         };
         foreach (var ((text, _), entry) in TestTextsAndEmbeddings.Zip(entries))
         {
-            await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+            await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         }
         var testReference = entries.First().Reference;
         var expectedReferences = entries.Where(entry => entry.FeedId == enabledFeedId).Select(entry => entry.Reference)
@@ -260,7 +265,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var entries = TestTextsAndEmbeddings.Select(_ => CreateTestEntry()).ToArray();
         foreach (var ((text, _), entry) in TestTextsAndEmbeddings.Zip(entries))
         {
-            await handler.InsertEntryAsync(entry, text, CancellationToken.None);
+            await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         }
         var disabledGist = new Gist(entries.Last(), TestSummaryAIResponse);
         await handler.EnsureGistHasCorrectMetadataAsync(disabledGist, true, CancellationToken.None);

@@ -185,7 +185,7 @@ public class GistServiceTests
         await Task.Delay(TimeSpan.FromSeconds(2));
 
         await Task.WhenAll(testFeed.Entries.Select(entry =>
-            chromaDbHandlerMock.Received(1).InsertEntryAsync(
+            chromaDbHandlerMock.Received(1).UpsertEntryAsync(
                 Arg.Is<RssEntry>(e => e.Reference == entry.Reference && e.FeedId == entry.FeedId),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())));
@@ -223,7 +223,7 @@ public class GistServiceTests
         foreach (var (entry, text) in testFeed.Entries.Zip(testTexts))
         {
             await chromaDbHandlerMock.Received(1)
-                .InsertEntryAsync(Arg.Is<RssEntry>(e => e.Reference == entry.Reference && e.FeedId == entry.FeedId),
+                .UpsertEntryAsync(Arg.Is<RssEntry>(e => e.Reference == entry.Reference && e.FeedId == entry.FeedId),
                     text,
                     Arg.Any<CancellationToken>());
         }

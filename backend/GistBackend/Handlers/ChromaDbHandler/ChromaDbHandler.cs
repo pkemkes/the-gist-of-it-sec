@@ -11,8 +11,10 @@ using static GistBackend.Utils.LogEvents;
 
 namespace GistBackend.Handlers.ChromaDbHandler;
 
-public interface IChromaDbHandler {
-    Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
+public interface IChromaDbHandler
+{
+    Task<bool> EntryExistsByReferenceAsync(string reference, CancellationToken ct, string? collectionId = null);
+    Task UpsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
     Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct);
     Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(
         string reference, int nResults, IEnumerable<int> disabledFeedIds, CancellationToken ct);
@@ -57,7 +59,7 @@ public class ChromaDbHandler : IChromaDbHandler
     {
         ValidateReference(reference);
         var collectionId = await GetOrCreateCollectionAsync(ct);
-        if (!await EntryExistsByReferenceAsync(reference, collectionId, ct))
+        if (!await EntryExistsByReferenceAsync(reference, ct, collectionId))
         {
             throw new DatabaseOperationException("Entry does not exist in database");
         }
@@ -118,28 +120,32 @@ public class ChromaDbHandler : IChromaDbHandler
 
     private static float ConvertCosineDistanceToSimilarity(float distance) => float.Clamp(1 - distance/2, 0, 1);
 
-    public async Task InsertEntryAsync(RssEntry entry, string text, CancellationToken ct)
+    public async Task UpsertEntryAsync(RssEntry entry, string text, CancellationToken ct)
     {
         ValidateReference(entry.Reference);
         var collectionId = await GetOrCreateCollectionAsync(ct);
-        if (await EntryExistsByReferenceAsync(entry.Reference, collectionId, ct))
+        var mode = "add";
+        if (await EntryExistsByReferenceAsync(entry.Reference, ct, collectionId))
         {
-            throw new DatabaseOperationException("Entry already exists in database");
+            _logger?.LogInformation(EntryAlreadyExistsInChromaDb,
+                "Entry with reference {Reference} already exists in database", entry.Reference);
+            mode = "update";
         }
 
         var metadata = new Metadata(entry.Reference, entry.FeedId);
         var embedding = await _openAIHandler.GenerateEmbeddingAsync(text, ct);
         var content = CreateStringContent(new Document([entry.Reference], [metadata], [embedding]));
         var response = await SendPostRequestAsync(
-            $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/add", content, ct);
+            $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/{mode}", content, ct);
 
-        if (response.StatusCode != HttpStatusCode.Created)
+        if (mode == "add" && response.StatusCode != HttpStatusCode.Created ||
+            mode == "update" && response.StatusCode != HttpStatusCode.OK)
         {
-            throw await CreateDatabaseOperationExceptionAsync("Could not insert entry", response, ct);
+            throw await CreateDatabaseOperationExceptionAsync($"Could not {mode} entry", response, ct);
         }
         _logger?.LogInformation(DocumentInserted,
-            "Inserted document with metadata {Metadata} for entry with reference {Reference}",
-            metadata, entry.Reference);
+            "Upserted ({Mode}) document with metadata {Metadata} for entry with reference {Reference}",
+            mode, metadata, entry.Reference);
     }
 
     public async Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct)
@@ -165,7 +171,7 @@ public class ChromaDbHandler : IChromaDbHandler
     {
         ValidateReference(reference);
         var collectionId = await GetOrCreateCollectionAsync(ct);
-        if (!await EntryExistsByReferenceAsync(reference, collectionId, ct))
+        if (!await EntryExistsByReferenceAsync(reference, ct, collectionId))
         {
             throw new DatabaseOperationException("Entry to update does not exist");
         }
@@ -179,8 +185,9 @@ public class ChromaDbHandler : IChromaDbHandler
         }
     }
 
-    private async Task<bool> EntryExistsByReferenceAsync(string reference, string collectionId, CancellationToken ct)
+    public async Task<bool> EntryExistsByReferenceAsync(string reference, CancellationToken ct, string? collectionId = null)
     {
+        collectionId ??= await GetOrCreateCollectionAsync(ct);
         var document = await GetDocumentByReferenceAsync(reference, collectionId, false, false, ct);
         return document.Ids.Length != 0;
     }

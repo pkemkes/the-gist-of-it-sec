@@ -99,7 +99,7 @@ public class GistService(
             var aiResponse = await GenerateAIResponse(entry.Title, entryText, ct);
             var gist = new Gist(entry, aiResponse);
 
-            await chromaDbHandler.InsertEntryAsync(entry, entryText, ct);
+            await chromaDbHandler.UpsertEntryAsync(entry, entryText, ct);
 
             if (existingGist is null) await InsertDataIntoDatabaseAsync(gist, ct);
             else await UpdateDataInDatabaseAsync(gist, existingGist.Id!.Value, ct);

@@ -194,7 +194,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
         {
             var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
             var entry = CreateTestEntry(testGists[i].FeedId) with { Reference = testGists[i].Reference };
-            await _chromaDbHandler.InsertEntryAsync(entry, text, CancellationToken.None);
+            await _chromaDbHandler.UpsertEntryAsync(entry, text, CancellationToken.None);
         }
         var gistId = testGists.First().Id!.Value;
         var expectedGistsWithFeed = testGists.Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed))
@@ -222,7 +222,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
         {
             var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
             var entry = CreateTestEntry(testGists[i].FeedId) with { Reference = testGists[i].Reference };
-            await _chromaDbHandler.InsertEntryAsync(entry, text, CancellationToken.None);
+            await _chromaDbHandler.UpsertEntryAsync(entry, text, CancellationToken.None);
         }
         var gistId = testGists.First().Id!.Value;
         var expectedGistsWithFeed = gistsOfEnabledFeed.Select(gist => GistWithFeed.FromGistAndFeed(gist, enabledFeed))

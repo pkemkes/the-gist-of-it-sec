@@ -16,6 +16,7 @@ public static class LogEvents {
     public static readonly EventId DatabaseOperationRetry = new(208, nameof(DatabaseOperationRetry));
     public static readonly EventId FetchingPageContentFailed = new(209, nameof(FetchingPageContentFailed));
     public static readonly EventId ExtractingPageContentFailed = new(210, nameof(ExtractingPageContentFailed));
+    public static readonly EventId EntryAlreadyExistsInChromaDb = new(211, nameof(EntryAlreadyExistsInChromaDb));
     public static readonly EventId SearchResultsInserted = new(300, nameof(SearchResultsInserted));
     public static readonly EventId SearchResultsUpdated = new(301, nameof(SearchResultsUpdated));
     public static readonly EventId NoSearchResults = new(302, nameof(NoSearchResults));
