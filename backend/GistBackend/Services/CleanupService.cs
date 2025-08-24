@@ -53,11 +53,12 @@ public class CleanupService(
 
     private async Task ParseAndCacheFeedAsync(RssFeed feed, CancellationToken ct)
     {
+        using var _ = logger?.BeginScope(new Dictionary<string, object> { ["RssUrl"] = feed.RssUrl });
         await rssFeedHandler.ParseFeedAsync(feed, ct);
         var feedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
         if (feedInfo is null)
         {
-            logger?.LogWarning(DidNotFindExpectedFeedInDb, "Could not find feed with Url {RssUrl} in db", feed.RssUrl);
+            logger?.LogWarning(DidNotFindExpectedFeedInDb, "Could not find feed in db");
         }
         else
         {
