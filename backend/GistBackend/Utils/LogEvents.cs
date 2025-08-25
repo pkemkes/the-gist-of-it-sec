@@ -2,71 +2,89 @@ using Microsoft.Extensions.Logging;
 
 namespace GistBackend.Utils;
 
-public static class LogEvents {
-    public static readonly EventId GistServiceDelayExceeded = new(100, nameof(GistServiceDelayExceeded));
-    public static readonly EventId DatabaseConnectionFailed = new(101, nameof(DatabaseConnectionFailed));
-    public static readonly EventId GistInserted = new(200, nameof(GistInserted));
-    public static readonly EventId GistUpdated = new(201, nameof(GistUpdated));
-    public static readonly EventId GettingFeedInfoByUrlFailed = new(202, nameof(GettingFeedInfoByUrlFailed));
-    public static readonly EventId InsertingFeedInfoFailed = new(203, nameof(InsertingFeedInfoFailed));
-    public static readonly EventId UpdatingFeedInfoFailed = new(204, nameof(UpdatingFeedInfoFailed));
-    public static readonly EventId GettingGistByReferenceFailed = new(205, nameof(GettingGistByReferenceFailed));
-    public static readonly EventId InsertingGistFailed = new(206, nameof(InsertingGistFailed));
-    public static readonly EventId UpdatingGistFailed = new(207, nameof(UpdatingGistFailed));
-    public static readonly EventId DatabaseOperationRetry = new(208, nameof(DatabaseOperationRetry));
-    public static readonly EventId FetchingPageContentFailed = new(209, nameof(FetchingPageContentFailed));
-    public static readonly EventId ExtractingPageContentFailed = new(210, nameof(ExtractingPageContentFailed));
-    public static readonly EventId EntryAlreadyExistsInChromaDb = new(211, nameof(EntryAlreadyExistsInChromaDb));
-    public static readonly EventId SearchResultsInserted = new(300, nameof(SearchResultsInserted));
-    public static readonly EventId SearchResultsUpdated = new(301, nameof(SearchResultsUpdated));
-    public static readonly EventId NoSearchResults = new(302, nameof(NoSearchResults));
-    public static readonly EventId GettingSearchResultsFailed = new(303, nameof(GettingSearchResultsFailed));
-    public static readonly EventId DeletingSearchResultsFailed = new(304, nameof(DeletingSearchResultsFailed));
-    public static readonly EventId DocumentInserted = new(400, nameof(DocumentInserted));
-    public static readonly EventId SummaryAIResponseJsonParsingError = new(500, nameof(SummaryAIResponseJsonParsingError));
-    public static readonly EventId RecapAIResponseJsonParsingError = new(501, nameof(RecapAIResponseJsonParsingError));
-    public static readonly EventId GoogleApiQuotaExceeded = new(600, nameof(GoogleApiQuotaExceeded));
-    public static readonly EventId UnexpectedGoogleApiException = new(601, nameof(UnexpectedGoogleApiException));
-    public static readonly EventId NoGistsForDailyRecap = new(700, nameof(NoGistsForDailyRecap));
-    public static readonly EventId DailyRecapCreated = new(701, nameof(DailyRecapCreated));
-    public static readonly EventId NoGistsForWeeklyRecap = new(702, nameof(NoGistsForWeeklyRecap));
-    public static readonly EventId WeeklyRecapCreated = new(703, nameof(WeeklyRecapCreated));
-    public static readonly EventId CheckIfRecapExistsFailed = new(704, nameof(CheckIfRecapExistsFailed));
-    public static readonly EventId GettingGistsForRecapFailed = new(705, nameof(GettingGistsForRecapFailed));
-    public static readonly EventId ChangedDisabledStateOfGistInDb = new(800, nameof(ChangedDisabledStateOfGistInDb));
-    public static readonly EventId ChangedMetadataOfGistInChromaDb = new(801, nameof(ChangedMetadataOfGistInChromaDb));
-    public static readonly EventId GettingAllGistsFailed = new(802, nameof(GettingAllGistsFailed));
-    public static readonly EventId EnsuringCorrectDisabledFailed = new(803, nameof(EnsuringCorrectDisabledFailed));
-    public static readonly EventId GettingDisabledStateFailed = new(804, nameof(GettingDisabledStateFailed));
-    public static readonly EventId GettingPreviousGistsWithFeedFailed = new(900, nameof(GettingPreviousGistsWithFeedFailed));
-    public static readonly EventId GettingAllFeedInfosFailed = new(901, nameof(GettingAllFeedInfosFailed));
-    public static readonly EventId NoRecapFound = new(902, nameof(NoRecapFound));
-    public static readonly EventId GettingLatestRecapFailed = new(903, nameof(GettingLatestRecapFailed));
-    public static readonly EventId ErrorInHttpRequest = new(1000, nameof(ErrorInHttpRequest));
-    public static readonly EventId ChatRegisterCheckFailed = new(1100, nameof(ChatRegisterCheckFailed));
-    public static readonly EventId NoRecentGistFound = new(1101, nameof(NoRecentGistFound));
-    public static readonly EventId ChatRegistered = new(1102, nameof(ChatRegistered));
-    public static readonly EventId ChatDeregistered = new(1103, nameof(ChatDeregistered));
-    public static readonly EventId RegisteringChatFailed = new(1104, nameof(RegisteringChatFailed));
-    public static readonly EventId DeregisteringChatFailed = new(1105, nameof(DeregisteringChatFailed));
-    public static readonly EventId SentTelegramMessage = new(1108, nameof(SentTelegramMessage));
-    public static readonly EventId UnexpectedTelegramError = new(1109, nameof(UnexpectedTelegramError));
-    public static readonly EventId GettingAllChatsFailed = new(1110, nameof(GettingAllChatsFailed));
-    public static readonly EventId GettingNextFiveGistsWithFeedFailed = new(1111, nameof(GettingNextFiveGistsWithFeedFailed));
-    public static readonly EventId SendingGistToChatFailed = new(1113, nameof(SendingGistToChatFailed));
-    public static readonly EventId SettingGistIdLastSentFailed = new(1114, nameof(SettingGistIdLastSentFailed));
-    public static readonly EventId TelegramCommandNotRecognized = new(1200, nameof(TelegramCommandNotRecognized));
-    public static readonly EventId StartCommandButAlreadyRegistered = new(1201, nameof(StartCommandButAlreadyRegistered));
-    public static readonly EventId StartCommandForNewChat = new(1201, nameof(StartCommandForNewChat));
-    public static readonly EventId StopCommandButNotRegistered = new(1202, nameof(StopCommandButNotRegistered));
-    public static readonly EventId StopCommandForExistingChat = new(1202, nameof(StopCommandForExistingChat));
-    public static readonly EventId SendingGistToChat = new(1203, nameof(SendingGistToChat));
-    public static readonly EventId DidNotFindExpectedFeedInDb = new(1300, nameof(DidNotFindExpectedFeedInDb));
-    public static readonly EventId WebCrawlSemaphoreWait = new(1400, nameof(WebCrawlSemaphoreWait));
-    public static readonly EventId WebCrawlSemaphoreAcquired = new(1401, nameof(WebCrawlSemaphoreAcquired));
-    public static readonly EventId WebCrawlSemaphoreReleased = new(1402, nameof(WebCrawlSemaphoreReleased));
-    public static readonly EventId WebCrawlStarted = new(1403, nameof(WebCrawlStarted));
-    public static readonly EventId WebCrawlFailed = new(1404, nameof(WebCrawlFailed));
-    public static readonly EventId WebCrawlMaxCrawlsReached = new(1405, nameof(WebCrawlMaxCrawlsReached));
-    public static readonly EventId WebCrawlRestartingBrowser = new(1406, nameof(WebCrawlRestartingBrowser));
+public static class LogEvents
+{
+    // ReSharper disable once FieldCanBeMadeReadOnly.Local
+    private static int _eventId;
+
+    public static readonly EventId GistServiceDelayExceeded = new(++_eventId, nameof(GistServiceDelayExceeded));
+    public static readonly EventId DatabaseConnectionFailed = new(++_eventId, nameof(DatabaseConnectionFailed));
+
+    public static readonly EventId GistInserted = new(++_eventId, nameof(GistInserted));
+    public static readonly EventId GistUpdated = new(++_eventId, nameof(GistUpdated));
+    public static readonly EventId GettingFeedInfoByUrlFailed = new(++_eventId, nameof(GettingFeedInfoByUrlFailed));
+    public static readonly EventId InsertingFeedInfoFailed = new(++_eventId, nameof(InsertingFeedInfoFailed));
+    public static readonly EventId UpdatingFeedInfoFailed = new(++_eventId, nameof(UpdatingFeedInfoFailed));
+    public static readonly EventId GettingGistByReferenceFailed = new(++_eventId, nameof(GettingGistByReferenceFailed));
+    public static readonly EventId InsertingGistFailed = new(++_eventId, nameof(InsertingGistFailed));
+    public static readonly EventId UpdatingGistFailed = new(++_eventId, nameof(UpdatingGistFailed));
+    public static readonly EventId DatabaseOperationRetry = new(++_eventId, nameof(DatabaseOperationRetry));
+    public static readonly EventId FetchingPageContentFailed = new(++_eventId, nameof(FetchingPageContentFailed));
+    public static readonly EventId ExtractingPageContentFailed = new(++_eventId, nameof(ExtractingPageContentFailed));
+    public static readonly EventId EntryAlreadyExistsInChromaDb = new(++_eventId, nameof(EntryAlreadyExistsInChromaDb));
+    public static readonly EventId ParsingFeedFailed = new(++_eventId, nameof(ParsingFeedFailed));
+
+    public static readonly EventId SearchResultsInserted = new(++_eventId, nameof(SearchResultsInserted));
+    public static readonly EventId SearchResultsUpdated = new(++_eventId, nameof(SearchResultsUpdated));
+    public static readonly EventId NoSearchResults = new(++_eventId, nameof(NoSearchResults));
+    public static readonly EventId GettingSearchResultsFailed = new(++_eventId, nameof(GettingSearchResultsFailed));
+    public static readonly EventId DeletingSearchResultsFailed = new(++_eventId, nameof(DeletingSearchResultsFailed));
+
+    public static readonly EventId DocumentInserted = new(++_eventId, nameof(DocumentInserted));
+
+    public static readonly EventId SummaryAIResponseJsonParsingError = new(++_eventId, nameof(SummaryAIResponseJsonParsingError));
+    public static readonly EventId RecapAIResponseJsonParsingError = new(++_eventId, nameof(RecapAIResponseJsonParsingError));
+
+    public static readonly EventId GoogleApiQuotaExceeded = new(++_eventId, nameof(GoogleApiQuotaExceeded));
+    public static readonly EventId UnexpectedGoogleApiException = new(++_eventId, nameof(UnexpectedGoogleApiException));
+
+    public static readonly EventId NoGistsForDailyRecap = new(++_eventId, nameof(NoGistsForDailyRecap));
+    public static readonly EventId DailyRecapCreated = new(++_eventId, nameof(DailyRecapCreated));
+    public static readonly EventId NoGistsForWeeklyRecap = new(++_eventId, nameof(NoGistsForWeeklyRecap));
+    public static readonly EventId WeeklyRecapCreated = new(++_eventId, nameof(WeeklyRecapCreated));
+    public static readonly EventId CheckIfRecapExistsFailed = new(++_eventId, nameof(CheckIfRecapExistsFailed));
+    public static readonly EventId GettingGistsForRecapFailed = new(++_eventId, nameof(GettingGistsForRecapFailed));
+
+    public static readonly EventId ChangedDisabledStateOfGistInDb = new(++_eventId, nameof(ChangedDisabledStateOfGistInDb));
+    public static readonly EventId ChangedMetadataOfGistInChromaDb = new(++_eventId, nameof(ChangedMetadataOfGistInChromaDb));
+    public static readonly EventId GettingAllGistsFailed = new(++_eventId, nameof(GettingAllGistsFailed));
+    public static readonly EventId EnsuringCorrectDisabledFailed = new(++_eventId, nameof(EnsuringCorrectDisabledFailed));
+    public static readonly EventId GettingDisabledStateFailed = new(++_eventId, nameof(GettingDisabledStateFailed));
+
+    public static readonly EventId GettingPreviousGistsWithFeedFailed = new(++_eventId, nameof(GettingPreviousGistsWithFeedFailed));
+    public static readonly EventId GettingAllFeedInfosFailed = new(++_eventId, nameof(GettingAllFeedInfosFailed));
+    public static readonly EventId NoRecapFound = new(++_eventId, nameof(NoRecapFound));
+    public static readonly EventId GettingLatestRecapFailed = new(++_eventId, nameof(GettingLatestRecapFailed));
+
+    public static readonly EventId ErrorInHttpRequest = new(++_eventId, nameof(ErrorInHttpRequest));
+
+    public static readonly EventId ChatRegisterCheckFailed = new(++_eventId, nameof(ChatRegisterCheckFailed));
+    public static readonly EventId NoRecentGistFound = new(++_eventId, nameof(NoRecentGistFound));
+    public static readonly EventId ChatRegistered = new(++_eventId, nameof(ChatRegistered));
+    public static readonly EventId ChatDeregistered = new(++_eventId, nameof(ChatDeregistered));
+    public static readonly EventId RegisteringChatFailed = new(++_eventId, nameof(RegisteringChatFailed));
+    public static readonly EventId DeregisteringChatFailed = new(++_eventId, nameof(DeregisteringChatFailed));
+    public static readonly EventId SentTelegramMessage = new(++_eventId, nameof(SentTelegramMessage));
+    public static readonly EventId UnexpectedTelegramError = new(++_eventId, nameof(UnexpectedTelegramError));
+    public static readonly EventId GettingAllChatsFailed = new(++_eventId, nameof(GettingAllChatsFailed));
+    public static readonly EventId GettingNextFiveGistsWithFeedFailed = new(++_eventId, nameof(GettingNextFiveGistsWithFeedFailed));
+    public static readonly EventId SendingGistToChatFailed = new(++_eventId, nameof(SendingGistToChatFailed));
+    public static readonly EventId SettingGistIdLastSentFailed = new(++_eventId, nameof(SettingGistIdLastSentFailed));
+
+    public static readonly EventId TelegramCommandNotRecognized = new(++_eventId, nameof(TelegramCommandNotRecognized));
+    public static readonly EventId StartCommandButAlreadyRegistered = new(++_eventId, nameof(StartCommandButAlreadyRegistered));
+    public static readonly EventId StartCommandForNewChat = new(++_eventId, nameof(StartCommandForNewChat));
+    public static readonly EventId StopCommandButNotRegistered = new(++_eventId, nameof(StopCommandButNotRegistered));
+    public static readonly EventId StopCommandForExistingChat = new(++_eventId, nameof(StopCommandForExistingChat));
+    public static readonly EventId SendingGistToChat = new(++_eventId, nameof(SendingGistToChat));
+
+    public static readonly EventId DidNotFindExpectedFeedInDb = new(++_eventId, nameof(DidNotFindExpectedFeedInDb));
+
+    public static readonly EventId WebCrawlSemaphoreWait = new(++_eventId, nameof(WebCrawlSemaphoreWait));
+    public static readonly EventId WebCrawlSemaphoreAcquired = new(++_eventId, nameof(WebCrawlSemaphoreAcquired));
+    public static readonly EventId WebCrawlSemaphoreReleased = new(++_eventId, nameof(WebCrawlSemaphoreReleased));
+    public static readonly EventId WebCrawlStarted = new(++_eventId, nameof(WebCrawlStarted));
+    public static readonly EventId WebCrawlFailed = new(++_eventId, nameof(WebCrawlFailed));
+    public static readonly EventId WebCrawlMaxCrawlsReached = new(++_eventId, nameof(WebCrawlMaxCrawlsReached));
+    public static readonly EventId WebCrawlRestartingBrowser = new(++_eventId, nameof(WebCrawlRestartingBrowser));
 }

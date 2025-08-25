@@ -1,6 +1,7 @@
 using System.Net;
 using System.ServiceModel.Syndication;
 using System.Xml;
+using GistBackend.Exceptions;
 using GistBackend.Utils;
 
 namespace GistBackend.Types;
@@ -14,8 +15,14 @@ public record RssFeed(Uri RssUrl, Func<string, string> ExtractText, IEnumerable<
 
     public async Task ParseFeedAsync(HttpClient httpClient, CancellationToken ct)
     {
-        var response = await httpClient.GetStringAsync(RssUrl, ct);
-        using var stringReader = new StringReader(response);
+        var response = await httpClient.GetAsync(RssUrl, ct);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            throw new ParsingFeedException(
+                $"Failed to fetch RSS feed from {RssUrl}, status code: {response.StatusCode}");
+        }
+        var feedContent = await response.Content.ReadAsStringAsync(ct);
+        using var stringReader = new StringReader(feedContent);
         using var xmlReader = XmlReader.Create(stringReader);
         SyndicationFeed = SyndicationFeed.Load(xmlReader);
         Title = SyndicationFeed.Title.Text;

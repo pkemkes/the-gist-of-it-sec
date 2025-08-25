@@ -35,6 +35,8 @@ public class GistService(
     private static readonly Summary SummarizeEntrySummary =
         Metrics.CreateSummary("summarize_entry_seconds", "Time spent to summarize an entry");
 
+    private readonly Dictionary<int, RssFeed> _feedsByFeedId = new();
+
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         while (!ct.IsCancellationRequested)
@@ -43,6 +45,8 @@ public class GistService(
             using (new SelfReportingStopwatch(elapsed => ProcessFeedsGauge.Set(elapsed)))
             {
                 await ProcessFeedsAsync(ct);
+                var entries = _feedsByFeedId.Values.SelectMany(feed => feed.Entries!).OrderBy(entry => entry.Updated);
+                await ProcessEntriesAsync(entries, ct);
             }
             await DelayUntilNextExecutionAsync(startTime, 5, logger, ct);
         }
@@ -55,10 +59,18 @@ public class GistService(
 
     private async Task ProcessFeedAsync(RssFeed feed, CancellationToken ct)
     {
-        await rssFeedHandler.ParseFeedAsync(feed, ct);
-        var feedId = await EnsureCurrentFeedInfoInDbAsync(feed, ct);
-        feed.ParseEntries(feedId);
-        foreach (var entry in feed.Entries!.OrderBy(entry => entry.Updated)) await ProcessEntryAsync(entry, feed, ct);
+        try
+        {
+            await rssFeedHandler.ParseFeedAsync(feed, ct);
+            var feedId = await EnsureCurrentFeedInfoInDbAsync(feed, ct);
+            feed.ParseEntries(feedId);
+            _feedsByFeedId[feedId] = feed;
+        }
+        catch (ParsingFeedException e)
+        {
+            logger?.LogWarning(ParsingFeedFailed, e, "Skipping feed, failed to parse RSS feed from {RssUrl}",
+                feed.RssUrl);
+        }
     }
 
     private async Task<int> EnsureCurrentFeedInfoInDbAsync(RssFeed feed, CancellationToken ct)
@@ -78,7 +90,12 @@ public class GistService(
         return existingFeedInfo.Id!.Value;
     }
 
-    private async Task ProcessEntryAsync(RssEntry entry, RssFeed feed, CancellationToken ct)
+    private async Task ProcessEntriesAsync(IEnumerable<RssEntry> entries, CancellationToken ct)
+    {
+        foreach (var entry in entries) await ProcessEntryAsync(entry, ct);
+    }
+
+    private async Task ProcessEntryAsync(RssEntry entry, CancellationToken ct)
     {
         var stopwatch = Stopwatch.StartNew();
         using var loggingScope = logger?.BeginScope("Processing entry with reference {Reference}", entry.Reference);
@@ -93,6 +110,7 @@ public class GistService(
 
         try
         {
+            var feed = _feedsByFeedId[entry.FeedId];
             var pageText = await webCrawlHandler.FetchPageContentAsync(entry.Url.AbsoluteUri);
 
             var entryText = entry.ExtractText(pageText);

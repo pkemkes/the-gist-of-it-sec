@@ -29,6 +29,7 @@ public class CleanupService(
         Metrics.CreateSummary("check_gist_seconds", "Time spent to check a gist", "feed_title");
     private static readonly Gauge GistsCheckedGauge =
         Metrics.CreateGauge("gists_checked", "Number of gists checked in one run");
+    private List<int> _feedsInDb = [];
     private Dictionary<int, RssFeed> _feedsByFeedId = new();
 
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -36,6 +37,7 @@ public class CleanupService(
         while (!ct.IsCancellationRequested)
         {
             var startTime = DateTime.UtcNow;
+            _feedsInDb = [];
             _feedsByFeedId = new Dictionary<int, RssFeed>();
             using (new SelfReportingStopwatch(elapsed => CleanupGistsGauge.Set(elapsed)))
             {
@@ -54,16 +56,25 @@ public class CleanupService(
     private async Task ParseAndCacheFeedAsync(RssFeed feed, CancellationToken ct)
     {
         using var _ = logger?.BeginScope(new Dictionary<string, object> { ["RssUrl"] = feed.RssUrl });
-        await rssFeedHandler.ParseFeedAsync(feed, ct);
-        var feedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
-        if (feedInfo is null)
+        try
         {
-            logger?.LogWarning(DidNotFindExpectedFeedInDb, "Could not find feed in db");
+            await rssFeedHandler.ParseFeedAsync(feed, ct);
+            var feedInfo = await mariaDbHandler.GetFeedInfoByRssUrlAsync(feed.RssUrl, ct);
+            if (feedInfo is null)
+            {
+                logger?.LogWarning(DidNotFindExpectedFeedInDb, "Could not find feed in db: {RssUrl}", feed.RssUrl);
+            }
+            else
+            {
+                _feedsInDb.Add(feedInfo.Id!.Value);
+                feed.ParseEntries(feedInfo.Id!.Value);
+                _feedsByFeedId.Add(feedInfo.Id!.Value, feed);
+            }
         }
-        else
+        catch (ParsingFeedException e)
         {
-            feed.ParseEntries(feedInfo.Id!.Value);
-            _feedsByFeedId.Add(feedInfo.Id!.Value, feed);
+            logger?.LogWarning(ParsingFeedFailed, e, "Skipping feed, failed to parse RSS feed from {RssUrl}",
+                feed.RssUrl);
         }
     }
 
@@ -78,6 +89,14 @@ public class CleanupService(
     {
         try
         {
+            if (!_feedsByFeedId.ContainsKey(gist.FeedId))
+            {
+                if (!_feedsInDb.Contains(gist.FeedId))
+                {
+                    throw new FeedNotFoundException($"Feed with ID {gist.FeedId} not found");
+                }
+                return;
+            }
             if (gistDebouncer.IsDebounced(gist.Id!.Value)) return;
             var shouldBeDisabled = await GistShouldBeDisabledAsync(gist);
             var wasAlreadyCorrect =
