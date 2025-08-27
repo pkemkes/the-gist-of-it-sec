@@ -80,10 +80,10 @@ public static class LogEvents
 
     public static readonly EventId DidNotFindExpectedFeedInDb = new(++_eventId, nameof(DidNotFindExpectedFeedInDb));
 
-    public static readonly EventId WebCrawlSemaphoreWait = new(++_eventId, nameof(WebCrawlSemaphoreWait));
-    public static readonly EventId WebCrawlSemaphoreAcquired = new(++_eventId, nameof(WebCrawlSemaphoreAcquired));
-    public static readonly EventId WebCrawlSemaphoreReleased = new(++_eventId, nameof(WebCrawlSemaphoreReleased));
+    public static readonly EventId WebCrawlDispatcherLoopStarted = new(++_eventId, nameof(WebCrawlDispatcherLoopStarted));
+    public static readonly EventId WaitingForWebCrawlToComplete = new(++_eventId, nameof(WaitingForWebCrawlToComplete));
     public static readonly EventId WebCrawlStarted = new(++_eventId, nameof(WebCrawlStarted));
+    public static readonly EventId WebCrawlCompleted = new(++_eventId, nameof(WebCrawlCompleted));
     public static readonly EventId WebCrawlFailed = new(++_eventId, nameof(WebCrawlFailed));
     public static readonly EventId WebCrawlMaxCrawlsReached = new(++_eventId, nameof(WebCrawlMaxCrawlsReached));
     public static readonly EventId WebCrawlRestartingBrowser = new(++_eventId, nameof(WebCrawlRestartingBrowser));

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using static System.GC;
@@ -11,14 +12,25 @@ public interface IWebCrawlHandler
     Task<IResponse?> FetchResponseAsync(string url);
 }
 
-public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCrawlHandler, IAsyncDisposable
+public class WebRequestTask<TResult>(string url)
 {
+    public string Url { get; } = url;
+
+    public TaskCompletionSource<TResult> CompletionSource { get; } =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+}
+
+public class WebCrawlHandler : IWebCrawlHandler, IAsyncDisposable
+{
+    private readonly ILogger<WebCrawlHandler>? _logger;
     private IPlaywright? _playwright;
     private IBrowserContext? _context;
     private IBrowser? _browser;
-    private readonly SemaphoreSlim _crawlSemaphore = new(1, 1);
     private const int MaxCrawls = 10;
     private int _crawlCount;
+
+    private readonly ConcurrentQueue<WebRequestTask<string>> _highPriorityQueue = new();
+    private readonly ConcurrentQueue<WebRequestTask<IResponse?>> _normalPriorityQueue = new();
 
     private readonly List<string> _browserArgs =
     [
@@ -67,93 +79,118 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         ["Cache-Control"] = "max-age=0"
     };
 
+    private readonly CancellationTokenSource _dispatcherCts = new();
+    private readonly Task _dispatcherTask;
+
+    public WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null)
+    {
+        _logger = logger;
+        _dispatcherTask = Task.Run(() => DispatcherLoopAsync(_dispatcherCts.Token));
+    }
+
     public async Task<string> FetchPageContentAsync(string url)
     {
-        using (logger?.BeginScope("Fetching page content for URL: {Url}", url))
-        {
-            try
-            {
-                await WaitForSemaphoreAsync(nameof(FetchPageContentAsync));
-                var (page, _) = await FetchPageAndResponseWithTimeoutAsync(url);
-                try
-                {
-                    return await page.ContentAsync();
-                }
-                finally
-                {
-                    await CleanupPageAsync(page);
-                }
-            }
-            finally
-            {
-                _crawlSemaphore.Release();
-                logger?.LogInformation(WebCrawlSemaphoreReleased,
-                    "Released crawl semaphore for FetchPageContentAsync");
-            }
-        }
+        var requestTask = new WebRequestTask<string>(url);
+        _highPriorityQueue.Enqueue(requestTask);
+        _logger?.LogInformation(WaitingForWebCrawlToComplete,
+            "Waiting for web crawl to complete for {Url} with {RequestType}", url, nameof(FetchPageContentAsync));
+        return await requestTask.CompletionSource.Task;
     }
 
     public async Task<IResponse?> FetchResponseAsync(string url)
     {
-        using (logger?.BeginScope("Fetching response for URL: {Url}", url))
+        using (_logger?.BeginScope("{RequestType} for {Url}", nameof(FetchResponseAsync), url))
         {
-            try
-            {
-                await WaitForSemaphoreAsync(nameof(FetchResponseAsync));
-                var (page, response) = await FetchPageAndResponseWithTimeoutAsync(url);
-                try
-                {
-                    return response;
-                }
-                finally
-                {
-                    await CleanupPageAsync(page);
-                }
-            }
-            finally
-            {
-                _crawlSemaphore.Release();
-                logger?.LogInformation(WebCrawlSemaphoreReleased,
-                    "Released crawl semaphore for FetchResponseAsync");
-            }
+            var requestTask = new WebRequestTask<IResponse?>(url);
+            _normalPriorityQueue.Enqueue(requestTask);
+            _logger?.LogInformation(WaitingForWebCrawlToComplete,
+                "Waiting for web crawl to complete for {Url} with {RequestType}", url, nameof(FetchResponseAsync));
+            return await requestTask.CompletionSource.Task;
         }
     }
 
-    private async Task WaitForSemaphoreAsync(string operationName)
+    private async Task DispatcherLoopAsync(CancellationToken cancellationToken)
     {
-        logger?.LogInformation(WebCrawlSemaphoreWait, "Waiting for crawl semaphore for {OperationName}", operationName);
-        await _crawlSemaphore.WaitAsync();
-        logger?.LogInformation(WebCrawlSemaphoreAcquired, "Acquired crawl semaphore for {OperationName}", operationName);
+        _logger?.LogInformation(WebCrawlDispatcherLoopStarted, "Web crawl dispatcher loop started");
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            // Always process high-priority requests first
+            if (_highPriorityQueue.TryDequeue(out var highPriorityRequest))
+            {
+                using (_logger?.BeginScope("Working on crawl with {Priority} priority for {Url}", "high",
+                           highPriorityRequest.Url))
+                {
+                    try
+                    {
+                        var (page, _) = await FetchPageAndResponseWithTimeoutAsync(highPriorityRequest.Url);
+                        var content = await page.ContentAsync();
+                        await CleanupPageAsync(page);
+                        highPriorityRequest.CompletionSource.SetResult(content);
+                    }
+                    catch (Exception ex)
+                    {
+                        highPriorityRequest.CompletionSource.SetException(ex);
+                        _logger?.LogError(ex, "Error processing high priority request");
+                    }
+                    continue;
+                }
+            }
+            // If no high-priority, process normal-priority requests
+            if (_normalPriorityQueue.TryDequeue(out var normalPriorityRequest))
+            {
+                using (_logger?.BeginScope("Working on crawl with {Priority} priority for {Url}", "normal",
+                           normalPriorityRequest.Url))
+                {
+                    try
+                    {
+                        var (page, response) = await FetchPageAndResponseWithTimeoutAsync(normalPriorityRequest.Url);
+                        await CleanupPageAsync(page);
+                        normalPriorityRequest.CompletionSource.SetResult(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        normalPriorityRequest.CompletionSource.SetException(ex);
+                        _logger?.LogError(ex, "Error processing normal priority request");
+                    }
+                    continue;
+                }
+            }
+            // Wait before next iteration
+            await Task.Delay(100, cancellationToken);
+        }
     }
 
     private async Task<(IPage, IResponse?)> FetchPageAndResponseWithTimeoutAsync(string url, int timeoutSeconds = 120, int maxAttempts = 5)
     {
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            if (attempt >= 4)
-            {
-                logger?.LogInformation(WebCrawlRestartingBrowser, "Restarting browser before attempt {Attempt}",
-                    attempt);
-                await RestartBrowserAsync();
-            }
-            var fetchTask = FetchPageAndResponseAsync(url);
+            IPage? page = null;
+            var success = false;
             try
             {
-                var completedTask = await Task.WhenAny(fetchTask, Task.Delay(TimeSpan.FromSeconds(timeoutSeconds)));
-                if (completedTask == fetchTask)
+                if (attempt >= 4)
                 {
-                    // Success within timeout
-                    return await fetchTask;
+                    _logger?.LogInformation(WebCrawlRestartingBrowser, "Restarting browser before attempt {Attempt}", attempt);
+                    await RestartBrowserAsync();
                 }
-
-                logger?.LogWarning(WebCrawlFailed, "Timeout ({Timeout}s) reached for attempt {Attempt}", timeoutSeconds,
-                    attempt);
+                var result = await TryFetchPageAndResponseAsync(url, timeoutSeconds);
+                page = result.Item1;
+                success = true;
+                return result;
+            }
+            catch (TimeoutException)
+            {
+                _logger?.LogWarning(WebCrawlFailed, "Timeout ({Timeout}s) reached for attempt {Attempt}", timeoutSeconds, attempt);
             }
             catch (Exception e)
             {
-                logger?.LogWarning(WebCrawlFailed, e, "Attempt failed with exception for attempt {Attempt}", attempt);
+                _logger?.LogWarning(WebCrawlFailed, e, "Attempt failed with exception for attempt {Attempt}", attempt);
             }
-
+            finally
+            {
+                // Only cleanup if not successful (i.e., page not returned)
+                if (!success && page != null) await CleanupPageAsync(page);
+            }
             await RestartBrowserAsync();
             _crawlCount = 0;
             await Task.Delay(1000);
@@ -161,14 +198,32 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         throw new TimeoutException($"Failed to fetch page within {timeoutSeconds}s after {maxAttempts} attempts");
     }
 
+    private async Task<(IPage, IResponse?)> TryFetchPageAndResponseAsync(string url, int timeoutSeconds)
+    {
+        var fetchTask = FetchPageAndResponseAsync(url);
+        var delayTask = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds));
+        var completedTask = await Task.WhenAny(fetchTask, delayTask);
+        if (completedTask == fetchTask)
+            return await fetchTask;
+
+        // Timeout occurred, but fetchTask may still complete later
+        if (fetchTask.IsCompletedSuccessfully || fetchTask.IsCompleted)
+        {
+            var result = fetchTask.Result;
+            var page = result.Item1;
+            await CleanupPageAsync(page);
+        }
+        throw new TimeoutException();
+    }
+
     private async Task<(IPage, IResponse?)> FetchPageAndResponseAsync(string url)
     {
         if (_crawlCount >= MaxCrawls)
         {
-            logger?.LogInformation(WebCrawlMaxCrawlsReached, "Maximum crawls reached. Restarting browser...");
+           _logger?.LogInformation(WebCrawlMaxCrawlsReached, "Maximum crawls reached. Restarting browser...");
             await RestartBrowserAsync();
         }
-        logger?.LogInformation(WebCrawlStarted, "Starting crawl request");
+        _logger?.LogInformation(WebCrawlStarted, "Starting crawl request");
         await EnsureBrowserInitializedAsync();
 
         var page = await _context!.NewPageAsync();
@@ -186,6 +241,7 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
 
         _crawlCount++;
 
+        _logger?.LogInformation(WebCrawlCompleted, "Crawl request completed");
         return (page, response);
     }
 
@@ -213,7 +269,7 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         _browser = _context.Browser;
 
         await _context.AddInitScriptAsync(ScriptToRemoveWebdriver);
-        logger?.LogInformation("Created new persistent browser context");
+        _logger?.LogInformation("Created new persistent browser context");
         _crawlCount = 0;
     }
 
@@ -243,7 +299,7 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
         }
         catch (Exception ex)
         {
-            logger?.LogWarning(ex, "Failed to cleanup page");
+            _logger?.LogWarning(ex, "Failed to cleanup page");
         }
     }
 
@@ -297,6 +353,12 @@ public class WebCrawlHandler(ILogger<WebCrawlHandler>? logger = null) : IWebCraw
 
     public async ValueTask DisposeAsync()
     {
+        await _dispatcherCts.CancelAsync();
+        try
+        {
+            await _dispatcherTask;
+        }
+        catch (OperationCanceledException) { }
         await DisposeCoreAsync();
         SuppressFinalize(this);
     }

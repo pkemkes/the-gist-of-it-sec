@@ -13,7 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		Dockerfile = Dockerfile
-		plan.md = plan.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GistBackend.TestUtilities", "GistBackend.TestUtilities\GistBackend.TestUtilities.csproj", "{9819FC26-33A4-46E3-BA01-D6D1B0D923F1}"
