@@ -1,56 +1,51 @@
-namespace GistBackend.Utils;
+using GistBackend.Handlers;
 
-public record DebounceInfo
-{
-    public int Count { get; set; }
-    public int Score { get; set; }
-}
+namespace GistBackend.Utils;
 
 public interface IGistDebouncer
 {
-    bool IsDebounced(int gistId);
-    void ResetDebounceState(int gistId);
-    int GetDebouncedGistsCount();
+    bool IsReady(int gistId, DateTime updated);
 }
 
-public class GistDebouncer : IGistDebouncer
+public class GistDebouncer(IDateTimeHandler dateTimeHandler) : IGistDebouncer
 {
-    private readonly Dictionary<int, DebounceInfo> _debouncedGists = new();
-    private const int MaxDebounceCount = 7;
+    private readonly Dictionary<int, DateTime> _readyTimesByGistId = new();
+    private static readonly Random Random = new();
 
-    public bool IsDebounced(int gistId)
+    public bool IsReady(int gistId, DateTime updated)
     {
-        if (!_debouncedGists.TryGetValue(gistId, out var debounceInfo))
+        if (_readyTimesByGistId.TryGetValue(gistId, out var readyTime))
         {
-            ResetDebounceState(gistId);
-            return false;
+            if (readyTime > dateTimeHandler.GetUtcNow()) return false;
+            DebounceGist(gistId, updated);
+            return true;
         }
-
-        if (debounceInfo.Score == 0)
-        {
-            IncreaseCount(gistId, debounceInfo);
-            return false;
-        }
-
-        DecreaseScore(gistId);
-        return true;
+        DebounceGist(gistId, updated);
+        return false;
     }
 
-    public void ResetDebounceState(int gistId)
+    private void DebounceGist(int gistId, DateTime updated)
     {
-        _debouncedGists[gistId] = new DebounceInfo();
+        _readyTimesByGistId[gistId] = CalculateReadyTime(updated);
     }
 
-    private void IncreaseCount(int gistId, DebounceInfo debounceInfo)
+    private DateTime CalculateReadyTime(DateTime updated)
     {
-        _debouncedGists[gistId].Count = Math.Min(debounceInfo.Count + 1, MaxDebounceCount);
-        _debouncedGists[gistId].Score = (int)Math.Pow(2, debounceInfo.Count) - 1;
-    }
+        var now = dateTimeHandler.GetUtcNow();
+        var age = now - updated;
 
-    private void DecreaseScore(int gistId)
-    {
-        _debouncedGists[gistId].Score -= 1;
-    }
+        TimeSpan meanDebounceDuration;
+        if (age < TimeSpan.FromHours(1)) meanDebounceDuration = TimeSpan.FromMinutes(30);
+        else if (age < TimeSpan.FromHours(6)) meanDebounceDuration = TimeSpan.FromHours(1);
+        else if (age < TimeSpan.FromDays(1)) meanDebounceDuration = TimeSpan.FromHours(3);
+        else if (age < TimeSpan.FromDays(7)) meanDebounceDuration = TimeSpan.FromHours(6);
+        else meanDebounceDuration = TimeSpan.FromDays(1);
 
-    public int GetDebouncedGistsCount() => _debouncedGists.Values.Count(debounceInfo => debounceInfo.Score != 0);
+        // Generate random jitter between -meanDebounceDuration/2 and +meanDebounceDuration/2
+        var halfDuration = meanDebounceDuration / 2;
+        var randomFactor = Random.NextDouble() * 2 - 1; // [-1, 1]
+        var jitter = halfDuration * randomFactor;
+
+        return now + meanDebounceDuration + jitter;
+    }
 }

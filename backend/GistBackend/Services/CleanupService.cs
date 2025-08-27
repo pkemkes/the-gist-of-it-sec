@@ -81,8 +81,9 @@ public class CleanupService(
     private async Task CleanupGistsAsync(CancellationToken ct)
     {
         var allGists = await mariaDbHandler.GetAllGistsAsync(ct);
-        GistsCheckedGauge.Set(allGists.Count - gistDebouncer.GetDebouncedGistsCount());
-        foreach (var gist in allGists) await CheckGistAsync(gist, ct);
+        var readyGists = allGists.Where(gist => gistDebouncer.IsReady(gist.Id!.Value, gist.Updated)).ToList();
+        foreach (var gist in readyGists) await CheckGistAsync(gist, ct);
+        GistsCheckedGauge.Set(readyGists.Count);
     }
 
     private async Task CheckGistAsync(Gist gist, CancellationToken ct)
@@ -97,12 +98,9 @@ public class CleanupService(
                 }
                 return;
             }
-            if (gistDebouncer.IsDebounced(gist.Id!.Value)) return;
             var shouldBeDisabled = await GistShouldBeDisabledAsync(gist);
-            var wasAlreadyCorrect =
-                await mariaDbHandler.EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, shouldBeDisabled, ct) &&
-                await chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct);
-            if (!wasAlreadyCorrect) gistDebouncer.ResetDebounceState(gist.Id!.Value);
+            await mariaDbHandler.EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, shouldBeDisabled, ct);
+            await chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct);
         }
         catch (Exception e) when (e is PlaywrightException or TimeoutException)
         {

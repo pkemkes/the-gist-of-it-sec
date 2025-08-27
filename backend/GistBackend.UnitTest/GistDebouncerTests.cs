@@ -1,86 +1,63 @@
+using GistBackend.Handlers;
 using GistBackend.Utils;
+using NSubstitute;
 
 namespace GistBackend.UnitTest;
 
 public class GistDebouncerTests
 {
     [Fact]
-    public void IsDebounced_NewGist_False()
+    public void IsReady_NewGist_False()
     {
-        var debouncer = new GistDebouncer();
+        var dateTimeHandler = new DateTimeHandler();
+        var debouncer = new GistDebouncer(dateTimeHandler);
 
-        var actual = debouncer.IsDebounced(1);
+        var actual = debouncer.IsReady(1, dateTimeHandler.GetUtcNow() - TimeSpan.FromHours(3));
 
         Assert.False(actual);
     }
 
     [Theory]
-    [InlineData(2)]
-    [InlineData(4)]
-    [InlineData(8)]
-    [InlineData(16)]
-    [InlineData(32)]
-    public void IsDebounced_ExponentialBounceCount_False(int bounceCount)
+    [InlineData(          60,      15)]
+    [InlineData(      6 * 60,      30)]
+    [InlineData( 1 * 24 * 60,      90)]
+    [InlineData( 7 * 24 * 60,  3 * 60)]
+    [InlineData(14 * 24 * 60, 12 * 60)]
+    public void IsReady_CheckingTooEarly_False(int minutes, int minDebounceDurationMinutes)
     {
         const int testGistId = 1;
-        var debouncer = new GistDebouncer();
-        var results = Enumerable.Range(0, bounceCount - 1).ToList().Select(_ => debouncer.IsDebounced(testGistId));
+        var now = DateTime.UtcNow;
+        var updated = now - TimeSpan.FromMinutes(minutes / 2);
+        var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
+        dateTimeHandlerMock.GetUtcNow().Returns(now);
+        var debouncer = new GistDebouncer(dateTimeHandlerMock);
+        debouncer.IsReady(testGistId, updated); // First call to set the debounce
+        dateTimeHandlerMock.GetUtcNow().Returns(now + TimeSpan.FromMinutes(minDebounceDurationMinutes - 1));
 
-        var actual = debouncer.IsDebounced(testGistId);
+        var actual = debouncer.IsReady(testGistId, updated);
 
         Assert.False(actual);
     }
 
     [Theory]
-    [InlineData(3)]
-    [InlineData(5)]
-    [InlineData(6)]
-    [InlineData(12)]
-    [InlineData(30)]
-    [InlineData(55)]
-    public void IsDebounced_NotExponentialBounceCount_True(int bounceCount)
+    [InlineData(          60,      45)]
+    [InlineData(      6 * 60,      90)]
+    [InlineData( 1 * 24 * 60,     270)]
+    [InlineData( 7 * 24 * 60,  9 * 60)]
+    [InlineData(14 * 24 * 60, 36 * 60)]
+    public void IsReady_CheckingAfterDebounceDuration_False(int minutes, int maxDebounceDurationMinutes)
     {
         const int testGistId = 1;
-        var debouncer = new GistDebouncer();
-        Enumerable.Range(0, bounceCount - 1).ToList().ForEach(_ => debouncer.IsDebounced(testGistId));
+        var now = DateTime.UtcNow;
+        var updated = now - TimeSpan.FromMinutes(minutes / 2);
+        var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
+        dateTimeHandlerMock.GetUtcNow().Returns(now);
+        var debouncer = new GistDebouncer(dateTimeHandlerMock);
+        debouncer.IsReady(testGistId, updated); // First call to set the debounce
+        dateTimeHandlerMock.GetUtcNow().Returns(now + TimeSpan.FromMinutes(maxDebounceDurationMinutes + 1));
 
-        var actual = debouncer.IsDebounced(testGistId);
+        var actual = debouncer.IsReady(testGistId, updated);
 
         Assert.True(actual);
-    }
-
-    [Theory]
-    [InlineData(1)]
-    [InlineData(12)]
-    [InlineData(13)]
-    [InlineData(14)]
-    [InlineData(15)]
-    [InlineData(299)]
-    public void ResetDebouncedState_BouncedBefore_StateReset(int bounceCount)
-    {
-        const int testGistId = 1;
-        var debouncer = new GistDebouncer();
-        Enumerable.Range(0, bounceCount).ToList().ForEach(_ => debouncer.IsDebounced(testGistId));
-
-        debouncer.ResetDebounceState(testGistId);
-
-        var actual = debouncer.IsDebounced(testGistId);
-        Assert.False(actual);
-    }
-
-    [Fact]
-    public void GetDebouncedCount_SomeGistsAreDebouncedNextTime_NumberOfThoseGists()
-    {
-        var notDebouncedGistIds = new List<int> { 3, 4, 5 };
-        var debouncedGistIds = new List<int> { 6, 7 };
-        var debouncer = new GistDebouncer();
-        notDebouncedGistIds.ForEach(gistId =>
-            Enumerable.Range(0, (int)Math.Pow(2, gistId) - 1).ToList().ForEach(_ => debouncer.IsDebounced(gistId)));
-        debouncedGistIds.ForEach(gistId =>
-            Enumerable.Range(0, (int)Math.Pow(2, gistId)).ToList().ForEach(_ => debouncer.IsDebounced(gistId)));
-
-        var actual = debouncer.GetDebouncedGistsCount();
-
-        Assert.Equal(debouncedGistIds.Count, actual);
     }
 }

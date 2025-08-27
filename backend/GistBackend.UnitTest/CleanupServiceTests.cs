@@ -38,7 +38,7 @@ public class CleanupServiceTests
          await chromaDbHandlerMock
              .DidNotReceive()
              .EnsureGistHasCorrectMetadataAsync(Arg.Any<Gist>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
-         gistDebouncerMock.DidNotReceive().IsDebounced(Arg.Any<int>());
+         gistDebouncerMock.DidNotReceive().IsReady(Arg.Any<int>(), Arg.Any<DateTime>());
      }
 
      [Fact]
@@ -48,7 +48,7 @@ public class CleanupServiceTests
          var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed]);
          var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
          var gistDebouncerMock = Substitute.For<IGistDebouncer>();
-         gistDebouncerMock.IsDebounced(Arg.Any<int>()).Returns(true);
+         gistDebouncerMock.IsReady(Arg.Any<int>(), Arg.Any<DateTime>()).Returns(false);
          var service = CreateCleanupService(
              [testFeed],
              mariaDbHandlerMock,
@@ -204,63 +204,6 @@ public class CleanupServiceTests
              .EnsureGistHasCorrectMetadataAsync(redirectedGist, true, Arg.Any<CancellationToken>());
      }
 
-     [Fact]
-     public async Task StartAsync_GistsDisabledStateWereAlreadyCorrect_DebounceStateNotReset()
-     {
-         var testFeed = new TestFeedData(feedId: 0);
-         var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed]);
-         var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
-         var gistDebouncerMock = Substitute.For<IGistDebouncer>();
-         var service = CreateCleanupService(
-             [testFeed],
-             mariaDbHandlerMock,
-             chromaDbHandlerMock,
-             gistDebouncerMock);
-
-         await service.StartAsync(CancellationToken.None);
-         await Task.Delay(TimeSpan.FromSeconds(2));
-
-         gistDebouncerMock.DidNotReceive().ResetDebounceState(Arg.Any<int>());
-     }
-
-     [Fact]
-     public async Task StartAsync_GistsDisabledStateWereNotAlreadyCorrectInDb_DebounceStateReset()
-     {
-         var testFeed = new TestFeedData(feedId: 0);
-         var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed], ensureCorrectDisabledStateResult: false);
-         var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
-         var gistDebouncerMock = Substitute.For<IGistDebouncer>();
-         var service = CreateCleanupService(
-             [testFeed],
-             mariaDbHandlerMock,
-             chromaDbHandlerMock,
-             gistDebouncerMock);
-
-         await service.StartAsync(CancellationToken.None);
-         await Task.Delay(TimeSpan.FromSeconds(2));
-
-         testFeed.Gists.ForEach(gist => gistDebouncerMock.Received().ResetDebounceState(gist.Id!.Value));
-     }
-
-     [Fact]
-     public async Task StartAsync_GistsDisabledStateWereNotAlreadyCorrectInChromaDb_DebounceStateReset()
-     {
-         var testFeed = new TestFeedData(feedId: 0);
-         var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed]);
-         var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock(ensureCorrectMetadataResult: false);
-         var gistDebouncerMock = Substitute.For<IGistDebouncer>();
-         var service = CreateCleanupService(
-             [testFeed],
-             mariaDbHandlerMock,
-             chromaDbHandlerMock,
-             gistDebouncerMock);
-
-         await service.StartAsync(CancellationToken.None);
-         await Task.Delay(TimeSpan.FromSeconds(2));
-
-         testFeed.Gists.ForEach(gist => gistDebouncerMock.Received().ResetDebounceState(gist.Id!.Value));
-     }
-
 
     private static CleanupService CreateCleanupService(
         List<TestFeedData> testFeeds,
@@ -270,9 +213,14 @@ public class CleanupServiceTests
         IWebCrawlHandler? webCrawlHandlerMock = null,
         IOptions<CleanupServiceOptions>? options = null)
     {
+        if (gistDebouncerMock is null)
+        {
+            gistDebouncerMock = Substitute.For<IGistDebouncer>();
+            gistDebouncerMock.IsReady(Arg.Any<int>(), Arg.Any<DateTime>()).Returns(true);
+        }
         return new CleanupService(
             CreateRssFeedHandler(CreateMockedHttpClient(testFeeds), testFeeds),
-            gistDebouncerMock ?? Substitute.For<IGistDebouncer>(),
+            gistDebouncerMock,
             mariaDbHandlerMock ?? CreateDefaultMariaDbHandlerMock(testFeeds),
             chromaDbHandlerMock ?? CreateDefaultChromaDbHandlerMock(),
             webCrawlHandlerMock ?? CreateWebCrawlHandlerMock(200),
