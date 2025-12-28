@@ -40,7 +40,7 @@ export const GistList = () => {
 
   const handleScroll = () => {
     const element = viewerBodyRef.current;
-    if (!element) return;
+    if (element == null) return;
     const scrollPos = element.scrollTop + element.offsetHeight;
     const maxScroll = element.scrollHeight;
     if (scrollPos >= maxScroll - 200) {
@@ -50,8 +50,8 @@ export const GistList = () => {
 
   useEffect(() => {
     const element = viewerBodyRef.current
-    if (!element) return; 
-    viewerBodyRef.current.addEventListener("scroll", handleScroll);
+    if (element == null) return; 
+    element.addEventListener("scroll", handleScroll);
     return () => element.removeEventListener("scroll", handleScroll);
   }, [lastGist, searchQuery, tags, isFetching]);
 

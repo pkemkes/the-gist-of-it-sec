@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 
 type Props = {
   children: ReactNode,
-  scrollRef?: React.RefObject<HTMLDivElement>
+  scrollRef?: React.RefObject<HTMLDivElement | null>
 }
 
 export const GistViewerBody = ({ children, scrollRef }: Props) => (
