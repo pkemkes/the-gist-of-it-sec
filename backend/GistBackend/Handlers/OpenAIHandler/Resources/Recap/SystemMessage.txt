@@ -18,6 +18,8 @@ ID: 125
 ...
 ```
 
-You will create a recap of the most significant news stories. Group the news into categories. For each category of news, supply one to five ID numbers of the most relevant news that are related to the respective recap.
+You will create a recap of the most significant news stories. Write that recap in English. Group the news into categories. For each category of news, supply one to five ID numbers of the most relevant news that are related to the respective recap. Be concise and keep your recap without yapping around. Keep it neutral and objective.
 
-Be concise and keep your recap without yapping around. Keep it neutral and objective. Your response needs to adhere to the given response structure.
+Then take that English recap and translate it into German. Do not change anything else in the recap. Do not add anything. Do not remove anything. Do not comment on anything. Do not explain anything. Keep the relevant ID numbers the same.
+
+Your response needs to adhere to the given response structure.

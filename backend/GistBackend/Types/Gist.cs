@@ -7,11 +7,9 @@ public record Gist(
     string Reference,
     int FeedId,
     string Author,
-    string Title,
     DateTime Published,
     DateTime Updated,
     Uri Url,
-    string Summary,
     string Tags,
     string SearchQuery,
     int? Id = null
@@ -25,11 +23,9 @@ public record Gist(
         entry.Reference,
         entry.FeedId,
         entry.Author,
-        entry.Title,
         entry.Published,
         entry.Updated,
         entry.Url,
-        summaryAIResponse.Summary,
         string.Join(";;", summaryAIResponse.Tags),
         summaryAIResponse.SearchQuery
     )

@@ -18,7 +18,8 @@ services:
         max-size: 1g
         tag: "{{.Name}}"
     environment:
-      - CORS_ALLOWED_ORIGIN=http://localhost:8081  # NOTE: Change this to your frontend's base URL
+      # - Serilog__MinimumLevel__Default=Debug
+      - CORS_ALLOWED_ORIGIN=http://localhost:5173  # NOTE: Change this to your frontend's base URL
       - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
       - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
       - ChatClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
@@ -28,7 +29,7 @@ services:
       - CustomSearchApiHandlerOptions__ApiKey=${GOOGLE_API_KEY}
       - CustomSearchApiHandlerOptions__EngineId=${GOOGLE_SEARCH_ENGINE_ID}
       - TelegramBotClientHandlerOptions__BotToken=${TELEGRAM_API_KEY}
-      - TelegramServiceOptions__AppBaseUrl=http://localhost:8081  # NOTE: Change this to your base URL
+      - TelegramServiceOptions__AppBaseUrl=http://localhost:5173  # NOTE: Change this to your base URL
       - GistMariaDbHandlerOptions__Server=database
       - GistMariaDbHandlerOptions__User=${DB_GISTSERVICE_USERNAME}
       - GistMariaDbHandlerOptions__Password=${DB_GISTSERVICE_PASSWORD}

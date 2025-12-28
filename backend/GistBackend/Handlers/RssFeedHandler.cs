@@ -2,6 +2,7 @@ using GistBackend.Exceptions;
 using GistBackend.Types;
 using HtmlAgilityPack;
 using static System.Net.WebUtility;
+using static GistBackend.Types.Language;
 
 namespace GistBackend.Handlers;
 
@@ -11,39 +12,19 @@ public interface IRssFeedHandler
     Task ParseFeedAsync(RssFeed rssFeed, CancellationToken ct);
 }
 
-public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
+public partial class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
 {
     public List<RssFeed> Definitions { get; set; } = [
-        new(
-            new Uri("https://krebsonsecurity.com/feed"),
-            ExtractTextKrebsOnSecurity
-        ),
-        new(
-            new Uri("https://www.bleepingcomputer.com/feed/"),
-            ExtractTextBleepingComputer,
-            [ "Security" ]
-        ),
-        new(
-            new Uri("https://www.darkreading.com/rss.xml"),
-            ExtractTextDarkReading
-        ),
-        new(
-            new Uri("https://www.theverge.com/rss/cyber-security/index.xml"),
-            ExtractTextTheVerge
-        ),
-        new(
-            new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"),
-            ExtractTextGData
-        ),
-        new(
-            new Uri("https://therecord.media/feed"),
-            ExtractTextTheRecord
-        ),
-        new(
-            new Uri("https://feeds.arstechnica.com/arstechnica/technology-lab"),
-            ExtractTextArsTechnica,
-            [ "Security" ]
-        )
+        new(new Uri("https://krebsonsecurity.com/feed"), ExtractTextKrebsOnSecurity, En),
+        new(new Uri("https://www.bleepingcomputer.com/feed/"), ExtractTextBleepingComputer, En, ["Security"]),
+        new(new Uri("https://www.darkreading.com/rss.xml"), ExtractTextDarkReading, En),
+        new(new Uri("https://www.theverge.com/rss/cyber-security/index.xml"), ExtractTextTheVerge, En),
+        new(new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"), ExtractTextGData, En),
+        new(new Uri("https://therecord.media/feed"), ExtractTextTheRecord, En),
+        new(new Uri("https://feeds.arstechnica.com/arstechnica/technology-lab"), ExtractTextArsTechnica, En, ["Security"]),
+        new(new Uri("https://www.heise.de/security/feed.xml"), ExtractTextHeise, De),
+        new(new Uri("https://www.security-insider.de/rss/news.xml"), ExtractTextSecurityInsider, De),
+        // new(new Uri("https://rss.golem.de/rss.php?ms=security&feed=ATOM1.0"), ExtractTextGolem)  // Golem has ad accept popup that blocks content
     ];
 
     public Task ParseFeedAsync(RssFeed rssFeed, CancellationToken ct) =>
@@ -220,4 +201,94 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         var decodedText = HtmlDecode(combinedText);
         return decodedText.Trim().Replace("\n", " ");
     }
+
+    private static string ExtractTextHeise(string content)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(content);
+
+        var entryContainer = doc.DocumentNode.SelectSingleNode("//div[@class='article-content']");
+        if (entryContainer == null)
+        {
+            throw new ExtractingEntryTextException("Missing container element");
+        }
+
+        var paragraphsAndHeadings = entryContainer.SelectNodes(".//p | .//h1 | .//h2 | .//h3 | .//h4 | .//h5 | .//h6");
+        if (paragraphsAndHeadings == null || paragraphsAndHeadings.Count == 0)
+        {
+            throw new ExtractingEntryTextException("Missing paragraph or heading elements");
+        }
+
+        var combinedTextContents = string.Join("\n", paragraphsAndHeadings.Select(node => node.InnerText));
+        if (string.IsNullOrWhiteSpace(combinedTextContents))
+        {
+            throw new ExtractingEntryTextException("No text found in container");
+        }
+
+        var decodedText = HtmlDecode(combinedTextContents);
+        return decodedText.Trim();
+    }
+
+    private static string ExtractTextSecurityInsider(string content)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(content);
+
+        var entryContainer = doc.DocumentNode.SelectSingleNode("//article[@class='inf-article-detail']");
+        if (entryContainer == null)
+        {
+            throw new ExtractingEntryTextException("Missing container element");
+        }
+
+        var textContainerSelectors = new List<string> {
+            ".//p[contains(@class, 'inf-text-')]",
+            ".//h1[contains(@class, 'inf-xheading')]",
+            ".//h2[contains(@class, 'inf-xheading')]",
+            ".//h3[contains(@class, 'inf-xheading')]",
+            ".//h4[contains(@class, 'inf-xheading')]",
+            ".//h5[contains(@class, 'inf-xheading')]",
+            ".//h6[contains(@class, 'inf-xheading')]"
+        };
+        var textContainers = entryContainer.SelectNodes(string.Join(" | ", textContainerSelectors));
+        if (textContainers == null || textContainers.Count == 0)
+        {
+            throw new ExtractingEntryTextException("Missing text container elements");
+        }
+
+        var textContent = string.Join("\n", textContainers.Select(node => node.InnerText));
+        if (string.IsNullOrWhiteSpace(textContent))
+        {
+            throw new ExtractingEntryTextException("No text found in containers");
+        }
+
+        var decodedText = HtmlDecode(textContent);
+        return decodedText.Trim();
+    }
+
+    // private static string ExtractTextGolem(string content)
+    // {
+    //     var doc = new HtmlDocument();
+    //     doc.LoadHtml(content);
+    //
+    //     var entryContainer = doc.DocumentNode.SelectSingleNode("//article[contains(@class, 'go-article')]");
+    //     if (entryContainer == null)
+    //     {
+    //         throw new ExtractingEntryTextException("Missing container element");
+    //     }
+    //
+    //     var paragraphsAndHeadings = entryContainer.SelectNodes(".//p | .//h1 | .//h2 | .//h3 | .//h4 | .//h5 | .//h6");
+    //     if (paragraphsAndHeadings == null || paragraphsAndHeadings.Count == 0)
+    //     {
+    //         throw new ExtractingEntryTextException("Missing paragraph or heading elements");
+    //     }
+    //
+    //     var combinedTextContents = string.Join("\n", paragraphsAndHeadings.Select(node => node.InnerText));
+    //     if (string.IsNullOrWhiteSpace(combinedTextContents))
+    //     {
+    //         throw new ExtractingEntryTextException("No text found in container");
+    //     }
+    //
+    //     var decodedText = HtmlDecode(combinedTextContents);
+    //     return decodedText;
+    // }
 }

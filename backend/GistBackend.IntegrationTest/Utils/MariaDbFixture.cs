@@ -75,6 +75,7 @@ public class MariaDbFixture : IAsyncLifetime {
             DELETE FROM RecapsWeekly;
             DELETE FROM Chats;
             DELETE FROM SearchResults;
+            DELETE FROM Summaries;
             DELETE FROM Gists;
             DELETE FROM Feeds;
         """;

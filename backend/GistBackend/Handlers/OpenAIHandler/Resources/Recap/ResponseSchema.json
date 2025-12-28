@@ -1,7 +1,33 @@
 {
   "type": "object",
   "properties": {
-    "recap_sections": {
+    "recap_sections_english": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "recap": {
+            "type": "string"
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "heading",
+          "recap",
+          "related"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "recap_sections_german": {
       "type": "array",
       "items": {
         "type": "object",
@@ -28,6 +54,9 @@
       }
     }
   },
-  "required": ["recap_sections"],
+  "required": [
+    "recap_sections_english",
+    "recap_sections_german"
+  ],
   "additionalProperties": false
 }

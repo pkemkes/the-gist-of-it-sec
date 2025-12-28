@@ -4,13 +4,14 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import gistSlice, { initialState } from "./GistViewer/slice";
 import throttle from "lodash.throttle";
-import { loadDisabledFeeds, loadTimezone, saveStateData } from "./localStorage";
+import { loadDisabledFeeds, loadLanguageMode, loadTimezone, saveStateData } from "./localStorage";
 
 const throttledSaveDisabledFeeds = throttle(() => {
   const state = store.getState().gists;
   saveStateData({
     disabledFeeds: state.disabledFeeds,
     timezone: state.timezone,
+    languageMode: state.languageMode,
   })
 }, 1000);
 
@@ -27,6 +28,7 @@ export const store = configureStore({
     ...initialState, 
     disabledFeeds: loadDisabledFeeds() ?? initialState.disabledFeeds,
     timezone: loadTimezone() ?? initialState.timezone,
+    languageMode: loadLanguageMode() ?? initialState.languageMode,
   } }
 });
 

@@ -8,6 +8,7 @@ using NSubstitute;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TestUtilities;
+using static TestUtilities.TestData;
 using Chat = GistBackend.Types.Chat;
 using TelegramChat = Telegram.Bot.Types.Chat;
 
@@ -179,9 +180,11 @@ public class TelegramServiceTests
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
         mariaDbHandlerMock.GetAllChatsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(chats));
-        var gistsWithFeed = feed.Gists.Select(g => GistWithFeed.FromGistAndFeed(g, feed.RssFeedInfo)).ToList();
-        mariaDbHandlerMock.GetNextFiveGistsWithFeedAsync(0, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(gistsWithFeed));
+        var constructedGists = feed.Gists.Select(g =>
+                ConstructedGist.FromGistFeedAndSummary(g, feed.RssFeedInfo, CreateTestSummary(Language.De, false)))
+            .ToList();
+        mariaDbHandlerMock.GetNextFiveConstructedGistsAsync(0, LanguageMode.Original, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(constructedGists));
         var telegramBotClientHandlerMock = Substitute.For<ITelegramBotClientHandler>();
         var telegramService = CreateTelegramService(mariaDbHandlerMock, telegramBotClientHandlerMock);
 
@@ -190,7 +193,7 @@ public class TelegramServiceTests
 
         foreach (var chat in chats)
         {
-            foreach (var gist in gistsWithFeed)
+            foreach (var gist in constructedGists)
             {
                 await telegramBotClientHandlerMock.Received(1)
                     .SendMessageAsync(chat.Id, Arg.Is<string>(s => s.Contains(gist.Title)), ParseMode.Html);

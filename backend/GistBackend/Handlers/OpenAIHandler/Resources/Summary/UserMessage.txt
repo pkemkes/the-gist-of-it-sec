@@ -1,5 +1,8 @@
-TITLE:
-{title}
+ORIGINAL LANGUAGE: {original_language}
+
+TRANSLATION LANGUAGE: {translation_language}
+
+TITLE: {title}
 
 ARTICLE:
 {article}

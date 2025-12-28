@@ -13,7 +13,9 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
     private readonly Random _random = new();
 
     private static readonly SummaryAIResponse TestSummaryAIResponse = new(
-        "test summary",
+        "test summary english",
+        "test summary german",
+        "translated test title",
         ["test tag 1", "test tag 2", "test tag 3"],
         "test search query"
     );

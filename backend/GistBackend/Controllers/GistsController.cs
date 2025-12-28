@@ -29,12 +29,13 @@ public class GistsController(
         [FromQuery] string? tags = null,
         [FromQuery] string? q = null,
         [FromQuery] string? disabledFeeds = null,
+        [FromQuery] LanguageMode? languageMode = null,
         CancellationToken ct = default)
     {
         try
         {
-            var gists = await mariaDbHandler.GetPreviousGistsWithFeedAsync(take, lastGist, ParseTags(tags), q,
-                ParseDisabledFeeds(disabledFeeds), ct);
+            var gists = await mariaDbHandler.GetPreviousConstructedGistsAsync(take, lastGist, ParseTags(tags), q,
+                ParseDisabledFeeds(disabledFeeds), languageMode, ct);
             return Ok(gists);
         }
         catch (Exception e)
@@ -47,16 +48,19 @@ public class GistsController(
 
     [HttpGet("health")]
     public Task<IActionResult> GetHealthAsync(CancellationToken ct = default) =>
-        GetGistsQueryAsync(1, null, null, null, null, ct);
+        GetGistsQueryAsync(1, null, null, null, null, null, ct);
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetGistWithFeedByIdAsync(int id, CancellationToken ct = default)
+    public async Task<IActionResult> GetGistWithFeedByIdAsync(
+        int id,
+        [FromQuery] LanguageMode? languageMode = null,
+        CancellationToken ct = default)
     {
         try
         {
-            var gistWithFeed = await mariaDbHandler.GetGistWithFeedByIdAsync(id, ct);
-            if (gistWithFeed is null) return NotFound();
-            return Ok(gistWithFeed);
+            var gist = await mariaDbHandler.GetConstructedGistByIdAsync(id, languageMode, ct);
+            if (gist is null) return NotFound();
+            return Ok(gist);
         }
         catch (Exception e)
         {
@@ -67,12 +71,15 @@ public class GistsController(
     }
 
     [HttpGet("{id:int}/similar")]
-    public async Task<IActionResult> GetSimilarGistsWithFeedAsync(int id, [FromQuery] string? disabledFeeds = null,
+    public async Task<IActionResult> GetSimilarGistsWithFeedAsync(
+        int id,
+        [FromQuery] string? disabledFeeds = null,
+        [FromQuery] LanguageMode? languageMode = null,
         CancellationToken ct = default)
     {
         try
         {
-            var gistWithFeed = await mariaDbHandler.GetGistWithFeedByIdAsync(id, ct);
+            var gistWithFeed = await mariaDbHandler.GetConstructedGistByIdAsync(id, languageMode, ct);
             if (gistWithFeed is null) return NotFound();
             var similarityResults =
                 await chromaDbHandler.GetReferenceAndScoreOfSimilarEntriesAsync(gistWithFeed.Reference, 5,
@@ -80,7 +87,7 @@ public class GistsController(
             var gistsWithFeed = new List<SimilarGistWithFeed>();
             foreach (var similarityResult in similarityResults)
             {
-                gistsWithFeed.Add(await GetSimilarGistWithFeedFromDatabaseAsync(similarityResult, ct));
+                gistsWithFeed.Add(await GetSimilarGistWithFeedFromDatabaseAsync(similarityResult, languageMode, ct));
             }
             return Ok(gistsWithFeed);
         }
@@ -93,9 +100,9 @@ public class GistsController(
     }
 
     private async Task<SimilarGistWithFeed> GetSimilarGistWithFeedFromDatabaseAsync(SimilarDocument similarDocument,
-        CancellationToken ct)
+        LanguageMode? languageMode, CancellationToken ct)
     {
-        var gistWithFeed = await mariaDbHandler.GetGistWithFeedByReference(similarDocument.Reference, ct);
+        var gistWithFeed = await mariaDbHandler.GetConstructedGistByReference(similarDocument.Reference, languageMode, ct);
         if (gistWithFeed is null)
         {
             throw new KeyNotFoundException(
@@ -137,31 +144,43 @@ public class GistsController(
     }
 
     [HttpGet("recap/daily")]
-    public Task<IActionResult> GetDailyRecapAsync(CancellationToken ct) => GetRecapAsync(RecapType.Daily, ct);
+    public Task<IActionResult> GetDailyRecapAsync([FromQuery] LanguageMode languageMode, CancellationToken ct) =>
+        GetRecapAsync(RecapType.Daily, languageMode, ct);
 
     [HttpGet("recap/weekly")]
-    public Task<IActionResult> GetWeeklyRecapAsync(CancellationToken ct) => GetRecapAsync(RecapType.Weekly, ct);
+    public Task<IActionResult> GetWeeklyRecapAsync([FromQuery] LanguageMode languageMode, CancellationToken ct) =>
+        GetRecapAsync(RecapType.Weekly, languageMode, ct);
 
-    private async Task<IActionResult> GetRecapAsync(RecapType type, CancellationToken ct)
+    private async Task<IActionResult> GetRecapAsync(RecapType type, LanguageMode languageMode, CancellationToken ct)
     {
         try
         {
+            if (languageMode == LanguageMode.Original)
+            {
+                throw new ArgumentException("Language mode 'Original' is not supported for recaps");
+            }
             var serializedRecap = await mariaDbHandler.GetLatestRecapAsync(type, ct);
             if (serializedRecap is null) return NotFound("No recap found in the database");
-            var recap = JsonSerializer.Deserialize<Recap>(serializedRecap.Recap, SerializerDefaults.JsonOptions);
-            if (recap is null)
+            var serializedRecapSections =
+                languageMode == LanguageMode.En ? serializedRecap.RecapEn : serializedRecap.RecapDe;
+            var recapSections =
+                JsonSerializer.Deserialize<IEnumerable<RecapSection>>(serializedRecapSections,
+                    SerializerDefaults.JsonOptions);
+            if (recapSections is null)
             {
-                throw new JsonException($"Could not deserialize recap from this JSON: {serializedRecap.Recap}");
+                throw new JsonException($"Could not deserialize recap from this JSON: {serializedRecapSections}");
             }
+
+            recapSections = recapSections.ToList();
             var gistTitlesById = new Dictionary<int, string>();
-            var gistIds = recap.RecapSections.SelectMany(s => s.Related).Distinct().ToList();
+            var gistIds = recapSections.SelectMany(s => s.Related).Distinct().ToList();
             foreach (var gistId in gistIds)
             {
-                var gistWithFeed = await mariaDbHandler.GetGistWithFeedByIdAsync(gistId, ct);
+                var gistWithFeed = await mariaDbHandler.GetConstructedGistByIdAsync(gistId, LanguageMode.Original, ct);
                 if (gistWithFeed is not null) gistTitlesById[gistId] = gistWithFeed.Title;
             }
 
-            var deserializedRecapSections = recap.RecapSections.Select(s => new DeserializedRecapSection(s.Heading,
+            var deserializedRecapSections = recapSections.Select(s => new DeserializedRecapSection(s.Heading,
                 s.Recap,
                 s.Related.Where(r => gistTitlesById.ContainsKey(r))
                     .Select(r => new RelatedGistInfo(r, gistTitlesById[r]))));
@@ -172,7 +191,7 @@ public class GistsController(
         catch (Exception e)
         {
             const string message = "Could not get recap from the database";
-            logger?.LogError(ErrorInHttpRequest, e, message);
+            logger?.LogError(CouldNotGetRecap, e, message);
             return Problem(message);
         }
     }

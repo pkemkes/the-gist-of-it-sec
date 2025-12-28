@@ -6,11 +6,15 @@ using GistBackend.Utils;
 
 namespace GistBackend.Types;
 
-public record RssFeed(Uri RssUrl, Func<string, string> ExtractText, IEnumerable<string>? AllowedCategories = null) {
+public record RssFeed(
+    Uri RssUrl,
+    Func<string, string> ExtractText,
+    Language Language,
+    IEnumerable<string>? AllowedCategories = null)
+{
     private SyndicationFeed? SyndicationFeed { get; set; }
     public int? Id { get; set; }
     public string? Title { get; set; }
-    public string? Language { get; set; }
     public IEnumerable<RssEntry>? Entries { get; private set; }
 
     public async Task ParseFeedAsync(HttpClient httpClient, CancellationToken ct)
@@ -26,22 +30,21 @@ public record RssFeed(Uri RssUrl, Func<string, string> ExtractText, IEnumerable<
         using var xmlReader = XmlReader.Create(stringReader);
         SyndicationFeed = SyndicationFeed.Load(xmlReader);
         Title = SyndicationFeed.Title.Text;
-        Language = SyndicationFeed.Language;
     }
 
     public void ParseEntries(int feedId)
     {
-        if (SyndicationFeed is null)
+        if (SyndicationFeed is null || Title is null)
             throw new InvalidOperationException($"{nameof(SyndicationFeed)} is null, need to parse feed first");
         Id = feedId;
         Entries = SyndicationFeed.Items.Select(SyndicationItemToRssEntry)
-            .FilterForAllowedCategories(AllowedCategories);
+            .FilterForAllowedCategories(AllowedCategories)
+            .FilterPaywallArticles(Title ?? "");
     }
 
     public RssFeedInfo ToRssFeedInfo()
     {
         if (Title is null) throw new ArgumentNullException($"{nameof(Title)} is null, need to parse feed first");
-        if (Language is null) throw new ArgumentNullException($"{nameof(Language)} is null, need to parse feed first");
         return new RssFeedInfo(Title, RssUrl, Language) { Id = Id };
     }
 

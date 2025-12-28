@@ -10,41 +10,49 @@ namespace GistBackend.UnitTest;
 
 public class OpenAIHandlerTests
 {
-    private readonly SummaryAIResponse _testSummaryAIResponse =
-        new("test summary", ["test tag 1", "test tag 2", "test tag 3"], "test search query");
+    private readonly SummaryAIResponse _testAIResponse =
+        new("test summary english", "test summary german", "test title translated",
+            ["test tag 1", "test tag 2", "test tag 3"], "test search query");
+
+    private const Language TestLanguage = Language.De;
     private const string TestTitle = "test title";
     private const string TestText = "test text";
-    private readonly Recap _testRecap = new([
-        new RecapSection("first test heading", "first test recap", new List<int> { 11, 12, 13 }),
-        new RecapSection("second test heading", "second test recap", new List<int> { 21, 22, 23 })
+    private readonly RecapAIResponse _testRecapAIResponse = new([
+        new RecapSection("first en test heading", "first en test recap", new List<int> { 11, 12, 13 }),
+        new RecapSection("second en test heading", "second en test recap", new List<int> { 21, 22, 23 })
+    ], [
+        new RecapSection("first de test heading", "first de test recap", new List<int> { 11, 12, 13 }),
+        new RecapSection("second de test heading", "second de test recap", new List<int> { 21, 22, 23 })
     ]);
-    private readonly List<Gist> _testGists = [
+    private readonly List<ConstructedGist> _testGists = [
         new(
-            "test reference",
             1,
-            "test author",
+            "test reference",
+            "test feed title",
+            "https://test.feed-url.com/",
             "test title",
-            new DateTime(),
-            new DateTime(),
-            new Uri("https://test.url.com/"),
+            "test author",
+            "https://test.url.com/",
+            new DateTime().ToDatabaseCompatibleString(),
+            new DateTime().ToDatabaseCompatibleString(),
             "test summary",
-            "test tag 1;;test tag 2",
-            "test search query",
-            1
+            ["test tag 1", "test tag 2"],
+            "test search query"
         ),
 
         new(
+            2,
             "other test reference",
-            1,
-            "other test author",
+            "test feed title",
+            "https://test.feed-url.com/",
             "other test title",
-            new DateTime(),
-            new DateTime(),
-            new Uri("https://other.test.url.com/"),
+            "other test author",
+            "https://test.url.com/other",
+            new DateTime().ToDatabaseCompatibleString(),
+            new DateTime().ToDatabaseCompatibleString(),
             "other test summary",
-            "test tag 3;;test tag 4",
-            "other test search query",
-            1
+            ["other test tag 1", "other test tag 2"],
+            "other test search query"
         )
     ];
 
@@ -52,12 +60,12 @@ public class OpenAIHandlerTests
     public async Task GenerateSummaryTagsAndQueryAsync_ValidResponseFromAPI_ExpectedAIResponseParsed()
     {
         var ct = CancellationToken.None;
-        var chatClientHandler = CreateSummaryChatClientHandler(GetResponseText(_testSummaryAIResponse), ct);
+        var chatClientHandler = CreateSummaryChatClientHandler(GetResponseText(_testAIResponse), ct);
         var handler = new OpenAIHandler(Substitute.For<IEmbeddingClientHandler>(), chatClientHandler);
 
-        var actual = await handler.GenerateSummaryTagsAndQueryAsync(TestTitle, TestText, ct);
+        var actual = await handler.GenerateSummaryAIResponseAsync(TestLanguage, TestTitle, TestText, ct);
 
-        Assert.Equivalent(_testSummaryAIResponse, actual);
+        Assert.Equivalent(_testAIResponse, actual);
     }
 
     [Theory]
@@ -72,14 +80,14 @@ public class OpenAIHandlerTests
         var handler = new OpenAIHandler(Substitute.For<IEmbeddingClientHandler>(), chatClientHandler);
 
         await Assert.ThrowsAsync<ExternalServiceException>(() =>
-            handler.GenerateSummaryTagsAndQueryAsync(TestTitle, TestText, ct));
+            handler.GenerateSummaryAIResponseAsync(TestLanguage, TestTitle, TestText, ct));
     }
 
     [Fact]
     public async Task GenerateDailyRecapAsync_ValidResponseFromAPI_ExpectedAIResponseParsed()
     {
         var ct = CancellationToken.None;
-        var chatClientHandler = CreateRecapChatClientHandler(GetResponseText(_testRecap), RecapType.Daily, ct);
+        var chatClientHandler = CreateRecapChatClientHandler(GetResponseText(_testRecapAIResponse), RecapType.Daily, ct);
         var handler = new OpenAIHandler(Substitute.For<IEmbeddingClientHandler>(), chatClientHandler);
 
         var actual = await handler.GenerateDailyRecapAsync(_testGists, ct);
@@ -105,7 +113,7 @@ public class OpenAIHandlerTests
     public async Task GenerateWeeklyRecapAsync_ValidResponseFromAPI_ExpectedAIResponseParsed()
     {
         var ct = CancellationToken.None;
-        var chatClientHandler = CreateRecapChatClientHandler(GetResponseText(_testRecap), RecapType.Weekly, ct);
+        var chatClientHandler = CreateRecapChatClientHandler(GetResponseText(_testRecapAIResponse), RecapType.Weekly, ct);
         var handler = new OpenAIHandler(Substitute.For<IEmbeddingClientHandler>(), chatClientHandler);
 
         var actual = await handler.GenerateWeeklyRecapAsync(_testGists, ct);
@@ -131,44 +139,40 @@ public class OpenAIHandlerTests
     {
         var chatClientHandlerMock = Substitute.For<IChatClientHandler>();
         chatClientHandlerMock.CompleteChatAsync(
-            Arg.Is<IEnumerable<ChatMessage>>(messages => AreExpectedSummaryMessages(messages)),
+            Arg.Is<List<ChatMessage>>(messages => AreExpectedSummaryMessages(messages)),
             Arg.Any<ChatCompletionOptions>(),
             ct
         ).Returns(Task.FromResult(responseText));
         return chatClientHandlerMock;
     }
 
-    private static bool AreExpectedSummaryMessages(IEnumerable<ChatMessage> messages)
-    {
-        messages = messages.ToArray();
-        return messages.Count() == 2
-               && messages.First().GetType() == typeof(SystemChatMessage)
-               && messages.First().Content.Single().Text
-                   .StartsWith(
-                       "You are an extremely experienced IT security news analyst. " +
-                       "The user will send you a message with a TITLE and an ARTICLE."
-                   )
-               && messages.Last().GetType() == typeof(UserChatMessage)
-               && messages.Last().Content.Single().Text.StartsWith("TITLE:");
-    }
+    private static bool AreExpectedSummaryMessages(List<ChatMessage> messages) =>
+        messages.Count == 2
+        && messages.First().GetType() == typeof(SystemChatMessage)
+        && messages.First().Content.Single().Text
+            .StartsWith(
+                "You are an extremely experienced IT security news analyst. " +
+                "The user will send you a message with a TITLE and an ARTICLE."
+            )
+        && messages.Last().GetType() == typeof(UserChatMessage)
+        && messages.Last().Content.Single().Text.StartsWith("ORIGINAL LANGUAGE:");
 
     private IChatClientHandler CreateRecapChatClientHandler(string responseText, RecapType recapType,
         CancellationToken ct)
     {
         var chatClientHandlerMock = Substitute.For<IChatClientHandler>();
         chatClientHandlerMock.CompleteChatAsync(
-            Arg.Is<IEnumerable<ChatMessage>>(messages => AreExpectedRecapMessages(messages, recapType)),
+            Arg.Is<List<ChatMessage>>(messages => AreExpectedRecapMessages(messages, recapType)),
             Arg.Any<ChatCompletionOptions>(),
             ct
         ).Returns(Task.FromResult(responseText));
         return chatClientHandlerMock;
     }
 
-    private bool AreExpectedRecapMessages(IEnumerable<ChatMessage> messages, RecapType recapType)
+    private bool AreExpectedRecapMessages(List<ChatMessage> messages, RecapType recapType)
     {
-        messages = messages.ToArray();
         var timeFrameDesc = recapType == RecapType.Daily ? "24 hours" : "7 days";
-        return messages.Count() == 2
+        return messages.Count == 2
                && messages.First().GetType() == typeof(SystemChatMessage)
                && messages.First().Content.Single().Text
                    .StartsWith(
@@ -179,7 +183,7 @@ public class OpenAIHandlerTests
                && messages.Last().Content.Single().Text.StartsWith($"TITLE: {_testGists.First().Title}");
     }
 
-    private string GetResponseText(object objectToSerialize)
+    private static string GetResponseText(object objectToSerialize)
     {
         var responseText = JsonSerializer.Serialize(objectToSerialize, SerializerDefaults.JsonOptions);
         Assert.NotNull(responseText);

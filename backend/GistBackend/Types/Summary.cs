@@ -3,11 +3,13 @@ using System.Text.Json.Serialization;
 namespace GistBackend.Types;
 
 [method: JsonConstructor]
-public record RssFeedInfo(
-    string Title,
-    Uri RssUrl,
+public record Summary(
+    int GistId,
     Language Language,
+    bool IsTranslated,
+    string Title,
+    string SummaryText,
     int? Id = null
-) {
+){
     public int? Id { get; set; } = Id;
-};
+}

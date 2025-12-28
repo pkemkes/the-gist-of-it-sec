@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
+using GistBackend.Utils;
 
 namespace GistBackend.Types;
 
 [method: JsonConstructor]
-public record GistWithFeed(
+public record ConstructedGist(
     int Id,
     string Reference,
     string FeedTitle,
@@ -17,7 +18,7 @@ public record GistWithFeed(
     string[] Tags,
     string SearchQuery)
 {
-    public GistWithFeed(
+    public ConstructedGist(
         int Id,
         string Reference,
         string FeedTitle,
@@ -47,19 +48,19 @@ public record GistWithFeed(
     {
     }
 
-    public static GistWithFeed FromGistAndFeed(Gist gist, RssFeedInfo feedInfo)
+    public static ConstructedGist FromGistFeedAndSummary(Gist gist, RssFeedInfo feedInfo, Summary summary)
     {
-        return new GistWithFeed(
+        return new ConstructedGist(
             gist.Id!.Value,
             gist.Reference,
             feedInfo.Title,
             feedInfo.RssUrl.ToString(),
-            gist.Title,
+            summary.Title,
             gist.Author,
             gist.Url.ToString(),
-            gist.Published.ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ"), // 6 decimal places to match database
-            gist.Updated.ToString("yyyy-MM-ddTHH:mm:ss.ffffffZ"), // 6 decimal places to match database
-            gist.Summary,
+            gist.Published.ToDatabaseCompatibleString(),
+            gist.Updated.ToDatabaseCompatibleString(),
+            summary.SummaryText,
             gist.Tags,
             gist.SearchQuery
         );

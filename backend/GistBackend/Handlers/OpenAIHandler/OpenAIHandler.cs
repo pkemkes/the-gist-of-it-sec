@@ -13,9 +13,11 @@ namespace GistBackend.Handlers.OpenAiHandler;
 
 public interface IOpenAIHandler {
     public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct);
-    public Task<SummaryAIResponse> GenerateSummaryTagsAndQueryAsync(string title, string text, CancellationToken ct);
-    public Task<Recap> GenerateDailyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct);
-    public Task<Recap> GenerateWeeklyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct);
+
+    public Task<SummaryAIResponse> GenerateSummaryAIResponseAsync(Language feedLanguage, string title, string text,
+        CancellationToken ct);
+    public Task<RecapAIResponse> GenerateDailyRecapAsync(IEnumerable<ConstructedGist> gists, CancellationToken ct);
+    public Task<RecapAIResponse> GenerateWeeklyRecapAsync(IEnumerable<ConstructedGist> gists, CancellationToken ct);
 }
 
 public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChatClientHandler chatClientHandler,
@@ -34,9 +36,10 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
     public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct) =>
         embeddingClientHandler.GenerateEmbeddingAsync(text, ct);
 
-    public async Task<SummaryAIResponse> GenerateSummaryTagsAndQueryAsync(string title, string text, CancellationToken ct)
+    public async Task<SummaryAIResponse> GenerateSummaryAIResponseAsync(Language feedLanguage, string title,
+        string text, CancellationToken ct)
     {
-        var messages = await CreateSummaryChatMessagesAsync(title, text, ct);
+        var messages = await CreateSummaryChatMessagesAsync(feedLanguage, title, text, ct);
         var completionOptions = await GetSummaryChatCompletionOptionsAsync();
         var result = await chatClientHandler.CompleteChatAsync(messages, completionOptions, ct);
         try
@@ -53,14 +56,11 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         }
     }
 
-    private async Task<IEnumerable<ChatMessage>> CreateSummaryChatMessagesAsync(string title, string text,
-        CancellationToken ct)
-    {
-        return [
-            await CreateSummarySystemMessageAsync(await GetTagsAsync(), ct),
-            await CreateSummaryUserMessageAsync(title, text, ct)
-        ];
-    }
+    private async Task<List<ChatMessage>> CreateSummaryChatMessagesAsync(Language feedLanguage, string title,
+        string text, CancellationToken ct) => [
+        await CreateSummarySystemMessageAsync(await GetTagsAsync(), ct),
+        await CreateSummaryUserMessageAsync(feedLanguage, title, text, ct)
+    ];
 
     private static async Task<SystemChatMessage> CreateSummarySystemMessageAsync(IEnumerable<string> tags,
         CancellationToken ct)
@@ -73,11 +73,13 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         return new SystemChatMessage(messageContent);
     }
 
-    private static async Task<UserChatMessage> CreateSummaryUserMessageAsync(string title, string text,
+    private static async Task<UserChatMessage> CreateSummaryUserMessageAsync(Language feedLanguage, string title, string text,
         CancellationToken ct)
     {
         var messageTemplate = await LoadTextFromFileAsync("Summary", "UserMessage.txt", ct);
         var messageContent = messageTemplate
+            .Replace("{original_language}", feedLanguage.ToFullName())
+            .Replace("{translation_language}", feedLanguage.Invert().ToFullName())
             .Replace("{title}", title)
             .Replace("{article}", text);
         return new UserChatMessage(messageContent);
@@ -91,32 +93,13 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         return tags;
     }
 
-    private static Task<ChatCompletionOptions> LoadSummaryChatCompletionOptionsAsync() =>
-        LoadChatCompletionOptionsAsync("Summary", "news_article_key_take_aways");
-
-    private static Task<ChatCompletionOptions> LoadRecapChatCompletionOptionsAsync() =>
-        LoadChatCompletionOptionsAsync("Recap", "news_articles_recap");
-
-    private static async Task<ChatCompletionOptions> LoadChatCompletionOptionsAsync(string directory, string name)
-    {
-        var responseSchema = await LoadTextFromFileAsync(directory, "ResponseSchema.json");
-        var responseSchemaBytes = BinaryData.FromBytes(Encoding.UTF8.GetBytes(responseSchema));
-        return new ChatCompletionOptions {
-            ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
-                name,
-                responseSchemaBytes,
-                jsonSchemaIsStrict: true
-            )
-        };
-    }
-
-    public Task<Recap> GenerateDailyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct) =>
+    public Task<RecapAIResponse> GenerateDailyRecapAsync(IEnumerable<ConstructedGist> gists, CancellationToken ct) =>
         GenerateRecapAsync(RecapType.Daily, gists, ct);
 
-    public Task<Recap> GenerateWeeklyRecapAsync(IEnumerable<Gist> gists, CancellationToken ct) =>
+    public Task<RecapAIResponse> GenerateWeeklyRecapAsync(IEnumerable<ConstructedGist> gists, CancellationToken ct) =>
         GenerateRecapAsync(RecapType.Weekly, gists, ct);
 
-    private async Task<Recap> GenerateRecapAsync(RecapType recapType, IEnumerable<Gist> gists,
+    private async Task<RecapAIResponse> GenerateRecapAsync(RecapType recapType, IEnumerable<ConstructedGist> gists,
         CancellationToken ct)
     {
         var messages = await CreateRecapChatMessagesAsync(recapType, gists, ct);
@@ -124,7 +107,7 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         var result = await chatClientHandler.CompleteChatAsync(messages, completionOptions, ct);
         try
         {
-            var recap = JsonSerializer.Deserialize<Recap>(result, SerializerDefaults.JsonOptions);
+            var recap = JsonSerializer.Deserialize<RecapAIResponse>(result, SerializerDefaults.JsonOptions);
             if (recap is null) throw new ExternalServiceException("Could not parse recap AI response");
             return recap;
         }
@@ -136,8 +119,8 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         }
     }
 
-    private static async Task<IEnumerable<ChatMessage>> CreateRecapChatMessagesAsync(RecapType recapType,
-        IEnumerable<Gist> gists, CancellationToken ct)
+    private static async Task<List<ChatMessage>> CreateRecapChatMessagesAsync(RecapType recapType,
+        IEnumerable<ConstructedGist> gists, CancellationToken ct)
     {
         var messages = new List<ChatMessage> {
             await CreateRecapSystemMessageAsync(recapType, ct),
@@ -160,7 +143,7 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         return new SystemChatMessage(messageContent);
     }
 
-    private static async Task<UserChatMessage> CreateRecapUserMessageAsync(IEnumerable<Gist> gists,
+    private static async Task<UserChatMessage> CreateRecapUserMessageAsync(IEnumerable<ConstructedGist> gists,
         CancellationToken ct)
     {
         var messageTemplate = await LoadTextFromFileAsync("Recap", "UserMessage.txt", ct);
@@ -171,6 +154,25 @@ public class OpenAIHandler(IEmbeddingClientHandler embeddingClientHandler, IChat
         );
         var messageContent = string.Join("\n", gistDescriptions);
         return new UserChatMessage(messageContent);
+    }
+
+    private static Task<ChatCompletionOptions> LoadSummaryChatCompletionOptionsAsync() =>
+        LoadChatCompletionOptionsAsync("Summary", "news_article_key_take_aways");
+
+    private static Task<ChatCompletionOptions> LoadRecapChatCompletionOptionsAsync() =>
+        LoadChatCompletionOptionsAsync("Recap", "news_articles_recap");
+
+    private static async Task<ChatCompletionOptions> LoadChatCompletionOptionsAsync(string directory, string name)
+    {
+        var responseSchema = await LoadTextFromFileAsync(directory, "ResponseSchema.json");
+        var responseSchemaBytes = BinaryData.FromBytes(Encoding.UTF8.GetBytes(responseSchema));
+        return new ChatCompletionOptions {
+            ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
+                name,
+                responseSchemaBytes,
+                jsonSchemaIsStrict: true
+            )
+        };
     }
 
     private static Task<string> LoadTextFromFileAsync(string directoryName, string fileName,

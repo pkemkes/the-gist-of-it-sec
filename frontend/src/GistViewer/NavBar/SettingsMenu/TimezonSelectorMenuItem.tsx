@@ -34,10 +34,10 @@ export const TimezoneSelectorMenuItem = () => {
 
   return <MenuItem disableRipple disableTouchRipple>
     <FormControl sx={{ my: "0.5rem", width: "20rem" }}>
-      <InputLabel id="demo-simple-select-label">Timezone</InputLabel>
+      <InputLabel id="timezone-select-label">Timezone</InputLabel>
       <Select
-        labelId="demo-simple-select-label"
-        id="demo-simple-select"
+        labelId="timezone-select-label"
+        id="timezone-select"
         value={ parseTimezone(selectedTimezone).value }
         label="Timezone"
         onChange={ handleChange }

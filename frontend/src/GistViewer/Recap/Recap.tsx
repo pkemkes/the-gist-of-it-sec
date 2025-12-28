@@ -8,14 +8,17 @@ import { ErrorMessage } from "../ErrorMessage";
 import { RelatedGist } from "./RelatedGist";
 import { ToLocaleString } from "../utils";
 import { useAppSelector } from "../../store";
-import { selectTimezone } from "../slice";
+import { selectLanguageMode, selectTimezone } from "../slice";
+import { LanguageMode } from "../../types";
 
 export const Recap = () => {
 	const [searchParams, _] = useSearchParams();
   const timezone = useAppSelector(selectTimezone);
+  let languageMode = useAppSelector(selectLanguageMode);
+  if (languageMode == LanguageMode.ORIGINAL) languageMode = LanguageMode.ENGLISH;
 	const recapType = searchParams.get("recap") == "daily" ? "daily" : "weekly";
 
-  const { data, error, isFetching } = backendApi.useGetRecapQuery({ type: recapType });
+  const { data, error, isFetching } = backendApi.useGetRecapQuery({ type: recapType, languageMode });
 
   if (error || data == undefined && !isFetching) {
     return <GistViewerBody>

@@ -4,7 +4,7 @@ import { GistEndCard } from "../GistEndCard";
 import { LoadingBar } from "../LoadingBar";
 import { ErrorMessage } from "../ErrorMessage";
 import { useAppSelector } from "../../store";
-import { selectDisabledFeeds } from "../slice";
+import { selectDisabledFeeds, selectLanguageMode } from "../slice";
 
 interface SimilarGistListProps {
   gistId: number
@@ -12,7 +12,8 @@ interface SimilarGistListProps {
 
 export const SimilarGistList = ({ gistId }: SimilarGistListProps) => {
   const disabledFeeds = useAppSelector(selectDisabledFeeds);
-  const { data, error, isFetching } = backendApi.useGetSimilarGistsQuery({ id: gistId, disabledFeeds });
+  const languageMode = useAppSelector(selectLanguageMode);
+  const { data, error, isFetching } = backendApi.useGetSimilarGistsQuery({ id: gistId, disabledFeeds, languageMode });
 
   if (error || data == undefined && !isFetching) {
     return <ErrorMessage />;

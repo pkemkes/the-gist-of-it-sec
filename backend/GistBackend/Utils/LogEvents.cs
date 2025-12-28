@@ -12,12 +12,17 @@ public static class LogEvents
 
     public static readonly EventId GistInserted = new(++_eventId, nameof(GistInserted));
     public static readonly EventId GistUpdated = new(++_eventId, nameof(GistUpdated));
+    public static readonly EventId OpeningTransactionFailed = new(++_eventId, nameof(OpeningTransactionFailed));
+    public static readonly EventId CommittingTransactionFailed = new(++_eventId, nameof(CommittingTransactionFailed));
     public static readonly EventId GettingFeedInfoByUrlFailed = new(++_eventId, nameof(GettingFeedInfoByUrlFailed));
     public static readonly EventId InsertingFeedInfoFailed = new(++_eventId, nameof(InsertingFeedInfoFailed));
     public static readonly EventId UpdatingFeedInfoFailed = new(++_eventId, nameof(UpdatingFeedInfoFailed));
     public static readonly EventId GettingGistByReferenceFailed = new(++_eventId, nameof(GettingGistByReferenceFailed));
+    public static readonly EventId EnsuringSearchResultsAreInDbFailed = new(++_eventId, nameof(EnsuringSearchResultsAreInDbFailed));
     public static readonly EventId InsertingGistFailed = new(++_eventId, nameof(InsertingGistFailed));
+    public static readonly EventId InsertingSummaryFailed = new(++_eventId, nameof(InsertingSummaryFailed));
     public static readonly EventId UpdatingGistFailed = new(++_eventId, nameof(UpdatingGistFailed));
+    public static readonly EventId UpdatingSummaryFailed = new(++_eventId, nameof(UpdatingSummaryFailed));
     public static readonly EventId DatabaseOperationRetry = new(++_eventId, nameof(DatabaseOperationRetry));
     public static readonly EventId FetchingPageContentFailed = new(++_eventId, nameof(FetchingPageContentFailed));
     public static readonly EventId ExtractingPageContentFailed = new(++_eventId, nameof(ExtractingPageContentFailed));
@@ -32,6 +37,8 @@ public static class LogEvents
 
     public static readonly EventId DocumentInserted = new(++_eventId, nameof(DocumentInserted));
 
+    public static readonly EventId GenerateChatCompletion = new(++_eventId, nameof(GenerateChatCompletion));
+    public static readonly EventId ChatCompletionGenerated = new(++_eventId, nameof(ChatCompletionGenerated));
     public static readonly EventId SummaryAIResponseJsonParsingError = new(++_eventId, nameof(SummaryAIResponseJsonParsingError));
     public static readonly EventId RecapAIResponseJsonParsingError = new(++_eventId, nameof(RecapAIResponseJsonParsingError));
 
@@ -44,6 +51,7 @@ public static class LogEvents
     public static readonly EventId WeeklyRecapCreated = new(++_eventId, nameof(WeeklyRecapCreated));
     public static readonly EventId CheckIfRecapExistsFailed = new(++_eventId, nameof(CheckIfRecapExistsFailed));
     public static readonly EventId GettingGistsForRecapFailed = new(++_eventId, nameof(GettingGistsForRecapFailed));
+    public static readonly EventId CouldNotGetRecap = new(++_eventId, nameof(CouldNotGetRecap));
 
     public static readonly EventId ChangedDisabledStateOfGistInDb = new(++_eventId, nameof(ChangedDisabledStateOfGistInDb));
     public static readonly EventId ChangedMetadataOfGistInChromaDb = new(++_eventId, nameof(ChangedMetadataOfGistInChromaDb));

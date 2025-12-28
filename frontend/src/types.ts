@@ -51,3 +51,9 @@ export interface Recap {
   recapSections: RecapSection[],
   id: number,
 }
+
+export enum LanguageMode {
+  ORIGINAL = "Original",
+  ENGLISH = "En",
+  GERMAN = "De",
+}
