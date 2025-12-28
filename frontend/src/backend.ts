@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Gist, FeedInfo, SimilarGist, SearchResult, Recap, LanguageMode } from "./types";
+import { Gist, FeedInfo, SimilarGist, Recap, LanguageMode } from "./types";
 
 interface GistsQueryParameters {
   lastGist: number | undefined,
@@ -76,9 +76,6 @@ export const backendApi = createApi({
     getSimilarGists: builder.query<SimilarGist[], SimilarGistsQueryParameters>({
       query: ({ id, disabledFeeds, languageMode }) => 
         `${id}/similar?disabledFeeds=${JoinDisabledFeedsParam(disabledFeeds)}&languageMode=${languageMode}`,
-    }),
-    getSearchResults: builder.query<SearchResult[], { id: number }>({
-      query: ({ id }) => `${id}/searchResults`,
     }),
     getRecap: builder.query<Recap, { type: string, languageMode: LanguageMode }>({
       query: ({ type, languageMode }) => `recap/${type}?languageMode=${languageMode}`,

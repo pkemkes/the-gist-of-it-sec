@@ -24,12 +24,6 @@ public interface IMariaDbHandler {
     Task InsertSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct);
     Task UpdateGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct);
     Task UpdateSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct);
-    Task<List<GoogleSearchResult>> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct);
-    Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct);
-    Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
-        CancellationToken ct);
-    Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
-        CancellationToken ct);
     Task<bool> DailyRecapExistsAsync(CancellationToken ct);
     Task<bool> WeeklyRecapExistsAsync(CancellationToken ct);
     Task<List<ConstructedGist>> GetConstructedGistsOfLastDayAsync(CancellationToken ct);
@@ -156,7 +150,7 @@ public class MariaDbHandler : IMariaDbHandler
     public async Task<Gist?> GetGistByReferenceAsync(string reference, CancellationToken ct)
     {
         const string query = """
-            SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, SearchQuery, Id
+            SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, Id
                 FROM Gists WHERE Reference = @Reference
         """;
         var command = new CommandDefinition(query, new { Reference = reference }, cancellationToken: ct);
@@ -189,8 +183,7 @@ public class MariaDbHandler : IMariaDbHandler
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
                 s.SummaryText as Summary,
-                g.Tags as Tags,
-                g.SearchQuery as SearchQuery
+                g.Tags as Tags
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
@@ -230,9 +223,9 @@ public class MariaDbHandler : IMariaDbHandler
     {
         const string query = """
             INSERT INTO Gists
-                (Reference, FeedId, Author, Published, Updated, Url, Tags, SearchQuery)
+                (Reference, FeedId, Author, Published, Updated, Url, Tags)
                 VALUES (
-                    @Reference, @FeedId, @Author, @Published, @Updated, @Url, @Tags, @SearchQuery
+                    @Reference, @FeedId, @Author, @Published, @Updated, @Url, @Tags
                 );
             SELECT LAST_INSERT_ID();
         """;
@@ -303,7 +296,7 @@ public class MariaDbHandler : IMariaDbHandler
         const string query = """
             UPDATE Gists
                 SET FeedId = @FeedId, Author = @Author, Published = @Published, Updated = @Updated, Url = @Url,
-                    Tags = @Tags, SearchQuery = @SearchQuery
+                    Tags = @Tags
                 WHERE Reference = @Reference;
         """;
         var command = new CommandDefinition(query, gist, handle.Transaction, cancellationToken: ct);
@@ -338,82 +331,6 @@ public class MariaDbHandler : IMariaDbHandler
         {
             _logger?.LogError(UpdatingSummaryFailed, e, "Updating summary failed");
             throw;
-        }
-    }
-
-    public async Task<List<GoogleSearchResult>> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct)
-    {
-        const string query = """
-            SELECT GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl, Id FROM SearchResults
-                WHERE GistId = @GistId;
-        """;
-        var command = new CommandDefinition(query, new { GistId = gistId }, cancellationToken: ct);
-
-        try
-        {
-            await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<GoogleSearchResult>(command).WithDeadlockRetry(_logger)).ToList();
-        }
-        catch (MySqlException e)
-        {
-            _logger?.LogError(GettingSearchResultsFailed, e, "Getting search results failed");
-            throw;
-        }
-    }
-
-    public async Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct)
-    {
-        await using var handle = await OpenTransactionAsync(ct);
-        await InsertSearchResultsAsync(searchResults, handle, ct);
-        await CommitTransactionAsync(handle.Transaction, ct);
-    }
-
-    public async Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
-        CancellationToken ct)
-    {
-        foreach (var searchResult in searchResults) await InsertSearchResultAsync(searchResult, handle, ct);
-    }
-
-    public async Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct)
-    {
-        await using var handle = await OpenTransactionAsync(ct);
-        await UpdateSearchResultsAsync(searchResults, handle, ct);
-        await CommitTransactionAsync(handle.Transaction, ct);
-    }
-
-    public async Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
-        CancellationToken ct)
-    {
-        var searchResultsArray = searchResults.ToArray();
-        await DeleteSearchResultsForGistIdAsync(searchResultsArray.First().GistId, handle, ct);
-        foreach (var searchResult in searchResultsArray)
-        {
-            await InsertSearchResultAsync(searchResult, handle, ct);
-        }
-    }
-
-    private async Task InsertSearchResultAsync(GoogleSearchResult searchResult,  TransactionHandle handle,
-        CancellationToken ct)
-    {
-        const string query = """
-            INSERT INTO SearchResults
-                (GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl)
-                VALUES (@GistId, @Title, @Snippet, @Url, @DisplayUrl, @ThumbnailUrl)
-        """;
-        var command = new CommandDefinition(query, searchResult, handle.Transaction, cancellationToken: ct);
-        await handle.Connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
-    }
-
-    private async Task DeleteSearchResultsForGistIdAsync(int gistId,  TransactionHandle handle, CancellationToken ct)
-    {
-        const string query = "DELETE FROM SearchResults WHERE GistId = @GistId";
-        var command = new CommandDefinition(query, new { GistId = gistId }, handle.Transaction, cancellationToken: ct);
-        var rowsAffected = await handle.Connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
-        if (rowsAffected == 0)
-        {
-            _logger?.LogError(DeletingSearchResultsFailed,
-                "Did not delete any search results for gist with ID {GistId} failed", gistId);
-            throw new DatabaseOperationException("Did not delete any search results");
         }
     }
 
@@ -470,8 +387,7 @@ public class MariaDbHandler : IMariaDbHandler
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
                 s.SummaryText as Summary,
-                g.Tags as Tags,
-                g.SearchQuery as SearchQuery
+                g.Tags as Tags
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
@@ -531,7 +447,7 @@ public class MariaDbHandler : IMariaDbHandler
     public async Task<List<Gist>> GetAllGistsAsync(CancellationToken ct)
     {
         const string query =
-            "SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, SearchQuery, Id FROM Gists";
+            "SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, Id FROM Gists";
         var command = new CommandDefinition(query, cancellationToken: ct);
 
         try
@@ -615,8 +531,7 @@ public class MariaDbHandler : IMariaDbHandler
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
                 s.SummaryText as Summary,
-                g.Tags as Tags,
-                g.SearchQuery as SearchQuery
+                g.Tags as Tags
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
@@ -715,8 +630,7 @@ public class MariaDbHandler : IMariaDbHandler
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
                 s.SummaryText as Summary,
-                g.Tags as Tags,
-                g.SearchQuery as SearchQuery
+                g.Tags as Tags
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
@@ -892,8 +806,7 @@ public class MariaDbHandler : IMariaDbHandler
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
                 s.SummaryText as Summary,
-                g.Tags as Tags,
-                g.SearchQuery as SearchQuery
+                g.Tags as Tags
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id

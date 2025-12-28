@@ -15,8 +15,7 @@ public record ConstructedGist(
     string Published,
     string Updated,
     string Summary,
-    string[] Tags,
-    string SearchQuery)
+    string[] Tags)
 {
     public ConstructedGist(
         int Id,
@@ -29,8 +28,7 @@ public record ConstructedGist(
         string Published,
         string Updated,
         string Summary,
-        string Tags,
-        string SearchQuery)
+        string Tags)
         : this(
             Id,
             Reference,
@@ -42,8 +40,7 @@ public record ConstructedGist(
             Published,
             Updated,
             Summary,
-            Tags.Split(";;", StringSplitOptions.RemoveEmptyEntries),
-            SearchQuery
+            Tags.Split(";;", StringSplitOptions.RemoveEmptyEntries)
         )
     {
     }
@@ -61,8 +58,7 @@ public record ConstructedGist(
             gist.Published.ToDatabaseCompatibleString(),
             gist.Updated.ToDatabaseCompatibleString(),
             summary.SummaryText,
-            gist.Tags,
-            gist.SearchQuery
+            gist.Tags
         );
     }
 };

@@ -4,6 +4,5 @@ public record SummaryAIResponse(
     string SummaryEnglish,
     string SummaryGerman,
     string TitleTranslated,
-    IEnumerable<string> Tags,
-    string SearchQuery
+    IEnumerable<string> Tags
 );

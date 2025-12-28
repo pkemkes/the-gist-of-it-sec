@@ -1,11 +1,9 @@
-import { ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Typography } from "@mui/material";
 import { backendApi } from "../../backend";
 import { GistViewerBody } from "../GistViewerBody";
 import { GistCard } from "../GistCard";
 import { BackButton } from "../BackButton";
-import React, { useState } from "react";
 import { SimilarGistList } from "./SimilarGistList";
-import { SearchResultList } from "./SearchResultList";
 import { LoadingBar } from "../LoadingBar";
 import { ErrorMessage } from "../ErrorMessage";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
@@ -18,15 +16,7 @@ interface GistInspectorProps {
 }
 
 export const GistInspector = ({ gistId }: GistInspectorProps) => {
-  let [ mode, setMode ] = useState("similar");
   const languageMode = useAppSelector(selectLanguageMode);
-
-  const handleModeChange = (
-    _: React.MouseEvent<HTMLElement>,
-    newMode: string,
-  ) => {
-    setMode(newMode);
-  };
 
   const { data, error, isFetching } = backendApi.useGetGistByIdQuery({ id: gistId, languageMode });
 
@@ -64,24 +54,9 @@ export const GistInspector = ({ gistId }: GistInspectorProps) => {
   return <GistViewerBody>
     <BackButton />
     <GistCard gist={ data } highlighted />
-    <ToggleButtonGroup
-      color="primary"
-      value={ mode }
-      exclusive
-      onChange={ handleModeChange }
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "50% auto",
-        mb: "1rem",
-      }}
-    >
-      <ToggleButton value="similar" size="small">Similar Gists</ToggleButton>
-      <ToggleButton value="search" size="small">Search Results</ToggleButton>
-    </ToggleButtonGroup>
-    { 
-      mode == "similar" 
-        ? <SimilarGistList gistId={ gistId } />
-        : <SearchResultList gistId={ gistId } searchQuery={ data.searchQuery } /> 
-    }
+    <Typography variant="h4" sx={{ ml: "1rem", mt: "2rem", mb: "1rem" }}>
+      Similar gists:
+    </Typography>
+    <SimilarGistList gistId={ gistId } />
   </GistViewerBody>
 }

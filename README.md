@@ -4,7 +4,7 @@
 
 The Gist of IT Sec aggregates multiple RSS feeds, parses their entries, generates short summaries ("gists") using OpenAIs ChatGPT and collects those in a sleek web UI. A Telegram Bot can also easily be set up that sends a short message to each registered user for every new RSS feed entry.
 
-The web UI furthermore offers the feature to quickly find similar gists using the LLM embeddings and presents a generated Google search query for finding more information about the article.
+The web UI furthermore offers the feature to quickly find similar gists using the LLM embeddings.
 
 [<img src="./assets/screenshot.png" alt="screenshot.png" height="500"/>](./assets/screenshot.png)
 

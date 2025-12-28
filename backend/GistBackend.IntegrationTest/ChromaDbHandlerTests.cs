@@ -16,8 +16,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         "test summary english",
         "test summary german",
         "translated test title",
-        ["test tag 1", "test tag 2", "test tag 3"],
-        "test search query"
+        ["test tag 1", "test tag 2", "test tag 3"]
     );
 
     private readonly ChromaDbHandlerOptions _handlerOptions = new()

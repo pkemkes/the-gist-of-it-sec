@@ -8,8 +8,7 @@ export interface Gist {
   published: string,
   updated: string,
   summary: string,
-  tags: string[],
-  searchQuery: string,
+  tags: string[]
 }
 
 export interface FeedInfo {
@@ -22,17 +21,6 @@ export interface FeedInfo {
 export interface SimilarGist {
   gist: Gist,
   similarity: number,
-}
-
-export interface SearchResult {
-  id: number,
-  gistId: number,
-  title: string,
-  snippet: string,
-  url: string,
-  displayUrl: string,
-  thumbnailUrl: string | undefined,
-  imageUrl: string | undefined
 }
 
 export interface RecapRelatedGist {

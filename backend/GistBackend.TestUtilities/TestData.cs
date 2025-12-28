@@ -60,7 +60,6 @@ public static class TestData
         updated ?? Random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
         Random.NextUri(),
         string.Join(";;", Random.NextArrayOfStrings()),
-        Random.NextString(),
         Random.Next()
     );
 
@@ -78,7 +77,6 @@ public static class TestData
             entry.Updated,
             entry.Url,
             string.Join(";;", summaryAIResponse.Tags),
-            summaryAIResponse.SearchQuery,
             Random.Next()
         );
     }
@@ -109,21 +107,6 @@ public static class TestData
         var summary = CreateTestSummary(language, isTranslated, gist.Id);
         return ConstructedGist.FromGistFeedAndSummary(gist, feed, summary);
     }
-
-    public static GoogleSearchResult CreateTestSearchResult(int? gistId = null) => new(
-        gistId ?? Random.Next(),
-        Random.NextString(),
-        Random.NextString(),
-        Random.NextUri(),
-        Random.NextString(),
-        Random.Next(0, 2) == 0 ? Random.NextUri() : null
-    );
-
-    public static List<GoogleSearchResult> CreateTestSearchResults(int count, int? gistId = null) =>
-        Enumerable.Range(0, count).Select(_ => CreateTestSearchResult(gistId)).ToList();
-
-    public static List<List<GoogleSearchResult>> CreateMultipleTestSearchResults(int count) =>
-        Enumerable.Range(0, count).Select(_ => CreateTestSearchResults(10)).ToList();
 
     public static RecapAIResponse CreateTestRecap() => new(CreateTestRecapSections(), CreateTestRecapSections());
 
@@ -164,8 +147,7 @@ public static class TestData
         Random.NextString(),
         Random.NextString(),
         Random.NextString(),
-        CreateTestStrings(Random.Next(1, 5)),
-        Random.NextString()
+        CreateTestStrings(Random.Next(1, 5))
     );
 
     public static List<SummaryAIResponse> CreateTestSummaryAIResponses(int count) =>

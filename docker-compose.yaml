@@ -26,8 +26,6 @@ services:
       - ChatClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
       - ChromaDbHandlerOptions__Server=chromadb
       - ChromaDbHandlerOptions__ServerAuthnCredentials=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - CustomSearchApiHandlerOptions__ApiKey=${GOOGLE_API_KEY}
-      - CustomSearchApiHandlerOptions__EngineId=${GOOGLE_SEARCH_ENGINE_ID}
       - TelegramBotClientHandlerOptions__BotToken=${TELEGRAM_API_KEY}
       - TelegramServiceOptions__AppBaseUrl=http://localhost:5173  # NOTE: Change this to your base URL
       - GistMariaDbHandlerOptions__Server=database

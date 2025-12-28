@@ -35,7 +35,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
     public async Task AssertGistIsInDbAsync(Gist expectedGist)
     {
         const string query = """
-            SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, SearchQuery, Id
+            SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, Id
                 FROM Gists WHERE Reference = @Reference
         """;
         var command = new CommandDefinition(query, expectedGist);
@@ -64,24 +64,6 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         var actualSummary = summariesInDb.Single();
         expectedSummary.Id = actualSummary.Id;
         Assert.Equal(expectedSummary, actualSummary);
-    }
-
-    public async Task AssertSearchResultsForGistIdInDbAsync(int gistId,
-        IList<GoogleSearchResult> expectedSearchResults)
-    {
-        const string query = """
-            SELECT GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl, Id
-                FROM SearchResults WHERE GistId = @GistId
-        """;
-        var command = new CommandDefinition(query, new { GistId = gistId });
-
-        await using var connection = await GetOpenConnectionAsync();
-        var searchResultsInDb = (await connection.QueryAsync<GoogleSearchResult>(command)).ToList();
-
-        // We don't want to check whether the IDs are the same for the expected and actual searchResults
-        foreach (var searchResult in expectedSearchResults.Concat(searchResultsInDb)) searchResult.Id = null;
-
-        Assert.Equal(expectedSearchResults, searchResultsInDb);
     }
 
     public async Task AssertRecapIsInDbAsync(RecapAIResponse expectedRecapAIResponse, DateTime expectedCreated,

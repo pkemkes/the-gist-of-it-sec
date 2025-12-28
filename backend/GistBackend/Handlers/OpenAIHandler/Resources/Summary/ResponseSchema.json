@@ -15,17 +15,13 @@
       "items": {
         "type": "string"
       }
-    },
-    "search_query": {
-      "type": "string"
     }
   },
   "required": [
     "summary_english",
     "summary_german",
     "title_translated",
-    "tags",
-    "search_query"
+    "tags"
   ],
   "additionalProperties": false
 }

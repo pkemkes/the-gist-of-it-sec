@@ -145,7 +145,7 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
                 variant="outlined"
                 size="small"
               >
-                Investigate further
+                Find similar gists
               </Button>
           }
         </Box>

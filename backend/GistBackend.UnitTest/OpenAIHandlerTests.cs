@@ -12,7 +12,7 @@ public class OpenAIHandlerTests
 {
     private readonly SummaryAIResponse _testAIResponse =
         new("test summary english", "test summary german", "test title translated",
-            ["test tag 1", "test tag 2", "test tag 3"], "test search query");
+            ["test tag 1", "test tag 2", "test tag 3"]);
 
     private const Language TestLanguage = Language.De;
     private const string TestTitle = "test title";
@@ -36,8 +36,7 @@ public class OpenAIHandlerTests
             new DateTime().ToDatabaseCompatibleString(),
             new DateTime().ToDatabaseCompatibleString(),
             "test summary",
-            ["test tag 1", "test tag 2"],
-            "test search query"
+            ["test tag 1", "test tag 2"]
         ),
 
         new(
@@ -51,8 +50,7 @@ public class OpenAIHandlerTests
             new DateTime().ToDatabaseCompatibleString(),
             new DateTime().ToDatabaseCompatibleString(),
             "other test summary",
-            ["other test tag 1", "other test tag 2"],
-            "other test search query"
+            ["other test tag 1", "other test tag 2"]
         )
     ];
 

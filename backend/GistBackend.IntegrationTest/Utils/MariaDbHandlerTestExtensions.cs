@@ -63,14 +63,6 @@ public static class MariaDbHandlerTestExtensions
         return [summaryOrig, summaryTranslated];
     }
 
-    public static async Task<List<GoogleSearchResult>> InsertTestSearchResultsAsync(this IMariaDbHandler handler,
-        int count, int gistId)
-    {
-        var searchResults = Enumerable.Range(0, count).Select(_ => CreateTestSearchResult(gistId)).ToList();
-        await handler.InsertSearchResultsAsync(searchResults, CancellationToken.None);
-        return await handler.GetSearchResultsByGistIdAsync(gistId, CancellationToken.None);
-    }
-
     public static async Task<List<Chat>> InsertTestChatsAsync(this IMariaDbHandler handler, int count)
     {
         var gistWithFeedLastSent =

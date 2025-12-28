@@ -8,8 +8,4 @@ Furthermore, select at most ten tags from the following list that best describe 
 
 Allowed tags: {tags}
 
-Lastly create a single Google search query in English or German that can be used to further investigate the topic of the ARTICLE. Focus with the search query on finding more information from different sources for the information in that article. Remember, the current date and time is {now}. Put the search query into the search_query field.
-
-Make sure to create the search_query such that it returns results from multiple sources, so for example never use the "site" keyword.
-
 Your response needs to adhere to the given response structure.

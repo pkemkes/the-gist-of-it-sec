@@ -1,9 +1,7 @@
 using System.Diagnostics;
-using System.Text.Json;
 using GistBackend.Exceptions;
 using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
-using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Types;
@@ -25,7 +23,6 @@ public class GistService(
     IMariaDbHandler mariaDbHandler,
     IOpenAIHandler openAIHandler,
     IChromaDbHandler chromaDbHandler,
-    IGoogleSearchHandler googleSearchHandler,
     ILogger<GistService>? logger = null
 ) : BackgroundService
 {
@@ -33,8 +30,6 @@ public class GistService(
         Metrics.CreateGauge("process_feeds_seconds", "Time spent to process all feeds");
     private static readonly PrometheusSummary ProcessEntrySummary =
         Metrics.CreateSummary("process_entry_seconds", "Time spent to process an entry", "feed_title");
-    private static readonly PrometheusSummary GetSearchResultsSummary =
-        Metrics.CreateSummary("google_search_results_seconds", "Time spent to get search results");
     private static readonly PrometheusSummary SummarizeEntrySummary =
         Metrics.CreateSummary("summarize_entry_seconds", "Time spent to summarize an entry");
 
@@ -105,11 +100,7 @@ public class GistService(
 
         var existingGist = await mariaDbHandler.GetGistByReferenceAsync(entry.Reference, ct);
         var currentVersionAlreadyExists = existingGist is not null && existingGist.Updated == entry.Updated;
-        if (currentVersionAlreadyExists)
-        {
-            await EnsureSearchResultInDbAsync(existingGist!, ct);
-            return;
-        }
+        if (currentVersionAlreadyExists) return;
 
         try
         {
@@ -147,28 +138,6 @@ public class GistService(
         }
     }
 
-    private async Task EnsureSearchResultInDbAsync(Gist gist, CancellationToken ct)
-    {
-        var searchResultInDb = await mariaDbHandler.GetSearchResultsByGistIdAsync(gist.Id!.Value, ct);
-        if (searchResultInDb.Count != 0) return;
-        await using var handle = await mariaDbHandler.OpenTransactionAsync(ct);
-        try
-        {
-            var searchResults = await GetSearchResultsAsync(gist.SearchQuery, gist.Id.Value, ct);
-            if (searchResults is null) return;
-            await mariaDbHandler.InsertSearchResultsAsync(searchResults, handle, ct);
-            await handle.Transaction.CommitAsync(ct);
-            logger?.LogInformation(SearchResultsInserted, "Search Results inserted for gist with ID {GistId}",
-                gist.Id.Value);
-        }
-        catch (Exception e)
-        {
-            logger?.LogError(EnsuringSearchResultsAreInDbFailed, e,
-                "Failed to insert search results for gist with ID {Id}", gist.Id);
-            await handle.Transaction.RollbackAsync(ct);
-        }
-    }
-
     private async Task<SummaryAIResponse> GenerateSummaryAIResponse(Language feedLanguage, string entryTitle,
         string text, CancellationToken ct)
     {
@@ -190,15 +159,8 @@ public class GistService(
             var englishSummary = CreateSummary(gistId, entry, summaryAIResponse, feedLanguage, Language.En);
             await mariaDbHandler.InsertSummaryAsync(englishSummary, handle, ct);
 
-            var searchResults = await GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
-            if (searchResults is not null) await mariaDbHandler.InsertSearchResultsAsync(searchResults, handle, ct);
-
             await handle.Transaction.CommitAsync(ct);
             logger?.LogInformation(GistInserted, "Gist inserted with ID {Id}", gistId);
-            if (searchResults is not null) {
-                logger?.LogInformation(SearchResultsInserted, "Search Results inserted for gist with ID {GistId}",
-                    gistId);
-            }
         }
         catch (Exception e)
         {
@@ -223,15 +185,8 @@ public class GistService(
             var englishSummary = CreateSummary(gistId, entry, summaryAIResponse, feedLanguage, Language.En);
             await mariaDbHandler.UpdateSummaryAsync(englishSummary, handle, ct);
 
-            var searchResults = await GetSearchResultsAsync(gist.SearchQuery, gistId, ct);
-            if (searchResults is not null) await mariaDbHandler.UpdateSearchResultsAsync(searchResults, handle, ct);
-
             await handle.Transaction.CommitAsync(ct);
             logger?.LogInformation(GistUpdated, "Gist updated at ID {Id}", gistId);
-            if (searchResults is not null) {
-                logger?.LogInformation(SearchResultsUpdated, "Search Results updated for gist with ID {GistId}",
-                    gistId);
-            }
         }
         catch (Exception e)
         {
@@ -246,16 +201,4 @@ public class GistService(
         new(gistId, summaryLanguage, feedLanguage != summaryLanguage,
             feedLanguage == summaryLanguage ? entry.Title : summaryAIResponse.TitleTranslated,
             summaryLanguage == Language.En ? summaryAIResponse.SummaryEnglish : summaryAIResponse.SummaryGerman);
-
-    private async Task<List<GoogleSearchResult>?> GetSearchResultsAsync(string searchQuery, int gistId, CancellationToken ct)
-    {
-        using (new SelfReportingStopwatch(elapsed => GetSearchResultsSummary.Observe(elapsed)))
-        {
-            var searchResults = await googleSearchHandler.GetSearchResultsAsync(searchQuery, gistId, ct);
-            if (searchResults is not null && searchResults.Count != 0) return searchResults;
-        }
-
-        logger?.LogWarning(NoSearchResults, "No search results found for gist");
-        return null;
-    }
 }

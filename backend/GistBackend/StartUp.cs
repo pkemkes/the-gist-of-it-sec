@@ -1,6 +1,5 @@
 using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
-using GistBackend.Handlers.GoogleSearchHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Handlers.TelegramBotClientHandler;
@@ -50,8 +49,6 @@ public class StartUp(IConfiguration configuration)
             configuration.GetSection(nameof(ChatClientHandlerOptions)));
         services.Configure<ChromaDbHandlerOptions>(
             configuration.GetSection(nameof(ChromaDbHandlerOptions)));
-        services.Configure<CustomSearchApiHandlerOptions>(
-            configuration.GetSection(nameof(CustomSearchApiHandlerOptions)));
         services.Configure<TelegramBotClientHandlerOptions>(
             configuration.GetSection(nameof(TelegramBotClientHandlerOptions)));
         services.Configure<CleanupServiceOptions>(
@@ -83,8 +80,6 @@ public class StartUp(IConfiguration configuration)
         services.AddTransient<IChatClientHandler, ChatClientHandler>();
         services.AddTransient<IOpenAIHandler, OpenAIHandler>();
         services.AddTransient<IChromaDbHandler, ChromaDbHandler>();
-        services.AddTransient<ICustomSearchApiHandler, CustomSearchApiHandler>();
-        services.AddTransient<IGoogleSearchHandler, GoogleSearchHandler>();
         services.AddTransient<IGistDebouncer, GistDebouncer>();
         services.AddTransient<ITelegramBotClientHandler, TelegramBotClientHandler>();
         services.AddTransient<IDateTimeHandler, DateTimeHandler>();

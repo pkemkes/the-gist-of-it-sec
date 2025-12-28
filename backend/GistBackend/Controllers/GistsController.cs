@@ -111,22 +111,6 @@ public class GistsController(
         return new SimilarGistWithFeed(gistWithFeed, similarDocument.Similarity);
     }
 
-    [HttpGet("{id:int}/searchResults")]
-    public async Task<IActionResult> GetSearchResultsAsync(int id, CancellationToken ct)
-    {
-        try
-        {
-            var searchResults = await mariaDbHandler.GetSearchResultsByGistIdAsync(id, ct);
-            return Ok(searchResults);
-        }
-        catch (Exception e)
-        {
-            const string message = "Could not get search results for gist from the database";
-            logger?.LogError(ErrorInHttpRequest, e, message);
-            return Problem(message);
-        }
-    }
-
     [HttpGet("feeds")]
     public async Task<IActionResult> GetAllFeedsAsync(CancellationToken ct)
     {

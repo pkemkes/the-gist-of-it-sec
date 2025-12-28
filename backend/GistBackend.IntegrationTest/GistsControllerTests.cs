@@ -259,31 +259,6 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     }
 
     [Fact]
-    public async Task GetSearchResultsAsync_GistIdNotInDb_EmptyList()
-    {
-        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/999999999/searchResults");
-
-        actual.EnsureSuccessStatusCode();
-        var searchResults = await actual.Content.ReadFromJsonAsync<List<GoogleSearchResult>>(_jsonSerializerOptions);
-        Assert.NotNull(searchResults);
-        Assert.Empty(searchResults);
-    }
-
-    [Fact]
-    public async Task GetSearchResultsAsync_GistIdInDb_SearchResults()
-    {
-        var gist = (await _mariaDbHandler.InsertTestGistsAsync(1)).Single();
-        var expectedSearchResults = await _mariaDbHandler.InsertTestSearchResultsAsync(10, gist.Id!.Value);
-
-        var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/{gist.Id}/searchResults");
-
-        actual.EnsureSuccessStatusCode();
-        var searchResults = await actual.Content.ReadFromJsonAsync<List<GoogleSearchResult>>(_jsonSerializerOptions);
-        Assert.NotNull(searchResults);
-        Assert.Equivalent(expectedSearchResults, searchResults);
-    }
-
-    [Fact]
     public async Task GetAllFeedsAsync_NoFeedsInDb_EmptyList()
     {
         var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/feeds");

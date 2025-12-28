@@ -11,7 +11,6 @@ public record Gist(
     DateTime Updated,
     Uri Url,
     string Tags,
-    string SearchQuery,
     int? Id = null
 ) {
     public int? Id { get; set; } = Id;
@@ -26,8 +25,7 @@ public record Gist(
         entry.Published,
         entry.Updated,
         entry.Url,
-        string.Join(";;", summaryAIResponse.Tags),
-        summaryAIResponse.SearchQuery
+        string.Join(";;", summaryAIResponse.Tags)
     )
     {
     }
