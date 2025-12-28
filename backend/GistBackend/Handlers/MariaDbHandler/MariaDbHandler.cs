@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Text.Json;
 using Dapper;
 using GistBackend.Exceptions;
@@ -11,34 +12,43 @@ using static GistBackend.Utils.LogEvents;
 namespace GistBackend.Handlers.MariaDbHandler;
 
 public interface IMariaDbHandler {
+    Task< TransactionHandle> OpenTransactionAsync(CancellationToken ct);
     Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(Uri rssUrl, CancellationToken ct);
     Task<int> InsertFeedInfoAsync(RssFeedInfo feedInfo, CancellationToken ct);
     Task UpdateFeedInfoAsync(RssFeedInfo feedInfo, CancellationToken ct);
     Task<Gist?> GetGistByReferenceAsync(string reference, CancellationToken ct);
-    Task<GistWithFeed?> GetGistWithFeedByReference(string reference, CancellationToken ct);
+    Task<ConstructedGist?> GetConstructedGistByReference(string reference, LanguageMode? languageMode, CancellationToken ct);
     Task<int> InsertGistAsync(Gist gist, CancellationToken ct);
-    Task UpdateGistAsync(Gist gist, CancellationToken ct);
+    Task<int> InsertGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct);
+    Task InsertSummaryAsync(Summary summary, CancellationToken ct);
+    Task InsertSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct);
+    Task UpdateGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct);
+    Task UpdateSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct);
     Task<List<GoogleSearchResult>> GetSearchResultsByGistIdAsync(int gistId, CancellationToken ct);
     Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct);
-    Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct);
+    Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
+        CancellationToken ct);
+    Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
+        CancellationToken ct);
     Task<bool> DailyRecapExistsAsync(CancellationToken ct);
     Task<bool> WeeklyRecapExistsAsync(CancellationToken ct);
-    Task<List<Gist>> GetGistsOfLastDayAsync(CancellationToken ct);
-    Task<List<Gist>> GetGistsOfLastWeekAsync(CancellationToken ct);
-    Task<int> InsertDailyRecapAsync(Recap recap, CancellationToken ct);
-    Task<int> InsertWeeklyRecapAsync(Recap recap, CancellationToken ct);
+    Task<List<ConstructedGist>> GetConstructedGistsOfLastDayAsync(CancellationToken ct);
+    Task<List<ConstructedGist>> GetConstructedGistsOfLastWeekAsync(CancellationToken ct);
+    Task<int> InsertDailyRecapAsync(RecapAIResponse recapAIResponse, CancellationToken ct);
+    Task<int> InsertWeeklyRecapAsync(RecapAIResponse recapAIResponse, CancellationToken ct);
     Task<List<Gist>> GetAllGistsAsync(CancellationToken ct);
     Task<bool> EnsureCorrectDisabledStateForGistAsync(int gistId, bool disabled, CancellationToken ct);
-    Task<List<GistWithFeed>> GetPreviousGistsWithFeedAsync(int take, int? lastGistId, IEnumerable<string> tags,
-        string? searchQuery, IEnumerable<int> disabledFeeds, CancellationToken ct);
-    Task<GistWithFeed?> GetGistWithFeedByIdAsync(int id, CancellationToken ct);
+    Task<List<ConstructedGist>> GetPreviousConstructedGistsAsync(int take, int? lastGistId, IEnumerable<string> tags,
+        string? searchQuery, IEnumerable<int> disabledFeeds, LanguageMode? languageMode, CancellationToken ct);
+    Task<ConstructedGist?> GetConstructedGistByIdAsync(int id, LanguageMode? languageMode, CancellationToken ct);
     Task<List<RssFeedInfo>> GetAllFeedInfosAsync(CancellationToken ct);
     Task<SerializedRecap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct);
     Task<bool> IsChatRegisteredAsync(long chatId, CancellationToken ct);
     Task RegisterChatAsync(long chatId, CancellationToken ct);
     Task DeregisterChatAsync(long chatId, CancellationToken ct);
     Task<List<Chat>> GetAllChatsAsync(CancellationToken ct);
-    Task<List<GistWithFeed>> GetNextFiveGistsWithFeedAsync(int lastGistId, CancellationToken ct);
+    Task<List<ConstructedGist>> GetNextFiveConstructedGistsAsync(int lastGistId, LanguageMode languageMode,
+        CancellationToken ct);
     Task SetGistIdLastSentForChatAsync(long chatId, int gistId, CancellationToken ct);
 }
 
@@ -56,6 +66,35 @@ public class MariaDbHandler : IMariaDbHandler
         _logger = logger;
         _connectionString = options.Value.GetConnectionString();
         SqlMapper.AddTypeHandler(new UriTypeHandler());
+    }
+
+    public async Task< TransactionHandle> OpenTransactionAsync(CancellationToken ct)
+    {
+        try
+        {
+            var connection = await GetOpenConnectionAsync(ct);
+            return new TransactionHandle(connection, await connection.BeginTransactionAsync(ct));
+        }
+        catch (MySqlException e)
+        {
+            _logger?.LogError(OpeningTransactionFailed, e, "Opening transaction failed");
+            throw;
+        }
+    }
+
+    public async Task CommitTransactionAsync(DbTransaction transaction, CancellationToken ct)
+    {
+        try
+        {
+            await transaction.CommitAsync(ct);
+            if (transaction.Connection is null) return;
+            await transaction.Connection.CloseAsync();
+        }
+        catch (MySqlException e)
+        {
+            _logger?.LogError(CommittingTransactionFailed, e, "Committing transaction failed");
+            throw;
+        }
     }
 
     public async Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(Uri rssUrl, CancellationToken ct)
@@ -117,7 +156,7 @@ public class MariaDbHandler : IMariaDbHandler
     public async Task<Gist?> GetGistByReferenceAsync(string reference, CancellationToken ct)
     {
         const string query = """
-            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
+            SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, SearchQuery, Id
                 FROM Gists WHERE Reference = @Reference
         """;
         var command = new CommandDefinition(query, new { Reference = reference }, cancellationToken: ct);
@@ -134,32 +173,36 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public async Task<GistWithFeed?> GetGistWithFeedByReference(string reference, CancellationToken ct)
+    public async Task<ConstructedGist?> GetConstructedGistByReference(string reference, LanguageMode? languageMode,
+        CancellationToken ct)
     {
-        const string query = """
+        var parameters = new DynamicParameters();
+        var query = $"""
             SELECT
                 g.Id as Id,
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
-                g.Title as Title,
+                s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
-                g.Summary as Summary,
+                s.SummaryText as Summary,
                 g.Tags as Tags,
                 g.SearchQuery as SearchQuery
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
-            WHERE g.Reference = @Reference
+            INNER JOIN Summaries s ON s.GistId = g.Id
+            WHERE g.Reference = @Reference AND {GetLanguageModeCondition(parameters, languageMode)}
         """;
-        var command = new CommandDefinition(query, new { Reference = reference }, cancellationToken: ct);
+        parameters.Add("Reference", reference);
+        var command = new CommandDefinition(query, parameters, cancellationToken: ct);
 
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.QueryFirstOrDefaultAsync<GistWithFeed>(command).WithDeadlockRetry(_logger);
+            return await connection.QueryFirstOrDefaultAsync<ConstructedGist>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
@@ -170,20 +213,34 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task<int> InsertGistAsync(Gist gist, CancellationToken ct)
     {
+        try
+        {
+            await using var handle = await OpenTransactionAsync(ct);
+            var gistId = await InsertGistAsync(gist, handle, ct);
+            await CommitTransactionAsync(handle.Transaction, ct);
+            return gistId;
+        } catch (MySqlException e)
+        {
+            _logger?.LogError(InsertingGistFailed, e, "Inserting Gist failed");
+            throw;
+        }
+    }
+
+    public async Task<int> InsertGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct)
+    {
         const string query = """
             INSERT INTO Gists
-                (Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery)
+                (Reference, FeedId, Author, Published, Updated, Url, Tags, SearchQuery)
                 VALUES (
-                    @Reference, @FeedId, @Author, @Title, @Published, @Updated, @Url, @Summary, @Tags, @SearchQuery
+                    @Reference, @FeedId, @Author, @Published, @Updated, @Url, @Tags, @SearchQuery
                 );
             SELECT LAST_INSERT_ID();
         """;
-        var command = new CommandDefinition(query, gist, cancellationToken: ct);
+        var command = new CommandDefinition(query, gist, handle.Transaction, cancellationToken: ct);
 
         try
         {
-            await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(_logger);
+            return await handle.Connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
@@ -192,25 +249,94 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
+    public async Task InsertSummaryAsync(Summary summary, CancellationToken ct)
+    {
+        try
+        {
+            await using var handle = await OpenTransactionAsync(ct);
+            await InsertSummaryAsync(summary, handle, ct);
+            await CommitTransactionAsync(handle.Transaction, ct);
+        }
+        catch (MySqlException e)
+        {
+            _logger?.LogError(InsertingSummaryFailed, e, "Inserting Summary failed");
+            throw;
+        }
+    }
+
+    public async Task InsertSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct)
+    {
+        const string query = """
+            INSERT INTO Summaries (GistId, Language, IsTranslated, Title, SummaryText)
+                VALUES (@GistId, @Language, @IsTranslated, @Title, @SummaryText);
+        """;
+        var command = new CommandDefinition(query, summary, handle.Transaction, cancellationToken: ct);
+
+        try
+        {
+            await handle.Connection.ExecuteAsync(command);
+        }
+        catch (MySqlException e)
+        {
+            _logger?.LogError(InsertingSummaryFailed, e, "Inserting Summary failed");
+            throw;
+        }
+    }
+
     public async Task UpdateGistAsync(Gist gist, CancellationToken ct)
+    {
+        try
+        {
+            await using var handle = await OpenTransactionAsync(ct);
+            await UpdateGistAsync(gist, handle, ct);
+            await CommitTransactionAsync(handle.Transaction, ct);
+        }
+        catch (Exception e) when (e is MySqlException or DatabaseOperationException)
+        {
+            _logger?.LogError(UpdatingGistFailed, e, "Updating gist failed");
+            throw;
+        }
+    }
+
+    public async Task UpdateGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct)
     {
         const string query = """
             UPDATE Gists
-                SET FeedId = @FeedId, Author = @Author, Title = @Title, Published = @Published, Updated = @Updated,
-                    Url = @Url, Summary = @Summary, Tags = @Tags, SearchQuery = @SearchQuery
+                SET FeedId = @FeedId, Author = @Author, Published = @Published, Updated = @Updated, Url = @Url,
+                    Tags = @Tags, SearchQuery = @SearchQuery
                 WHERE Reference = @Reference;
         """;
-        var command = new CommandDefinition(query, gist, cancellationToken: ct);
+        var command = new CommandDefinition(query, gist, handle.Transaction, cancellationToken: ct);
 
-        await using var connection = await GetOpenConnectionAsync(ct);
         try
         {
-            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
+            var rowsAffected = await handle.Connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
             if (rowsAffected != 1) throw new DatabaseOperationException("Did not successfully update gist");
         }
         catch (Exception e) when (e is MySqlException or DatabaseOperationException)
         {
             _logger?.LogError(UpdatingGistFailed, e, "Updating gist failed");
+            throw;
+        }
+    }
+
+    public async Task UpdateSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct)
+    {
+        const string query = """
+            UPDATE Summaries
+                SET Title = @Title, SummaryText = @SummaryText
+                WHERE GistId = @GistId AND Language = @Language;
+        """;
+        var command = new CommandDefinition(query, summary, handle.Transaction, cancellationToken: ct);
+
+        try
+        {
+            var rowsAffected = await handle.Connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
+            if (rowsAffected != 1) throw new DatabaseOperationException("Did not successfully update summary");
+        }
+        catch (Exception e) when (e is MySqlException or DatabaseOperationException)
+        {
+            _logger?.LogError(UpdatingSummaryFailed, e, "Updating summary failed");
             throw;
         }
     }
@@ -237,46 +363,52 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct)
     {
-        await using var connection = await GetOpenConnectionAsync(ct);
-        await using var transaction = await connection.BeginTransactionAsync(ct);
-        foreach (var searchResult in searchResults)
-        {
-            await InsertSearchResultAsync(searchResult, connection, transaction, ct);
-        }
-        await transaction.CommitAsync(ct).WithDeadlockRetry(_logger);
+        await using var handle = await OpenTransactionAsync(ct);
+        await InsertSearchResultsAsync(searchResults, handle, ct);
+        await CommitTransactionAsync(handle.Transaction, ct);
+    }
+
+    public async Task InsertSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
+        CancellationToken ct)
+    {
+        foreach (var searchResult in searchResults) await InsertSearchResultAsync(searchResult, handle, ct);
     }
 
     public async Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults, CancellationToken ct)
     {
-        await using var connection = await GetOpenConnectionAsync(ct);
-        await using var transaction = await connection.BeginTransactionAsync(ct);
-        var searchResultsArray = searchResults.ToArray();
-        await DeleteSearchResultsForGistIdAsync(searchResultsArray.First().GistId, connection, transaction, ct);
-        foreach (var searchResult in searchResultsArray)
-        {
-            await InsertSearchResultAsync(searchResult, connection, transaction, ct);
-        }
-        await transaction.CommitAsync(ct).WithDeadlockRetry(_logger);
+        await using var handle = await OpenTransactionAsync(ct);
+        await UpdateSearchResultsAsync(searchResults, handle, ct);
+        await CommitTransactionAsync(handle.Transaction, ct);
     }
 
-    private async Task InsertSearchResultAsync(GoogleSearchResult searchResult, MySqlConnection connection,
-        MySqlTransaction transaction, CancellationToken ct)
+    public async Task UpdateSearchResultsAsync(IEnumerable<GoogleSearchResult> searchResults,  TransactionHandle handle,
+        CancellationToken ct)
+    {
+        var searchResultsArray = searchResults.ToArray();
+        await DeleteSearchResultsForGistIdAsync(searchResultsArray.First().GistId, handle, ct);
+        foreach (var searchResult in searchResultsArray)
+        {
+            await InsertSearchResultAsync(searchResult, handle, ct);
+        }
+    }
+
+    private async Task InsertSearchResultAsync(GoogleSearchResult searchResult,  TransactionHandle handle,
+        CancellationToken ct)
     {
         const string query = """
             INSERT INTO SearchResults
                 (GistId, Title, Snippet, Url, DisplayUrl, ThumbnailUrl)
                 VALUES (@GistId, @Title, @Snippet, @Url, @DisplayUrl, @ThumbnailUrl)
         """;
-        var command = new CommandDefinition(query, searchResult, transaction, cancellationToken: ct);
-        await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
+        var command = new CommandDefinition(query, searchResult, handle.Transaction, cancellationToken: ct);
+        await handle.Connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
     }
 
-    private async Task DeleteSearchResultsForGistIdAsync(int gistId, MySqlConnection connection,
-        MySqlTransaction transaction, CancellationToken ct)
+    private async Task DeleteSearchResultsForGistIdAsync(int gistId,  TransactionHandle handle, CancellationToken ct)
     {
         const string query = "DELETE FROM SearchResults WHERE GistId = @GistId";
-        var command = new CommandDefinition(query, new { GistId = gistId }, transaction, cancellationToken: ct);
-        var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
+        var command = new CommandDefinition(query, new { GistId = gistId }, handle.Transaction, cancellationToken: ct);
+        var rowsAffected = await handle.Connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
         if (rowsAffected == 0)
         {
             _logger?.LogError(DeletingSearchResultsFailed,
@@ -317,25 +449,45 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public Task<List<Gist>> GetGistsOfLastDayAsync(CancellationToken ct) => GetGistsOfLastDaysAsync(1, ct);
+    public Task<List<ConstructedGist>> GetConstructedGistsOfLastDayAsync(CancellationToken ct) =>
+        GetGistsWithFeedOfLastDaysAsync(1, ct);
 
-    public Task<List<Gist>> GetGistsOfLastWeekAsync(CancellationToken ct) => GetGistsOfLastDaysAsync(7, ct);
+    public Task<List<ConstructedGist>> GetConstructedGistsOfLastWeekAsync(CancellationToken ct) =>
+        GetGistsWithFeedOfLastDaysAsync(7, ct);
 
-    private async Task<List<Gist>> GetGistsOfLastDaysAsync(int days, CancellationToken ct)
+    private async Task<List<ConstructedGist>> GetGistsWithFeedOfLastDaysAsync(int days, CancellationToken ct)
     {
-        const string query = """
-            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
-            FROM Gists WHERE updated >= @EarliestUpdated AND updated <= @Now
+        var parameters = new DynamicParameters();
+        var query = $"""
+            SELECT
+                g.Id as Id,
+                g.Reference as Reference,
+                f.Title as FeedTitle,
+                f.RssUrl as FeedUrl,
+                s.Title as Title,
+                g.Author as Author,
+                g.Url as Url,
+                DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
+                DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
+                s.SummaryText as Summary,
+                g.Tags as Tags,
+                g.SearchQuery as SearchQuery
+            FROM Gists g
+            INNER JOIN Feeds f ON g.FeedId = f.Id
+            INNER JOIN Summaries s ON s.GistId = g.Id
+            WHERE {GetLanguageModeCondition(parameters, LanguageMode.Original)}
+                AND Updated >= @EarliestUpdated AND Updated <= @Now
         """;
         var now = _dateTimeHandler.GetUtcNow();
         var earliestUpdated = now.AddDays(-days);
-        var command = new CommandDefinition(query, new { Now = now, EarliestUpdated = earliestUpdated },
-            cancellationToken: ct);
+        parameters.Add("Now", now);
+        parameters.Add("EarliestUpdated", earliestUpdated);
+        var command = new CommandDefinition(query, parameters, cancellationToken: ct);
 
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<Gist>(command).WithDeadlockRetry(_logger)).ToList();
+            return (await connection.QueryAsync<ConstructedGist>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
@@ -344,21 +496,23 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public Task<int> InsertDailyRecapAsync(Recap recap, CancellationToken ct) =>
-        InsertRecapAsync(RecapType.Daily, recap, ct);
+    public Task<int> InsertDailyRecapAsync(RecapAIResponse recapAIResponse, CancellationToken ct) =>
+        InsertRecapAsync(RecapType.Daily, recapAIResponse, ct);
 
-    public Task<int> InsertWeeklyRecapAsync(Recap recap, CancellationToken ct) =>
-        InsertRecapAsync(RecapType.Weekly, recap, ct);
+    public Task<int> InsertWeeklyRecapAsync(RecapAIResponse recapAIResponse, CancellationToken ct) =>
+        InsertRecapAsync(RecapType.Weekly, recapAIResponse, ct);
 
-    private async Task<int> InsertRecapAsync(RecapType recapType, Recap recap, CancellationToken ct)
+    private async Task<int> InsertRecapAsync(RecapType recapType, RecapAIResponse recapAIResponse, CancellationToken ct)
     {
         var query = $"""
-            INSERT INTO Recaps{recapType.ToTypeString()} (created, recap) VALUES (@Created, @Recap);
+            INSERT INTO Recaps{recapType.ToTypeString()} (Created, RecapEn, RecapDe)
+                VALUES (@Created, @RecapEn, @RecapDe);
             SELECT LAST_INSERT_ID();
         """;
         var serializedRecap = new SerializedRecap(
             _dateTimeHandler.GetUtcNow(),
-            JsonSerializer.Serialize(recap, SerializerDefaults.JsonOptions)
+            JsonSerializer.Serialize(recapAIResponse.RecapSectionsEnglish, SerializerDefaults.JsonOptions),
+            JsonSerializer.Serialize(recapAIResponse.RecapSectionsGerman, SerializerDefaults.JsonOptions)
         );
         var command = new CommandDefinition(query, serializedRecap, cancellationToken: ct);
 
@@ -376,10 +530,8 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task<List<Gist>> GetAllGistsAsync(CancellationToken ct)
     {
-        const string query = """
-            SELECT Reference, FeedId, Author, Title, Published, Updated, Url, Summary, Tags, SearchQuery, Id
-            FROM Gists
-        """;
+        const string query =
+            "SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, SearchQuery, Id FROM Gists";
         var command = new CommandDefinition(query, cancellationToken: ct);
 
         try
@@ -434,13 +586,16 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public async Task<List<GistWithFeed>> GetPreviousGistsWithFeedAsync(int take, int? lastGistId, IEnumerable<string> tags,
-        string? searchQuery, IEnumerable<int> disabledFeeds, CancellationToken ct)
+    public async Task<List<ConstructedGist>> GetPreviousConstructedGistsAsync(int take, int? lastGistId, IEnumerable<string> tags,
+        string? searchQuery, IEnumerable<int> disabledFeeds, LanguageMode? languageMode, CancellationToken ct)
     {
         var parameters = new DynamicParameters();
-        var constraints = new List<string> { "Disabled IS FALSE" };
+        var constraints = new List<string> {
+            "Disabled IS FALSE",
+            GetLanguageModeCondition(parameters, languageMode)
+        };
 
-        AddLastGistIdConstraint(constraints, parameters, lastGistId);
+        AddLastGistIdConstraint(parameters, constraints, lastGistId);
         AddSearchQueryConstraint(parameters, constraints, searchQuery);
         AddTagsConstraint(parameters, constraints, tags);
         AddDisabledFeedsConstraint(parameters, constraints, disabledFeeds);
@@ -454,17 +609,18 @@ public class MariaDbHandler : IMariaDbHandler
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
-                g.Title as Title,
+                s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
-                g.Summary as Summary,
+                s.SummaryText as Summary,
                 g.Tags as Tags,
                 g.SearchQuery as SearchQuery
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
-            WHERE {constraintsTemplate}
+            INNER JOIN Summaries s ON s.GistId = g.Id
+                WHERE {constraintsTemplate}
             ORDER BY g.id DESC LIMIT @Take
         """;
 
@@ -472,7 +628,7 @@ public class MariaDbHandler : IMariaDbHandler
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<GistWithFeed>(command).WithDeadlockRetry(_logger)).ToList();
+            return (await connection.QueryAsync<ConstructedGist>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {
@@ -481,7 +637,23 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    private static void AddLastGistIdConstraint(List<string> constraints, DynamicParameters parameters, int? lastGistId)
+    private static string GetLanguageModeCondition(DynamicParameters parameters, LanguageMode? languageMode)
+    {
+        languageMode ??= LanguageMode.Original;
+        switch (languageMode)
+        {
+            case LanguageMode.Original:
+                return "s.IsTranslated IS FALSE";
+            case LanguageMode.En or LanguageMode.De:
+                var language = languageMode == LanguageMode.De ? Language.De : Language.En;
+                parameters.Add("Language", language);
+                return "s.Language = @Language";
+            default:
+                throw new ArgumentOutOfRangeException(nameof(languageMode), languageMode, null);
+        }
+    }
+
+    private static void AddLastGistIdConstraint(DynamicParameters parameters, List<string> constraints, int? lastGistId)
     {
         constraints.Add("g.Id < @LastGistId");
         parameters.Add("LastGistId", lastGistId ?? int.MaxValue);
@@ -493,7 +665,7 @@ public class MariaDbHandler : IMariaDbHandler
         for (var i = 0; i < parsedSearchQuery.Count; i++)
         {
             parameters.Add($"SearchQuery{i}", parsedSearchQuery[i]);
-            constraints.Add($"(LOWER(g.Title) LIKE @SearchQuery{i} OR LOWER(g.Summary) LIKE @SearchQuery{i})");
+            constraints.Add($"(LOWER(s.Title) LIKE @SearchQuery{i} OR LOWER(s.SummaryText) LIKE @SearchQuery{i})");
         }
     }
 
@@ -528,32 +700,35 @@ public class MariaDbHandler : IMariaDbHandler
         constraints.Add("g.FeedId NOT IN @DisabledFeeds");
     }
 
-    public async Task<GistWithFeed?> GetGistWithFeedByIdAsync(int id, CancellationToken ct)
+    public async Task<ConstructedGist?> GetConstructedGistByIdAsync(int id, LanguageMode? languageMode, CancellationToken ct)
     {
-        const string query = """
+        var parameters = new DynamicParameters();
+        var query = $"""
             SELECT
                 g.Id as Id,
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
-                g.Title as Title,
+                s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
-                g.Summary as Summary,
+                s.SummaryText as Summary,
                 g.Tags as Tags,
                 g.SearchQuery as SearchQuery
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
-            WHERE g.Id = @Id
+            INNER JOIN Summaries s ON s.GistId = g.Id
+            WHERE g.Id = @Id AND {GetLanguageModeCondition(parameters, languageMode)}
         """;
-        var command = new CommandDefinition(query, new { Id = id }, cancellationToken: ct);
+        parameters.Add("Id", id);
+        var command = new CommandDefinition(query, parameters, cancellationToken: ct);
 
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return await connection.QuerySingleOrDefaultAsync<GistWithFeed>(command).WithDeadlockRetry(_logger);
+            return await connection.QuerySingleOrDefaultAsync<ConstructedGist>(command).WithDeadlockRetry(_logger);
         }
         catch (MySqlException e)
         {
@@ -581,7 +756,7 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task<SerializedRecap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct)
     {
-        var query = $"SELECT Created, Recap, Id FROM Recaps{recapType.ToTypeString()} ORDER BY Created DESC LIMIT 1";
+        var query = $"SELECT Created, RecapEn, RecapDe, Id FROM Recaps{recapType.ToTypeString()} ORDER BY Created DESC LIMIT 1";
         var command = new CommandDefinition(query, cancellationToken: ct);
 
         try
@@ -649,9 +824,9 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    private async Task<GistWithFeed?> GetMostRecentGistWithFeedAsync(CancellationToken ct)
+    private async Task<ConstructedGist?> GetMostRecentGistWithFeedAsync(CancellationToken ct)
     {
-        var gistsWithFeed = await GetPreviousGistsWithFeedAsync(1, null, [], null, [], ct);
+        var gistsWithFeed = await GetPreviousConstructedGistsAsync(1, null, [], null, [], null, ct);
         if (gistsWithFeed.Count != 0) return gistsWithFeed.Single();
         _logger?.LogInformation(NoRecentGistFound, "No recent gist found in database");
         return null;
@@ -701,32 +876,37 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public async Task<List<GistWithFeed>> GetNextFiveGistsWithFeedAsync(int lastGistId, CancellationToken ct)
+    public async Task<List<ConstructedGist>> GetNextFiveConstructedGistsAsync(int lastGistId, LanguageMode languageMode,
+        CancellationToken ct)
     {
-        const string query = """
+        var parameters = new DynamicParameters();
+        var query = $"""
             SELECT
                 g.Id as Id,
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
-                g.Title as Title,
+                s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
-                g.Summary as Summary,
+                s.SummaryText as Summary,
                 g.Tags as Tags,
                 g.SearchQuery as SearchQuery
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
-            WHERE g.Id > @LastGistId AND g.Disabled IS FALSE ORDER BY g.Id ASC LIMIT 5
+            INNER JOIN Summaries s ON s.GistId = g.Id
+            WHERE g.Id > @LastGistId AND g.Disabled IS FALSE AND {GetLanguageModeCondition(parameters, languageMode)}
+            ORDER BY g.Id ASC LIMIT 5
         """;
-        var command = new CommandDefinition(query, new { LastGistId = lastGistId }, cancellationToken: ct);
+        parameters.Add("LastGistId", lastGistId);
+        var command = new CommandDefinition(query, parameters, cancellationToken: ct);
 
         try
         {
             await using var connection = await GetOpenConnectionAsync(ct);
-            return (await connection.QueryAsync<GistWithFeed>(command).WithDeadlockRetry(_logger)).ToList();
+            return (await connection.QueryAsync<ConstructedGist>(command).WithDeadlockRetry(_logger)).ToList();
         }
         catch (MySqlException e)
         {

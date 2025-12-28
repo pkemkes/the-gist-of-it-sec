@@ -4,6 +4,7 @@ import React from "react";
 import { FeedSelectorMenuItem } from "./FeedSelectorMenuItem";
 import { ThemeToggleMenuItem } from "./ThemeToggleMenuItem";
 import { TimezoneSelectorMenuItem } from "./TimezonSelectorMenuItem";
+import { LanguageModeSelectorMenuItem } from "./LanguageModeSelectorMenuItem";
 
 
 export const SettingsMenu = () => {
@@ -49,6 +50,7 @@ export const SettingsMenu = () => {
     >
       <FeedSelectorMenuItem />
       <TimezoneSelectorMenuItem />
+      <LanguageModeSelectorMenuItem />
       <ThemeToggleMenuItem />
     </Menu>
   </div>

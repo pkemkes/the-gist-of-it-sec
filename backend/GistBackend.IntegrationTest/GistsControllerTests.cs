@@ -111,16 +111,21 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     [Fact]
     public async Task GetGists_WithGists_Gists()
     {
-        var testFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        const Language feedLanguage = Language.De;
+        var testFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(feedLanguage, 1)).Single();
         var testGists = await _mariaDbHandler.InsertTestGistsAsync(5, testFeed.Id);
-        var expectedGistsWithFeed = testGists.Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed)).ToList();
+        var testSummaries = await Task.WhenAll(testGists.Select(gist =>
+                _mariaDbHandler.InsertTestSummariesAsync(gist.Id!.Value, feedLanguage)));
+        var originalSummaries = testSummaries.Select(summaryPair => summaryPair.First());
+        var expectedConstructedGists = testGists.Zip(originalSummaries,
+            (gist, summary) => ConstructedGist.FromGistFeedAndSummary(gist, testFeed, summary)).ToList();
 
         var actual = await _client.GetAsync(RoutingConstants.GistsRoute);
 
         actual.EnsureSuccessStatusCode();
-        var actualGistsWithFeed = await actual.Content.ReadFromJsonAsync<List<GistWithFeed>>(_jsonSerializerOptions);
-        Assert.NotNull(actualGistsWithFeed);
-        Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
+        var actualConstructedGist = await actual.Content.ReadFromJsonAsync<List<ConstructedGist>>(_jsonSerializerOptions);
+        Assert.NotNull(actualConstructedGist);
+        Assert.Equivalent(expectedConstructedGists, actualConstructedGist);
     }
 
     [Fact]
@@ -128,33 +133,37 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     {
         var searchWords = new[] { "word1", "word2" };
         var tags = new[] { "tag1", "tag2" };
-        var enabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var enabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(Language.De, 1)).Single();
         await _mariaDbHandler.InsertTestGistsAsync(4, enabledFeed.Id);  // gists of enabled feed
         var gistToFind = CreateTestGist(enabledFeed.Id) with {
-            Title = $"This is a {searchWords.First()} title",
-            Summary = $"This is a {searchWords.Last()} summary",
             Tags = string.Join(";;", tags.Concat(_random.NextArrayOfStrings(3)))
         };
         gistToFind.Id = await _mariaDbHandler.InsertGistAsync(gistToFind, CancellationToken.None);
-        var expectedGistWithFeed = GistWithFeed.FromGistAndFeed(gistToFind, enabledFeed);
-        var otherGistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(5, enabledFeed.Id);
-        var disabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
-        await _mariaDbHandler.InsertTestGistsAsync(10, disabledFeed.Id);  // gists of disabled feed
+        var summary = CreateTestSummary(Language.En, true, gistToFind.Id) with {
+            Title = $"This is a {searchWords.First()} title",
+            SummaryText = $"This is a {searchWords.Last()} summary"
+        };
+        await _mariaDbHandler.InsertSummaryAsync(summary, CancellationToken.None);
+        var expectedConstructedGist = ConstructedGist.FromGistFeedAndSummary(gistToFind, enabledFeed, summary);
+        var otherGistsOfEnabledFeed = await _mariaDbHandler.InsertTestConstructedGistsAsync(5, enabledFeed);
+        var disabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(Language.De, 1)).Single();
+        await _mariaDbHandler.InsertTestConstructedGistsAsync(10, disabledFeed);  // gists of disabled feed
         var parameters = new Dictionary<string, string?> {
-            { "lastGist", otherGistsOfEnabledFeed.Last().Id!.Value.ToString() },
+            { "lastGist", otherGistsOfEnabledFeed.Last().Id.ToString() },
             { "tags", string.Join(";;", tags) },
             { "q", string.Join("  ", searchWords) },
-            { "disabledFeeds", string.Join(",", [ disabledFeed.Id, 1337, 4332, 4332 ]) }
+            { "disabledFeeds", string.Join(",", [ disabledFeed.Id, 1337, 4332, 4332 ]) },
+            { "languageMode", nameof(LanguageMode.En) }
         };
         var uri = QueryHelpers.AddQueryString(RoutingConstants.GistsRoute, parameters);
 
         var actual = await _client.GetAsync(uri);
 
         actual.EnsureSuccessStatusCode();
-        var actualGistsWithFeed = await actual.Content.ReadFromJsonAsync<List<GistWithFeed>>(_jsonSerializerOptions);
+        var actualGistsWithFeed = await actual.Content.ReadFromJsonAsync<List<ConstructedGist>>(_jsonSerializerOptions);
         Assert.NotNull(actualGistsWithFeed);
         var actualGistWithFeed = Assert.Single(actualGistsWithFeed);
-        Assert.Equivalent(expectedGistWithFeed, actualGistWithFeed);
+        Assert.Equivalent(expectedConstructedGist, actualGistWithFeed);
     }
 
     [Fact]
@@ -188,17 +197,20 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     [Fact]
     public async Task GetSimilarGistsAsync_NoDisabledFeeds_AllSimilarGists()
     {
-        var testFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var testFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(Language.De, 1)).Single();
         var testGists = await _mariaDbHandler.InsertTestGistsAsync(3, testFeed.Id);
+        var testConstructedGists = new List<ConstructedGist>();
         for (var i = 0; i < testGists.Count; i++)
         {
+            var gist = testGists[i];
             var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
-            var entry = CreateTestEntry(testGists[i].FeedId) with { Reference = testGists[i].Reference };
+            var entry = CreateTestEntry(gist.FeedId) with { Reference = gist.Reference };
             await _chromaDbHandler.UpsertEntryAsync(entry, text, CancellationToken.None);
+            var summaries = await _mariaDbHandler.InsertTestSummariesAsync(gist.Id!.Value, testFeed.Language);
+            testConstructedGists.Add(ConstructedGist.FromGistFeedAndSummary(gist, testFeed, summaries.First()));
         }
-        var gistId = testGists.First().Id!.Value;
-        var expectedGistsWithFeed = testGists.Select(gist => GistWithFeed.FromGistAndFeed(gist, testFeed))
-            .Where(gist => gist.Id != gistId).ToList();
+        var gistId = testConstructedGists.First().Id;
+        var expectedConstructedGists = testConstructedGists.Where(gist => gist.Id != gistId).ToList();
 
         var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/{gistId}/similar");
 
@@ -207,25 +219,30 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
             await actual.Content.ReadFromJsonAsync<List<SimilarGistWithFeed>>(_jsonSerializerOptions);
         Assert.NotNull(similarGistsWithFeed);
         var gistsWithFeed = similarGistsWithFeed.Select(similarGist => similarGist.Gist).ToList();
-        Assert.Equivalent(expectedGistsWithFeed.OrderBy(g => g.Id), gistsWithFeed.OrderBy(g => g.Id));
+        Assert.Equivalent(expectedConstructedGists.OrderBy(g => g.Id), gistsWithFeed.OrderBy(g => g.Id));
     }
 
     [Fact]
     public async Task GetSimilarGistsAsync_OneDisabledFeed_OnlySimilarGistsOfOtherFeeds()
     {
-        var enabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var enabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(Language.De, 1)).Single();
         var gistsOfEnabledFeed = await _mariaDbHandler.InsertTestGistsAsync(2, enabledFeed.Id);
-        var disabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(1)).Single();
+        var disabledFeed = (await _mariaDbHandler.InsertTestFeedInfosAsync(Language.En, 1)).Single();
         var gistsOfDisabledFeed = await _mariaDbHandler.InsertTestGistsAsync(1, disabledFeed.Id);
         var testGists = gistsOfEnabledFeed.Concat(gistsOfDisabledFeed).ToList();
+        var testConstructedGists = new List<ConstructedGist>();
         for (var i = 0; i < testGists.Count; i++)
         {
+            var gist = testGists[i];
+            var feed = gist.FeedId == enabledFeed.Id ? enabledFeed : disabledFeed;
             var text = TestTextsAndEmbeddings.Keys.ElementAt(i);
-            var entry = CreateTestEntry(testGists[i].FeedId) with { Reference = testGists[i].Reference };
+            var entry = CreateTestEntry(gist.FeedId) with { Reference = gist.Reference };
             await _chromaDbHandler.UpsertEntryAsync(entry, text, CancellationToken.None);
+            var summaries = await _mariaDbHandler.InsertTestSummariesAsync(gist.Id!.Value, feed.Language);
+            testConstructedGists.Add(ConstructedGist.FromGistFeedAndSummary(gist, feed, summaries.First()));
         }
         var gistId = testGists.First().Id!.Value;
-        var expectedGistsWithFeed = gistsOfEnabledFeed.Select(gist => GistWithFeed.FromGistAndFeed(gist, enabledFeed))
+        var expectedGistsWithFeed = testConstructedGists.Where(gist => gist.FeedTitle == enabledFeed.Title)
             .Where(gist => gist.Id != gistId).ToList();
         var parameters = new Dictionary<string, string?> {
             { "disabledFeeds", string.Join(",", [ disabledFeed.Id, 33, 83, 83 ]) }
@@ -280,7 +297,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
     [Fact]
     public async Task GetAllFeedsAsync_FeedsInDb_Feeds()
     {
-        var expectedFeeds = await _mariaDbHandler.InsertTestFeedInfosAsync(5);
+        var expectedFeeds = await _mariaDbHandler.InsertTestFeedInfosAsync(Language.De, 5);
 
         var actual = await _client.GetAsync($"{RoutingConstants.GistsRoute}/feeds");
 

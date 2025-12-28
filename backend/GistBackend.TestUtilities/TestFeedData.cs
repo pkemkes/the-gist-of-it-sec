@@ -6,11 +6,13 @@ namespace TestUtilities;
 
 public class TestFeedData
 {
-    public RssFeed RssFeed { get; } = CreateTestRssFeed();
+    public RssFeed RssFeed { get; } = CreateTestRssFeed(Language.De);
     public string SyndicationFeedXml => SyndicationFeed.ToEncodedXmlString();
     public RssFeedInfo RssFeedInfo =>
-        new(SyndicationFeed.Title.Text, RssFeed.RssUrl, SyndicationFeed.Language, RssFeed.Id);
+        new(SyndicationFeed.Title.Text, RssFeed.RssUrl, RssFeed.Language, RssFeed.Id);
     public List<RssEntry> Entries { get; }
+    public List<SummaryAIResponse> SummaryAIResponses { get; }
+    public List<string> Texts { get; }
     public List<Gist> Gists { get; }
     private SyndicationFeed SyndicationFeed { get;  }
 
@@ -19,7 +21,9 @@ public class TestFeedData
         if (feedId is not null)
             RssFeed.Id = feedId.Value;
         Entries = entries ?? CreateTestEntries(5, feedId);
-        Gists = Entries.Select(CreateTestGistFromEntry).ToList();
+        SummaryAIResponses = CreateTestSummaryAIResponses(Entries.Count);
+        Texts = CreateTestStrings(Entries.Count);
+        Gists = Entries.Zip(SummaryAIResponses, CreateTestGistFromEntry).ToList();
         SyndicationFeed = CreateTestSyndicationFeed(Entries);
     }
 }

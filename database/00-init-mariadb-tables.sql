@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS Feeds (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Title TEXT NOT NULL,
     RssUrl MEDIUMTEXT NOT NULL,
-    Language TINYTEXT,
+    Language INT NOT NULL,
     UNIQUE(RssUrl)
 );
 
@@ -17,22 +17,33 @@ CREATE TABLE IF NOT EXISTS Gists (
     Reference TEXT NOT NULL,
     FeedId INT NOT NULL,
     Author TEXT NOT NULL,
-    Title TEXT NOT NULL,
     Published DATETIME NOT NULL,
     Updated DATETIME NOT NULL,
     Url MEDIUMTEXT NOT NULL,
-    Summary LONGTEXT NOT NULL,
     Tags LONGTEXT NOT NULL,
     SearchQuery MEDIUMTEXT NOT NULL,
     Disabled BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (FeedId) REFERENCES Feeds(Id),
-    FULLTEXT(Summary),
-    FULLTEXT(Tags),
     UNIQUE(Reference)
 );
 
 CREATE INDEX IF NOT EXISTS GistsByReference ON Gists(Reference);
 CREATE INDEX IF NOT EXISTS GistsByUpdated ON Gists(Updated);
+CREATE FULLTEXT INDEX IF NOT EXISTS TagsFulltext ON Gists(Tags);
+
+CREATE TABLE IF NOT EXISTS Summaries (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    GistId INT NOT NULL,
+    Language INT NOT NULL,
+    IsTranslated BOOLEAN NOT NULL,
+    Title TEXT NOT NULL,
+    SummaryText LONGTEXT NOT NULL,
+    FOREIGN KEY (GistId) REFERENCES Gists(Id),
+    UNIQUE(GistId, Language)
+);
+
+CREATE FULLTEXT INDEX IF NOT EXISTS TitlesFulltext ON Summaries(Title);
+CREATE FULLTEXT INDEX IF NOT EXISTS SummariesFulltext ON Summaries(SummaryText);
 
 CREATE TABLE IF NOT EXISTS Chats (
     Id BIGINT PRIMARY KEY,
@@ -53,7 +64,8 @@ CREATE TABLE IF NOT EXISTS SearchResults (
 CREATE TABLE IF NOT EXISTS RecapsDaily (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Created DATETIME NOT NULL,
-    Recap LONGTEXT NOT NULL
+    RecapEn LONGTEXT NOT NULL,
+    RecapDe LONGTEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS RecapsDailyByCreated ON RecapsDaily(Created);
@@ -61,7 +73,8 @@ CREATE INDEX IF NOT EXISTS RecapsDailyByCreated ON RecapsDaily(Created);
 CREATE TABLE IF NOT EXISTS RecapsWeekly (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Created DATETIME NOT NULL,
-    Recap LONGTEXT NOT NULL
+    RecapEn LONGTEXT NOT NULL,
+    RecapDe LONGTEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS RecapsWeeklyByCreated ON RecapsWeekly(Created);

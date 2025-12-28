@@ -1,7 +1,13 @@
 {
   "type": "object",
   "properties": {
-    "summary": {
+    "summary_english": {
+      "type": "string"
+    },
+    "summary_german": {
+      "type": "string"
+    },
+    "title_translated": {
       "type": "string"
     },
     "tags": {
@@ -15,7 +21,9 @@
     }
   },
   "required": [
-    "summary",
+    "summary_english",
+    "summary_german",
+    "title_translated",
     "tags",
     "search_query"
   ],

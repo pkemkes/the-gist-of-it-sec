@@ -10,19 +10,21 @@ public static class TestData
 {
     private static readonly Random Random = new();
 
-    public static RssFeed CreateTestRssFeed() => new(Random.NextUri(), s => s);
+    public static RssFeed CreateTestRssFeed(Language language) => new(Random.NextUri(), s => s, language);
 
     public static List<TestFeedData> CreateTestFeeds(int count = 5) =>
         Enumerable.Range(0, count).Select(_ => new TestFeedData()).ToList();
 
-    public static RssFeedInfo CreateTestFeedInfo() => new(
+    public static RssFeedInfo CreateTestFeedInfo(Language language) => new(
         Random.NextString(),
         Random.NextUri(),
-        Random.NextString()
+        language
     );
 
-    public static List<RssFeed> CreateTestRssFeeds(int count) =>
-        Enumerable.Range(0, count).Select(_ => CreateTestRssFeed()).ToList();
+    public static RssFeedInfo CreateTestFeedInfo() => CreateTestFeedInfo(Language.De);
+
+    public static List<RssFeed> CreateTestRssFeeds(int count, Language language) =>
+        Enumerable.Range(0, count).Select(_ => CreateTestRssFeed(language)).ToList();
 
     public static SyndicationFeed CreateTestSyndicationFeed(List<RssEntry>? entries = null)
     {
@@ -54,11 +56,9 @@ public static class TestData
         reference ?? Random.NextString(),
         feedId ?? Random.Next(),
         Random.NextString(),
-        Random.NextString(),
         Random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
         updated ?? Random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
         Random.NextUri(),
-        Random.NextString(),
         string.Join(";;", Random.NextArrayOfStrings()),
         Random.NextString(),
         Random.Next()
@@ -67,22 +67,47 @@ public static class TestData
     public static List<Gist> CreateTestGists(int count, int? feedId = null) =>
         Enumerable.Range(0, count).Select(_ => CreateTestGist(feedId ?? Random.Next())).ToList();
 
-    public static Gist CreateTestGistFromEntry(RssEntry entry)
+    public static Gist CreateTestGistFromEntry(RssEntry entry, SummaryAIResponse? summaryAIResponse = null)
     {
-        var summaryAIResponse = CreateTestSummaryAIResponse();
+        summaryAIResponse ??= CreateTestSummaryAIResponse();
         return new Gist(
             entry.Reference,
             entry.FeedId,
             entry.Author,
-            entry.Title,
             entry.Published,
             entry.Updated,
             entry.Url,
-            summaryAIResponse.Summary,
             string.Join(";;", summaryAIResponse.Tags),
             summaryAIResponse.SearchQuery,
             Random.Next()
         );
+    }
+
+    public static Summary CreateTestSummary(Language language, bool isTranslated, int? gistId = null) => new(
+        gistId ?? Random.Next(),
+        language,
+        isTranslated,
+        Random.NextString(),
+        Random.NextString()
+    );
+
+    public static List<ConstructedGist> CreateTestConstructedGists(int count, RssFeedInfo? feed = null,
+        Language language = Language.De)
+    {
+        feed ??= CreateTestFeedInfo(language);
+        return Enumerable.Range(0, count).Select(_ => CreateTestConstructedGist(feed)).ToList();
+    }
+
+    public static ConstructedGist CreateTestConstructedGist(RssFeedInfo? feed = null, string? reference = null,
+        DateTime? updated = null, Language language = Language.De, LanguageMode languageMode = LanguageMode.Original)
+    {
+        feed ??= CreateTestFeedInfo(language);
+        var gist = CreateTestGist(feed.Id, reference, updated);
+        var isTranslated = languageMode == LanguageMode.Original ||
+                           languageMode == LanguageMode.De && language == Language.De ||
+                           languageMode == LanguageMode.En && language == Language.En;
+        var summary = CreateTestSummary(language, isTranslated, gist.Id);
+        return ConstructedGist.FromGistFeedAndSummary(gist, feed, summary);
     }
 
     public static GoogleSearchResult CreateTestSearchResult(int? gistId = null) => new(
@@ -100,13 +125,16 @@ public static class TestData
     public static List<List<GoogleSearchResult>> CreateMultipleTestSearchResults(int count) =>
         Enumerable.Range(0, count).Select(_ => CreateTestSearchResults(10)).ToList();
 
-    public static Recap CreateTestRecap() => new (Enumerable.Range(0, 5).Select(_ =>
-        new RecapSection(
-            Random.NextString(),
-            Random.NextString(),
-            Enumerable.Range(0, 3).Select(_ => Random.Next(10000)).ToList()
-        )
-    ).ToList());
+    public static RecapAIResponse CreateTestRecap() => new(CreateTestRecapSections(), CreateTestRecapSections());
+
+    private static List<RecapSection> CreateTestRecapSections() =>
+        Enumerable.Range(0, 5).Select(_ =>
+            new RecapSection(
+                Random.NextString(),
+                Random.NextString(),
+                Enumerable.Range(0, 3).Select(_ => Random.Next(10000)).ToList()
+            )
+        ).ToList();
 
     public static readonly Dictionary<string, float[]> TestTextsAndEmbeddings = new() {
         { "test text", Enumerable.Repeat(0.1f, 100).ToArray() },
@@ -134,6 +162,8 @@ public static class TestData
 
     private static SummaryAIResponse CreateTestSummaryAIResponse() => new(
         Random.NextString(),
+        Random.NextString(),
+        Random.NextString(),
         CreateTestStrings(Random.Next(1, 5)),
         Random.NextString()
     );
@@ -146,7 +176,8 @@ public static class TestData
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> sendAsync)
         : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+            CancellationToken cancellationToken)
             => sendAsync(request, cancellationToken);
     }
 

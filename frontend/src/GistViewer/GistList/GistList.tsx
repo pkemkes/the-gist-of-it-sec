@@ -2,13 +2,12 @@ import { backendApi } from "../../backend";
 import { GistCard } from "../GistCard";
 import { GistEndCard } from "../GistEndCard";
 import { useAppDispatch, useAppSelector } from "../../store";
-import { lastGistChanged, selectDisabledFeeds, selectLastGist, selectSearchQuery, selectTags } from "../slice";
+import { lastGistChanged, selectDisabledFeeds, selectLastGist, selectSearchQuery, selectTags, selectLanguageMode } from "../slice";
 import { Gist } from "src/types";
 import { GistViewerBody } from "../GistViewerBody";
 import { ErrorMessage } from "../ErrorMessage";
 import { useEffect, useRef } from "react";
 import { LoadingBar } from "../LoadingBar";
-import { Button } from "@mui/material";
 import { RecapButtons } from "./RecapButtons";
 
 
@@ -30,8 +29,12 @@ export const GistList = () => {
   const searchQuery = useAppSelector(selectSearchQuery);
   const tags = useAppSelector(selectTags);
   const disabledFeeds = useAppSelector(selectDisabledFeeds);
+  const languageMode = useAppSelector(selectLanguageMode);
 
-  const { data, error, isFetching } = backendApi.useGetGistsQuery({ lastGist, searchQuery, tags, disabledFeeds });
+  const { data, error, isFetching } = backendApi.useGetGistsQuery(
+    { lastGist, searchQuery, tags, disabledFeeds, languageMode },
+    { refetchOnMountOrArgChange: true }
+  );
 
   const viewerBodyRef = useRef<HTMLDivElement>(null);
 

@@ -5,7 +5,8 @@ namespace GistBackend.Utils;
 public static class SyndicationItemExtensions {
     public static string ExtractAuthor(this SyndicationItem item)
     {
-        if (item.Authors.Count != 0) return string.Join(", ", item.Authors.Select(person => person.Name.Trim()));
+        if (item.Authors is null) return "";
+        if (item.Authors.Count != 0) return string.Join(", ", item.Authors.Select(person => person.ExtractName()));
         return item.ElementExtensions
             .Where(ext => ext.OuterName == "creator")
             .Select(ext => ext.GetObject<string>())
@@ -21,4 +22,13 @@ public static class SyndicationItemExtensions {
 
     public static IEnumerable<string> ExtractCategories(this SyndicationItem item) =>
         item.Categories.Select(category => category.Name.Trim());
+}
+
+public static class SyndicationPersonExtensions {
+    public static string ExtractName(this SyndicationPerson person) =>
+        string.IsNullOrWhiteSpace(person.Name)
+            ? string.IsNullOrWhiteSpace(person.Email)
+                ? ""
+                : person.Email.Trim().Replace("(", "").Replace(")", "")
+            : person.Name.Trim();
 }

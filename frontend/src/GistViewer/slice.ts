@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { type RootState } from "../store";
+import { LanguageMode } from "../types";
 
 export const name = "gists"
 
@@ -9,6 +10,7 @@ export interface GistsState {
   tags: string[],
   disabledFeeds: number[],
   timezone: string,
+  languageMode: LanguageMode
 }
 
 export const initialState: GistsState = {
@@ -17,6 +19,7 @@ export const initialState: GistsState = {
   tags: [],
   disabledFeeds: [],
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  languageMode: LanguageMode.ORIGINAL,
 }
 
 export const slice = createSlice({
@@ -59,6 +62,9 @@ export const slice = createSlice({
     timezoneChanged: (state, action: PayloadAction<string>) => {
       state.timezone = action.payload;
     },
+    languageModeChanged: (state, action: PayloadAction<LanguageMode>) => {
+      state.languageMode = action.payload;
+    },
   }
 });
 
@@ -71,6 +77,7 @@ export const {
   disabledFeedsChanged,
   gistListReset,
   timezoneChanged,
+  languageModeChanged,
 } = slice.actions;
 
 export const selectLastGist = (state: RootState) => state.gists.lastGist;
@@ -78,5 +85,6 @@ export const selectSearchQuery = (state: RootState) => state.gists.searchQuery;
 export const selectTags = (state: RootState) => state.gists.tags;
 export const selectDisabledFeeds = (state: RootState) => state.gists.disabledFeeds;
 export const selectTimezone = (state: RootState) => state.gists.timezone;
+export const selectLanguageMode = (state: RootState) => state.gists.languageMode;
 
 export default slice.reducer;

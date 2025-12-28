@@ -10,9 +10,14 @@ public static class Program
     public static async Task Main(string[] args)
     {
         var builder = Host.CreateDefaultBuilder(args);
-        var host = builder.UseSerilog((_, _, configuration) => {
+        var host = builder.UseSerilog((context, _, configuration) => {
                 configuration
+                    .ReadFrom.Configuration(context.Configuration)
                     .Enrich.FromLogContext()
+                    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
+                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information)
+                    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
                     .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
                     .MinimumLevel.Override("System.Net.Http.HttpClient.Default.LogicalHandler", LogEventLevel.Warning)
                     .MinimumLevel.Override("System.Net.Http.HttpClient.Default.ClientHandler", LogEventLevel.Warning)

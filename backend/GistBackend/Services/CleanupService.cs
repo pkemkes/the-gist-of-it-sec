@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
 using Prometheus;
 using static GistBackend.Utils.LogEvents;
+using Summary = Prometheus.Summary;
 
 namespace GistBackend.Services;
 

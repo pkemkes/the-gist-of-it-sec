@@ -1,9 +1,13 @@
+import { LanguageMode } from "./types";
+
 const disabledFeedsLocalStorageKey = "disabledFeeds";
-const timezoneStorageKey = "timezone"
+const timezoneStorageKey = "timezone";
+const languageModeStorageKey = "languageMode";
 
 interface SaveableStateData {
   disabledFeeds: number[],
   timezone: string,
+  languageMode: LanguageMode,
 }
 
 export const saveStateData = (stateData: SaveableStateData) => {
@@ -11,6 +15,7 @@ export const saveStateData = (stateData: SaveableStateData) => {
     const serializedDisabledFeeds = JSON.stringify(stateData.disabledFeeds);
     localStorage.setItem(disabledFeedsLocalStorageKey, serializedDisabledFeeds);
     localStorage.setItem(timezoneStorageKey, stateData.timezone);
+    localStorage.setItem(languageModeStorageKey, stateData.languageMode);
   }
   catch { }
 };
@@ -30,3 +35,12 @@ export const loadTimezone = (): string | undefined => {
   const savedTimezone = localStorage.getItem(timezoneStorageKey);
   return savedTimezone === null ? undefined : savedTimezone;
 };
+
+export const loadLanguageMode = (): LanguageMode | undefined => {
+  const savedLanguageMode = localStorage.getItem(languageModeStorageKey);
+  if (savedLanguageMode == null) return undefined;
+  if (Object.values(LanguageMode).includes(savedLanguageMode as LanguageMode)) {
+    return savedLanguageMode as LanguageMode;
+  }
+  return undefined;
+}

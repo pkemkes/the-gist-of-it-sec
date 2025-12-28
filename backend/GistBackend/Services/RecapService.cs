@@ -62,20 +62,20 @@ public class RecapService(
 
     private async Task CreateDailyRecapAsync(CancellationToken ct)
     {
-        var gists = await mariaDbHandler.GetGistsOfLastDayAsync(ct);
+        var gists = await mariaDbHandler.GetConstructedGistsOfLastDayAsync(ct);
         if (gists.Count == 0)
         {
             logger?.LogInformation(NoGistsForDailyRecap, "No gists to create daily recap");
             return;
         }
-        var recap = await openAIHandler.GenerateDailyRecapAsync(gists, ct);
-        await mariaDbHandler.InsertDailyRecapAsync(recap, ct);
+        var recapAIResponse = await openAIHandler.GenerateDailyRecapAsync(gists, ct);
+        await mariaDbHandler.InsertDailyRecapAsync(recapAIResponse, ct);
         logger?.LogInformation(DailyRecapCreated, "Daily recap created");
     }
 
     private async Task CreateWeeklyRecapAsync(CancellationToken ct)
     {
-        var gists = await mariaDbHandler.GetGistsOfLastWeekAsync(ct);
+        var gists = await mariaDbHandler.GetConstructedGistsOfLastWeekAsync(ct);
         if (gists.Count == 0)
         {
             logger?.LogInformation(NoGistsForWeeklyRecap, "No gists to create weekly recap");

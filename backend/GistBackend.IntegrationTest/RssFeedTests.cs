@@ -22,13 +22,13 @@ public class RssFeedTests : IAsyncLifetime {
     public async Task ParseFeedAsync_Rss2FeedXML_FeedIsCorrectlyParsed()
     {
         var rssFeedUrl = new Uri($"{GetBaseUrl()}/test_rss_2.xml");
-        var rssFeed = new RssFeed(rssFeedUrl, content => content);
+        var rssFeed = new RssFeed(rssFeedUrl, content => content, Language.En);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
         rssFeed.ParseEntries(0);
 
         Assert.Equal("Test RSS Feed", rssFeed.Title);
-        Assert.Equal("en", rssFeed.Language);
+        Assert.Equal(Language.En, rssFeed.Language);
         Assert.Equal(3, rssFeed.Entries!.Count());
         var entries = rssFeed.Entries!.ToArray();
         Assert.Equal("First news article", entries[0].Title);
@@ -58,13 +58,13 @@ public class RssFeedTests : IAsyncLifetime {
     public async Task ParseFeedAsync_AtomFeedXML_FeedIsCorrectlyParsed()
     {
         var rssFeedUrl = new Uri($"{GetBaseUrl()}/test_atom.xml");
-        var rssFeed = new RssFeed(rssFeedUrl, content => content);
+        var rssFeed = new RssFeed(rssFeedUrl, content => content, Language.En);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
         rssFeed.ParseEntries(0);
 
         Assert.Equal("Test RSS Feed", rssFeed.Title);
-        Assert.Equal("en-US", rssFeed.Language);
+        Assert.Equal(Language.En, rssFeed.Language);
         Assert.Equal(3, rssFeed.Entries!.Count());
         var entries = rssFeed.Entries!.ToArray();
         Assert.Equal("First news article", entries[0].Title);
@@ -97,7 +97,7 @@ public class RssFeedTests : IAsyncLifetime {
         string rssFeedPath)
     {
         var rssFeedUrl = new Uri($"{GetBaseUrl()}/{rssFeedPath}");
-        var rssFeed = new RssFeed(rssFeedUrl, content => content, [ "Test Category 1" ]);
+        var rssFeed = new RssFeed(rssFeedUrl, content => content, Language.De, ["Test Category 1"]);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
         rssFeed.ParseEntries(0);

@@ -6,11 +6,12 @@ import { BackButton } from "../BackButton";
 import React, { useState } from "react";
 import { SimilarGistList } from "./SimilarGistList";
 import { SearchResultList } from "./SearchResultList";
-import { useNavigate, useSearchParams } from "react-router";
 import { LoadingBar } from "../LoadingBar";
 import { ErrorMessage } from "../ErrorMessage";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { GistNotFoundMessage } from "../GistNotFoundMessage";
+import { useAppSelector } from "../../store";
+import { selectLanguageMode } from "../slice";
 
 interface GistInspectorProps {
   gistId: number
@@ -18,6 +19,7 @@ interface GistInspectorProps {
 
 export const GistInspector = ({ gistId }: GistInspectorProps) => {
   let [ mode, setMode ] = useState("similar");
+  const languageMode = useAppSelector(selectLanguageMode);
 
   const handleModeChange = (
     _: React.MouseEvent<HTMLElement>,
@@ -26,7 +28,7 @@ export const GistInspector = ({ gistId }: GistInspectorProps) => {
     setMode(newMode);
   };
 
-  const { data, error, isFetching } = backendApi.useGetGistByIdQuery({ id: gistId });
+  const { data, error, isFetching } = backendApi.useGetGistByIdQuery({ id: gistId, languageMode });
 
   if (isFetching) {
     return <GistViewerBody>

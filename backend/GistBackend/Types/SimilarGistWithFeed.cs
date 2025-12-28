@@ -4,6 +4,6 @@ namespace GistBackend.Types;
 
 [method: JsonConstructor]
 public record SimilarGistWithFeed(
-    GistWithFeed Gist,
+    ConstructedGist Gist,
     float Similarity
 );
