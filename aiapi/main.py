@@ -6,8 +6,6 @@ from api import app
 
 
 def main() -> None:
-    print(getenv("OPENAI_API_KEY"))
-
     parser = argparse.ArgumentParser(description="Summarizer API utilities")
     parser.add_argument("--host", default="0.0.0.0", help="Host for the dev server")
     parser.add_argument("--port", type=int, default=8000, help="Port for the dev server")
