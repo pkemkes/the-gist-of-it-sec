@@ -25,7 +25,7 @@ class SummarizeRequest(BaseModel):
 @app.post("/summarize")
 async def summarize_article(request: SummarizeRequest) -> dict:
     lang_enum = Language(request.language)
-    summary_response = handler.summarize(request.title, request.article, lang_enum)
+    summary_response = await handler.summarize_async(request.title, request.article, lang_enum)
     return summary_response.model_dump()
 
 class RecapRequest(BaseModel):
@@ -35,5 +35,5 @@ class RecapRequest(BaseModel):
 @app.post("/recap")
 async def recap_article(request: RecapRequest) -> dict:
     recap_type = RecapType(request.recap_type)
-    recap_response = handler.recap(request.summaries, recap_type)
+    recap_response = await handler.recap_async(request.summaries, recap_type)
     return recap_response.model_dump()

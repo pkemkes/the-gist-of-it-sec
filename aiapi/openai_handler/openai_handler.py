@@ -52,18 +52,13 @@ class OpenAIHandler:
         )
     
     def _filter_tags(self, generated_tags: List[str]) -> List[str]:
-        filtered_tags = []
-        for tag in generated_tags:
-            if type(tag) is not str:
-                self.logger.warning(f"Generated tag that was not a string: {tag}")
-            elif tag.lower().strip() not in self.tags:
-                self.logger.warning(f"Generated tag that was not predefined: {tag}")
-            else:
-                filtered_tags.append(tag)
-        return filtered_tags
+        return [
+            tag for tag in generated_tags 
+            if type(tag) is str and tag.lower().strip() in self.tags
+        ]
     
-    def summarize(self, title: str, article: str, language: Language) -> SummaryAIResponse:
-        result: dict = self.summary_agent.invoke({
+    async def summarize_async(self, title: str, article: str, language: Language) -> SummaryAIResponse:
+        result: dict = await self.summary_agent.ainvoke({
             "messages": [ self._get_summary_user_message(language, title, article) ]
         })
         response = result.get("structured_response")
@@ -114,9 +109,9 @@ class OpenAIHandler:
             id=summary.id
         )
     
-    def recap(self, summaries: list[SummaryForRecap], recap_type: RecapType) -> RecapAIResponse:
+    async def recap_async(self, summaries: list[SummaryForRecap], recap_type: RecapType) -> RecapAIResponse:
         agent = self._get_recap_agent(recap_type)
-        result: dict = agent.invoke({
+        result: dict = await agent.ainvoke({
             "messages": [ self._get_recap_user_message(summary) for summary in summaries ]
         })
         response = result.get("structured_response")
