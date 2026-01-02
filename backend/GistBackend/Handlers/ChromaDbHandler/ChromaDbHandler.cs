@@ -2,7 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using GistBackend.Exceptions;
-using GistBackend.Handlers.OpenAiHandler;
+using GistBackend.Handlers.AIHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Logging;
@@ -26,13 +26,13 @@ public class ChromaDbHandler : IChromaDbHandler
     private readonly string _tenantName;
     private readonly string _databaseName;
     private readonly string _collectionName;
-    private readonly IOpenAIHandler _openAIHandler;
+    private readonly IAIHandler _aiHandler;
     private readonly HttpClient _httpClient;
     private readonly string _credentialsHeaderName;
     private readonly string _serverAuthnCredentials;
     private readonly ILogger<ChromaDbHandler>? _logger;
 
-    public ChromaDbHandler(IOpenAIHandler openAIHandler,
+    public ChromaDbHandler(IAIHandler aiHandler,
         HttpClient httpClient,
         IOptions<ChromaDbHandlerOptions> options,
         ILogger<ChromaDbHandler>? logger)
@@ -41,7 +41,7 @@ public class ChromaDbHandler : IChromaDbHandler
             throw new ArgumentException("Server is not set in the options.");
         if (string.IsNullOrWhiteSpace(options.Value.ServerAuthnCredentials))
             throw new ArgumentException("Server authentication credentials are not set in the options.");
-        _openAIHandler = openAIHandler;
+        _aiHandler = aiHandler;
         _httpClient = httpClient;
         _logger = logger;
         _chromaDbUri = new Uri($"http://{options.Value.Server}:{options.Value.Port}/");
@@ -133,7 +133,7 @@ public class ChromaDbHandler : IChromaDbHandler
         }
 
         var metadata = new Metadata(entry.Reference, entry.FeedId);
-        var embedding = await _openAIHandler.GenerateEmbeddingAsync(text, ct);
+        var embedding = await _aiHandler.GenerateEmbeddingAsync(text, ct);
         var content = CreateStringContent(new Document([entry.Reference], [metadata], [embedding]));
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/{mode}", content, ct);

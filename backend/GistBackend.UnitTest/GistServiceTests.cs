@@ -1,7 +1,7 @@
 using GistBackend.Handlers;
+using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
-using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Services;
 using GistBackend.Types;
 using Microsoft.Extensions.Logging;
@@ -199,27 +199,27 @@ public class GistServiceTests
         return rssEntryHandlerMock;
     }
 
-    private static IOpenAIHandler CreateMockedOpenAIHandler(List<TestFeedData> testFeeds)
+    private static IAIHandler CreateMockedAIHandler(List<TestFeedData> testFeeds)
     {
-        var openAIHandlerMock = Substitute.For<IOpenAIHandler>();
+        var aiHandlerMock = Substitute.For<IAIHandler>();
         foreach (var feed in testFeeds)
         {
             foreach (var (entry, text, aiResponse) in feed.Entries.Zip(feed.Texts, feed.SummaryAIResponses))
             {
-                openAIHandlerMock
+                aiHandlerMock
                     .GenerateSummaryAIResponseAsync(feed.RssFeed.Language, entry.Title, text,
                         Arg.Any<CancellationToken>())
                     .Returns(Task.FromResult(aiResponse));
             }
         }
-        return openAIHandlerMock;
+        return aiHandlerMock;
     }
 
     private static GistService CreateGistService(
         List<TestFeedData> testFeeds,
         IWebCrawlHandler? webCrawlHandler = null,
         IMariaDbHandler? mariaDbHandlerMock = null,
-        IOpenAIHandler? openAIHandlerMock = null,
+        IAIHandler? aiHandlerMock = null,
         IChromaDbHandler? chromaDbHandlerMock = null,
         ILogger<GistService>? loggerMock = null
     ) =>
@@ -227,7 +227,7 @@ public class GistServiceTests
             CreateRssFeedHandler(CreateMockedHttpClient(testFeeds), testFeeds),
             webCrawlHandler ?? CreateMockedRssEntryHandler(testFeeds),
             mariaDbHandlerMock ?? Substitute.For<IMariaDbHandler>(),
-            openAIHandlerMock ?? CreateMockedOpenAIHandler(testFeeds),
+            aiHandlerMock ?? CreateMockedAIHandler(testFeeds),
             chromaDbHandlerMock ?? Substitute.For<IChromaDbHandler>(),
             loggerMock
         );
