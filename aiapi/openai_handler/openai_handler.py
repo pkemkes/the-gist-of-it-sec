@@ -19,7 +19,12 @@ class OpenAIHandler:
     def __init__(self):
         self.tags = self._load_tags()
         self.summary_user_message_template = self._load_summary_user_message_template()
-        self.model = ChatOpenAI(model=getenv("OPENAI_MODEL", "gpt-5-mini"))
+        openai_project = getenv("OPENAI_PROJECT")
+        project_headers = {"OpenAI-Project": openai_project} if openai_project else None
+        self.model = ChatOpenAI(
+            model=getenv("OPENAI_MODEL", "gpt-5-mini"),
+            default_headers=project_headers,
+        )
         self.summary_agent = create_agent(
             model=self.model,
             response_format=SummaryAIResponse,
