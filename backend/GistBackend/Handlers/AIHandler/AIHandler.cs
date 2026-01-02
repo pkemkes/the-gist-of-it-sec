@@ -3,6 +3,7 @@ using GistBackend.Exceptions;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Options;
+using SharpToken;
 
 namespace GistBackend.Handlers.AIHandler;
 
@@ -14,7 +15,7 @@ public record RecapRequest(List<SummaryForRecap> Summaries, string RecapType);
 
 public interface IAIHandler
 {
-    public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct);
+    public Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken ct);
     public Task<SummaryAIResponse> GenerateSummaryAIResponseAsync(Language feedLanguage, string title, string article,
         CancellationToken ct);
     public Task<RecapAIResponse> GenerateDailyRecapAsync(IEnumerable<ConstructedGist> gists, CancellationToken ct);
@@ -25,17 +26,26 @@ public class AIHandler : IAIHandler
 {
     private readonly IEmbeddingClientHandler _embeddingClientHandler;
     private readonly HttpClient _httpClient;
+    private readonly GptEncoding _encoding;
 
     public AIHandler(IEmbeddingClientHandler embeddingClientHandler, HttpClient httpClient,
         IOptions<AIHandlerOptions> options)
     {
         _embeddingClientHandler = embeddingClientHandler;
+        _encoding = GptEncoding.GetEncodingForModel(embeddingClientHandler.Model);
         _httpClient = httpClient;
         _httpClient.BaseAddress = new Uri(options.Value.Host);
     }
 
-    public Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct) =>
-        _embeddingClientHandler.GenerateEmbeddingAsync(text, ct);
+    public Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken ct)
+    {
+        // Tokenize and truncate to stay under 8k context; keep a small buffer for prompts.
+        const int maxTokens = 7500;
+        var tokens = _encoding.Encode(input);
+        var safeInput = tokens.Count > maxTokens ? _encoding.Decode(tokens.Take(maxTokens)) : input;
+
+        return _embeddingClientHandler.GenerateEmbeddingAsync(safeInput, ct);
+    }
 
     public async Task<SummaryAIResponse> GenerateSummaryAIResponseAsync(Language feedLanguage, string title,
         string article, CancellationToken ct)

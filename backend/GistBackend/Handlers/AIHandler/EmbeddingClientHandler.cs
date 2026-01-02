@@ -8,20 +8,23 @@ namespace GistBackend.Handlers.AIHandler;
 public interface IEmbeddingClientHandler
 {
     public Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken ct);
+    public string Model { get; }
 }
 
 public class EmbeddingClientHandler : IEmbeddingClientHandler
 {
     private readonly EmbeddingClient _client;
+    public string Model { get; }
 
     public EmbeddingClientHandler(IOptions<EmbeddingClientHandlerOptions> options)
     {
         if (string.IsNullOrWhiteSpace(options.Value.ApiKey))
             throw new ArgumentException("API key is not set in the options.");
+        Model = options.Value.Model;
         _client = options.Value.ProjectId is not null
-            ? new EmbeddingClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey),
+            ? new EmbeddingClient(Model, new ApiKeyCredential(options.Value.ApiKey),
                 new OpenAIClientOptions { ProjectId = options.Value.ProjectId })
-            : new EmbeddingClient(options.Value.Model, new ApiKeyCredential(options.Value.ApiKey));
+            : new EmbeddingClient(Model, new ApiKeyCredential(options.Value.ApiKey));
     }
 
     public async Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken ct)
@@ -30,3 +33,4 @@ public class EmbeddingClientHandler : IEmbeddingClientHandler
         return result.Value.ToFloats().ToArray();
     }
 }
+
