@@ -1,6 +1,6 @@
 using GistBackend.Handlers;
+using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.MariaDbHandler;
-using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Services;
 using GistBackend.Types;
 using NSubstitute;
@@ -16,7 +16,7 @@ public class RecapServiceTests
     public async Task StartAsync_NotUtcHourToCreateRecapAt_NoRecapCreated(string dateTimeString)
     {
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
-        var openAIHandlerMock = Substitute.For<IOpenAIHandler>();
+        var openAIHandlerMock = Substitute.For<IAIHandler>();
         var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
         dateTimeHandlerMock.GetUtcNow().Returns(DateTime.Parse(dateTimeString));
         var service = CreateRecapService(mariaDbHandlerMock, openAIHandlerMock, dateTimeHandlerMock);
@@ -42,7 +42,7 @@ public class RecapServiceTests
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();
         mariaDbHandlerMock.DailyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
         mariaDbHandlerMock.WeeklyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
-        var openAIHandlerMock = Substitute.For<IOpenAIHandler>();
+        var openAIHandlerMock = Substitute.For<IAIHandler>();
         var service = CreateRecapService(mariaDbHandlerMock, openAIHandlerMock);
 
         await service.StartAsync(CancellationToken.None);
@@ -66,7 +66,7 @@ public class RecapServiceTests
         mariaDbHandlerMock.WeeklyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
         mariaDbHandlerMock.GetConstructedGistsOfLastDayAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<ConstructedGist>()));
-        var openAIHandlerMock = Substitute.For<IOpenAIHandler>();
+        var openAIHandlerMock = Substitute.For<IAIHandler>();
         var service = CreateRecapService(mariaDbHandlerMock, openAIHandlerMock);
 
         await service.StartAsync(CancellationToken.None);
@@ -86,7 +86,7 @@ public class RecapServiceTests
         mariaDbHandlerMock.WeeklyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(false));
         mariaDbHandlerMock.GetConstructedGistsOfLastWeekAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<ConstructedGist>()));
-        var openAIHandlerMock = Substitute.For<IOpenAIHandler>();
+        var openAIHandlerMock = Substitute.For<IAIHandler>();
         var service = CreateRecapService(mariaDbHandlerMock, openAIHandlerMock);
 
         await service.StartAsync(CancellationToken.None);
@@ -107,15 +107,15 @@ public class RecapServiceTests
         mariaDbHandlerMock.DailyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(false));
         mariaDbHandlerMock.WeeklyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
         mariaDbHandlerMock.GetConstructedGistsOfLastDayAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(testGists));
-        var openAIHandlerMock = Substitute.For<IOpenAIHandler>();
-        openAIHandlerMock.GenerateDailyRecapAsync(testGists, Arg.Any<CancellationToken>())
+        var aiHandlerMock = Substitute.For<IAIHandler>();
+        aiHandlerMock.GenerateDailyRecapAsync(testGists, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(testRecap));
-        var service = CreateRecapService(mariaDbHandlerMock, openAIHandlerMock);
+        var service = CreateRecapService(mariaDbHandlerMock, aiHandlerMock);
 
         await service.StartAsync(CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
 
-        await openAIHandlerMock.Received(1).GenerateDailyRecapAsync(testGists, Arg.Any<CancellationToken>());
+        await aiHandlerMock.Received(1).GenerateDailyRecapAsync(testGists, Arg.Any<CancellationToken>());
         await mariaDbHandlerMock.Received(1).InsertDailyRecapAsync(testRecap, Arg.Any<CancellationToken>());
     }
 
@@ -128,7 +128,7 @@ public class RecapServiceTests
         mariaDbHandlerMock.DailyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
         mariaDbHandlerMock.WeeklyRecapExistsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(false));
         mariaDbHandlerMock.GetConstructedGistsOfLastWeekAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(testGists));
-        var openAIHandlerMock = Substitute.For<IOpenAIHandler>();
+        var openAIHandlerMock = Substitute.For<IAIHandler>();
         openAIHandlerMock.GenerateWeeklyRecapAsync(testGists, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(testRecap));
         var service = CreateRecapService(mariaDbHandlerMock, openAIHandlerMock);
@@ -140,7 +140,7 @@ public class RecapServiceTests
         await mariaDbHandlerMock.Received(1).InsertWeeklyRecapAsync(testRecap, Arg.Any<CancellationToken>());
     }
 
-    private static RecapService CreateRecapService(IMariaDbHandler mariaDbHandlerMock, IOpenAIHandler openAIHandlerMock,
+    private static RecapService CreateRecapService(IMariaDbHandler mariaDbHandlerMock, IAIHandler aiHandlerMock,
         IDateTimeHandler? dateTimeHandlerMock = null)
     {
         if (dateTimeHandlerMock == null)
@@ -148,6 +148,6 @@ public class RecapServiceTests
             dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
             dateTimeHandlerMock.GetUtcNow().Returns(DateTime.Parse("2025-01-01 05:00:00"));
         }
-        return new RecapService(mariaDbHandlerMock, openAIHandlerMock, dateTimeHandlerMock);
+        return new RecapService(mariaDbHandlerMock, aiHandlerMock, dateTimeHandlerMock);
     }
 }

@@ -1,6 +1,6 @@
 using GistBackend.Handlers;
+using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.MariaDbHandler;
-using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,7 +11,7 @@ namespace GistBackend.Services;
 
 public class RecapService(
     IMariaDbHandler mariaDbHandler,
-    IOpenAIHandler openAIHandler,
+    IAIHandler aiHandler,
     IDateTimeHandler dateTimeHandler,
     ILogger<RecapService>? logger = null) : BackgroundService
 {
@@ -68,7 +68,7 @@ public class RecapService(
             logger?.LogInformation(NoGistsForDailyRecap, "No gists to create daily recap");
             return;
         }
-        var recapAIResponse = await openAIHandler.GenerateDailyRecapAsync(gists, ct);
+        var recapAIResponse = await aiHandler.GenerateDailyRecapAsync(gists, ct);
         await mariaDbHandler.InsertDailyRecapAsync(recapAIResponse, ct);
         logger?.LogInformation(DailyRecapCreated, "Daily recap created");
     }
@@ -81,7 +81,7 @@ public class RecapService(
             logger?.LogInformation(NoGistsForWeeklyRecap, "No gists to create weekly recap");
             return;
         }
-        var recap = await openAIHandler.GenerateWeeklyRecapAsync(gists, ct);
+        var recap = await aiHandler.GenerateWeeklyRecapAsync(gists, ct);
         await mariaDbHandler.InsertWeeklyRecapAsync(recap, ct);
         logger?.LogInformation(WeeklyRecapCreated, "Weekly recap created");
     }

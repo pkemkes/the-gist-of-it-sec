@@ -4,6 +4,8 @@ services:
     image: pkemkes/the-gist-of-it-sec-backend
     container_name: backend
     depends_on:
+      aiapi:
+        condition: service_healthy
       database:
         condition: service_healthy
       chromadb:
@@ -19,11 +21,10 @@ services:
         tag: "{{.Name}}"
     environment:
       # - Serilog__MinimumLevel__Default=Debug
-      - CORS_ALLOWED_ORIGIN=http://localhost:5173  # NOTE: Change this to your frontend's base URL
+      - CORS_ALLOWED_ORIGIN=http://localhost:8081  # NOTE: Change this to your frontend's base URL
       - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
-      - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
-      - ChatClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
-      - ChatClientHandlerOptions__ProjectId=${OPENAI_PROJECT_KEY}
+      - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT}
+      - AIHandlerOptions__Host=http://aiapi:8000
       - ChromaDbHandlerOptions__Server=chromadb
       - ChromaDbHandlerOptions__ServerAuthnCredentials=${CHROMA_SERVER_AUTHN_CREDENTIALS}
       - TelegramBotClientHandlerOptions__BotToken=${TELEGRAM_API_KEY}
@@ -47,8 +48,29 @@ services:
       - database
       - chromadb
       - monitoring
+      - aiapi
     ports:
       - "8080:8080"
+  
+  aiapi:
+    image: pkemkes/the-gist-of-it-sec-aiapi
+    container_name: aiapi
+    depends_on:
+      promtail:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_PROJECT=${OPENAI_PROJECT}
+      - LANGSMITH_TRACING=true
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT}
+    networks:
+      - aiapi
 
   frontend:
     image: pkemkes/the-gist-of-it-sec-frontend
@@ -192,6 +214,7 @@ networks:
   database:
   chromadb:
   monitoring:
+  aiapi:
 
 volumes:
   database-data:

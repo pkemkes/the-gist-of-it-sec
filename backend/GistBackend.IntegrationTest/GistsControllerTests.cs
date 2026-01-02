@@ -52,7 +52,7 @@ public class GistsControllerTests : IDisposable, IClassFixture<MariaDbFixture>
             ServerAuthnCredentials = ChromaDbFixture.GistServiceServerAuthnCredentials,
             Port = _chromaDbFixture.ExposedPort
         };
-        _chromaDbHandler = new ChromaDbHandler(OpenAiHandlerUtils.CreateOpenAIHandlerMock(), new HttpClient(),
+        _chromaDbHandler = new ChromaDbHandler(AIHandlerUtils.CreateOpenAIHandlerMock(), new HttpClient(),
             Options.Create(chromeDbHandlerOptions), null);
 
         _factory = new WebApplicationFactory<StartUp>()

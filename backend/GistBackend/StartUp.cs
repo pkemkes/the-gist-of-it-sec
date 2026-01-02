@@ -1,7 +1,7 @@
 using GistBackend.Handlers;
+using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
-using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Handlers.TelegramBotClientHandler;
 using GistBackend.Services;
 using GistBackend.Utils;
@@ -45,8 +45,8 @@ public class StartUp(IConfiguration configuration)
 
         services.Configure<EmbeddingClientHandlerOptions>(
             configuration.GetSection(nameof(EmbeddingClientHandlerOptions)));
-        services.Configure<ChatClientHandlerOptions>(
-            configuration.GetSection(nameof(ChatClientHandlerOptions)));
+        services.Configure<AIHandlerOptions>(
+            configuration.GetSection(nameof(AIHandlerOptions)));
         services.Configure<ChromaDbHandlerOptions>(
             configuration.GetSection(nameof(ChromaDbHandlerOptions)));
         services.Configure<TelegramBotClientHandlerOptions>(
@@ -77,8 +77,7 @@ public class StartUp(IConfiguration configuration)
         services.AddSingleton<IWebCrawlHandler, WebCrawlHandler>();
         services.AddTransient<IMariaDbHandler, MariaDbHandler>();
         services.AddTransient<IEmbeddingClientHandler, EmbeddingClientHandler>();
-        services.AddTransient<IChatClientHandler, ChatClientHandler>();
-        services.AddTransient<IOpenAIHandler, OpenAIHandler>();
+        services.AddTransient<IAIHandler, AIHandler>();
         services.AddTransient<IChromaDbHandler, ChromaDbHandler>();
         services.AddTransient<IGistDebouncer, GistDebouncer>();
         services.AddTransient<ITelegramBotClientHandler, TelegramBotClientHandler>();

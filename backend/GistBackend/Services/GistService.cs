@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using GistBackend.Exceptions;
 using GistBackend.Handlers;
+using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
-using GistBackend.Handlers.OpenAiHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
@@ -21,7 +21,7 @@ public class GistService(
     IRssFeedHandler rssFeedHandler,
     IWebCrawlHandler webCrawlHandler,
     IMariaDbHandler mariaDbHandler,
-    IOpenAIHandler openAIHandler,
+    IAIHandler aiHandler,
     IChromaDbHandler chromaDbHandler,
     ILogger<GistService>? logger = null
 ) : BackgroundService
@@ -142,7 +142,7 @@ public class GistService(
         string text, CancellationToken ct)
     {
         using var stopwatch = new SelfReportingStopwatch(elapsed => SummarizeEntrySummary.Observe(elapsed));
-        return await openAIHandler.GenerateSummaryAIResponseAsync(feedLanguage, entryTitle, text, ct);
+        return await aiHandler.GenerateSummaryAIResponseAsync(feedLanguage, entryTitle, text, ct);
     }
 
     private async Task InsertDataIntoDatabaseAsync(RssEntry entry, Gist gist, SummaryAIResponse summaryAIResponse,
