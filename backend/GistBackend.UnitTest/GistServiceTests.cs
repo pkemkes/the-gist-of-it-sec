@@ -1,7 +1,7 @@
-using GistBackend.Handlers;
 using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
+using GistBackend.Handlers.WebCrawlHandler;
 using GistBackend.Services;
 using GistBackend.Types;
 using Microsoft.Extensions.Logging;
@@ -189,14 +189,16 @@ public class GistServiceTests
         return new TransactionHandle(connectionMock, transactionMock);
     }
 
-    private static IWebCrawlHandler CreateMockedRssEntryHandler(List<TestFeedData> testFeeds)
+    private static IWebCrawlHandler CreateMockedWebCrawlHandler(List<TestFeedData> testFeeds)
     {
-        var rssEntryHandlerMock = Substitute.For<IWebCrawlHandler>();
+        var webCrawlHandlerMock = Substitute.For<IWebCrawlHandler>();
         foreach (var (entry, text) in testFeeds.SelectMany(feed => feed.Entries.Zip(feed.Texts)))
         {
-            rssEntryHandlerMock.FetchPageContentAsync(entry.Url.AbsoluteUri).Returns(Task.FromResult(text));
+            var response = new FetchResponse(200, text, false);
+            webCrawlHandlerMock.FetchAsync(entry.Url.AbsoluteUri, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(response));
         }
-        return rssEntryHandlerMock;
+        return webCrawlHandlerMock;
     }
 
     private static IAIHandler CreateMockedAIHandler(List<TestFeedData> testFeeds)
@@ -225,7 +227,7 @@ public class GistServiceTests
     ) =>
         new(
             CreateRssFeedHandler(CreateMockedHttpClient(testFeeds), testFeeds),
-            webCrawlHandler ?? CreateMockedRssEntryHandler(testFeeds),
+            webCrawlHandler ?? CreateMockedWebCrawlHandler(testFeeds),
             mariaDbHandlerMock ?? Substitute.For<IMariaDbHandler>(),
             aiHandlerMock ?? CreateMockedAIHandler(testFeeds),
             chromaDbHandlerMock ?? Substitute.For<IChromaDbHandler>(),

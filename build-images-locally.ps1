@@ -1,4 +1,5 @@
 docker build -t pkemkes/the-gist-of-it-sec-aiapi .\aiapi
+docker build -t pkemkes/the-gist-of-it-sec-fetcher .\fetcher
 docker build -t pkemkes/the-gist-of-it-sec-backend .\backend
 docker build -t pkemkes/the-gist-of-it-sec-database .\database
 docker build -t pkemkes/the-gist-of-it-sec-chromadb .\chromadb

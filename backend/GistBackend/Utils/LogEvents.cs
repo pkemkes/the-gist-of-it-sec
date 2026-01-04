@@ -18,7 +18,6 @@ public static class LogEvents
     public static readonly EventId InsertingFeedInfoFailed = new(++_eventId, nameof(InsertingFeedInfoFailed));
     public static readonly EventId UpdatingFeedInfoFailed = new(++_eventId, nameof(UpdatingFeedInfoFailed));
     public static readonly EventId GettingGistByReferenceFailed = new(++_eventId, nameof(GettingGistByReferenceFailed));
-    public static readonly EventId EnsuringSearchResultsAreInDbFailed = new(++_eventId, nameof(EnsuringSearchResultsAreInDbFailed));
     public static readonly EventId InsertingGistFailed = new(++_eventId, nameof(InsertingGistFailed));
     public static readonly EventId InsertingSummaryFailed = new(++_eventId, nameof(InsertingSummaryFailed));
     public static readonly EventId UpdatingGistFailed = new(++_eventId, nameof(UpdatingGistFailed));
@@ -29,21 +28,7 @@ public static class LogEvents
     public static readonly EventId EntryAlreadyExistsInChromaDb = new(++_eventId, nameof(EntryAlreadyExistsInChromaDb));
     public static readonly EventId ParsingFeedFailed = new(++_eventId, nameof(ParsingFeedFailed));
 
-    public static readonly EventId SearchResultsInserted = new(++_eventId, nameof(SearchResultsInserted));
-    public static readonly EventId SearchResultsUpdated = new(++_eventId, nameof(SearchResultsUpdated));
-    public static readonly EventId NoSearchResults = new(++_eventId, nameof(NoSearchResults));
-    public static readonly EventId GettingSearchResultsFailed = new(++_eventId, nameof(GettingSearchResultsFailed));
-    public static readonly EventId DeletingSearchResultsFailed = new(++_eventId, nameof(DeletingSearchResultsFailed));
-
     public static readonly EventId DocumentInserted = new(++_eventId, nameof(DocumentInserted));
-
-    public static readonly EventId GenerateChatCompletion = new(++_eventId, nameof(GenerateChatCompletion));
-    public static readonly EventId ChatCompletionGenerated = new(++_eventId, nameof(ChatCompletionGenerated));
-    public static readonly EventId SummaryAIResponseJsonParsingError = new(++_eventId, nameof(SummaryAIResponseJsonParsingError));
-    public static readonly EventId RecapAIResponseJsonParsingError = new(++_eventId, nameof(RecapAIResponseJsonParsingError));
-
-    public static readonly EventId GoogleApiQuotaExceeded = new(++_eventId, nameof(GoogleApiQuotaExceeded));
-    public static readonly EventId UnexpectedGoogleApiException = new(++_eventId, nameof(UnexpectedGoogleApiException));
 
     public static readonly EventId NoGistsForDailyRecap = new(++_eventId, nameof(NoGistsForDailyRecap));
     public static readonly EventId DailyRecapCreated = new(++_eventId, nameof(DailyRecapCreated));
@@ -87,12 +72,4 @@ public static class LogEvents
     public static readonly EventId SendingGistToChat = new(++_eventId, nameof(SendingGistToChat));
 
     public static readonly EventId DidNotFindExpectedFeedInDb = new(++_eventId, nameof(DidNotFindExpectedFeedInDb));
-
-    public static readonly EventId WebCrawlDispatcherLoopStarted = new(++_eventId, nameof(WebCrawlDispatcherLoopStarted));
-    public static readonly EventId WaitingForWebCrawlToComplete = new(++_eventId, nameof(WaitingForWebCrawlToComplete));
-    public static readonly EventId WebCrawlStarted = new(++_eventId, nameof(WebCrawlStarted));
-    public static readonly EventId WebCrawlCompleted = new(++_eventId, nameof(WebCrawlCompleted));
-    public static readonly EventId WebCrawlFailed = new(++_eventId, nameof(WebCrawlFailed));
-    public static readonly EventId WebCrawlMaxCrawlsReached = new(++_eventId, nameof(WebCrawlMaxCrawlsReached));
-    public static readonly EventId WebCrawlRestartingBrowser = new(++_eventId, nameof(WebCrawlRestartingBrowser));
 }

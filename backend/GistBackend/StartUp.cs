@@ -3,6 +3,7 @@ using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.TelegramBotClientHandler;
+using GistBackend.Handlers.WebCrawlHandler;
 using GistBackend.Services;
 using GistBackend.Utils;
 using Microsoft.AspNetCore.Builder;

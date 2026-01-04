@@ -4,11 +4,11 @@ using GistBackend.Handlers;
 using GistBackend.Handlers.AIHandler;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
+using GistBackend.Handlers.WebCrawlHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Playwright;
 using Prometheus;
 using static GistBackend.Utils.LogEvents;
 using static GistBackend.Utils.ServiceUtils;
@@ -43,8 +43,7 @@ public class GistService(
             using (new SelfReportingStopwatch(elapsed => ProcessFeedsGauge.Set(elapsed)))
             {
                 await ProcessFeedsAsync(ct);
-                var entries = _feedsByFeedId.Values.SelectMany(feed => feed.Entries!).OrderBy(entry => entry.Updated);
-                await ProcessEntriesAsync(entries, ct);
+                await Task.WhenAll(_feedsByFeedId.Values.Select(feed => ProcessEntriesAsync(feed.Entries!.OrderBy(e => e.Updated), ct)));
             }
             await DelayUntilNextExecutionAsync(startTime, 5, logger, ct);
         }
@@ -105,9 +104,16 @@ public class GistService(
         try
         {
             var feed = _feedsByFeedId[entry.FeedId];
-            var pageText = await webCrawlHandler.FetchPageContentAsync(entry.Url.AbsoluteUri);
+            var fetchResponse = await webCrawlHandler.FetchAsync(entry.Url.AbsoluteUri, ct);
+            if (fetchResponse.Status != 200)
+            {
+                logger?.LogWarning(FetchingPageContentFailed,
+                    "Skipping entry, fetched page content returned status {Status} for {Url}", fetchResponse.Status,
+                    entry.Url.AbsoluteUri);
+                return;
+            }
 
-            var entryText = entry.ExtractText(pageText);
+            var entryText = entry.ExtractText(fetchResponse.Content);
             var summaryAIResponse = await GenerateSummaryAIResponse(feed.Language, entry.Title, entryText, ct);
             var gist = new Gist(entry, summaryAIResponse);
 
@@ -131,7 +137,7 @@ public class GistService(
             logger?.LogWarning(ExtractingPageContentFailed, e, "Skipping entry, failed to extract text from page content for {Url}",
                 entry.Url.AbsoluteUri);
         }
-        catch (Exception e) when (e is PlaywrightException or TimeoutException)
+        catch (Exception e) when (e is ExternalServiceException or HttpRequestException)
         {
             logger?.LogWarning(FetchingPageContentFailed, e, "Skipping entry, failed to fetch page content for {Url}",
                 entry.Url.AbsoluteUri);

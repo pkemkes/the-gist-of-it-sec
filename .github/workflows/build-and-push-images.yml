@@ -42,6 +42,15 @@ jobs:
             pkemkes/the-gist-of-it-sec-aiapi:latest
             pkemkes/the-gist-of-it-sec-aiapi:${{ github.ref_name }}
 
+      - name: Build and push fetcher
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:fetcher"
+          push: true
+          tags: |
+            pkemkes/the-gist-of-it-sec-fetcher:latest
+            pkemkes/the-gist-of-it-sec-fetcher:${{ github.ref_name }}
+
       - name: Build and push database
         uses: docker/build-push-action@v6
         with:

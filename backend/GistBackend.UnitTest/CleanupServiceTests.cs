@@ -1,13 +1,12 @@
 using System.Net;
 using GistBackend.Exceptions;
-using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
+using GistBackend.Handlers.WebCrawlHandler;
 using GistBackend.Services;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Options;
-using Microsoft.Playwright;
 using NSubstitute;
 using TestUtilities;
 using static TestUtilities.TestData;
@@ -186,7 +185,7 @@ public class CleanupServiceTests
          var testGists = testFeed.Gists.Concat([redirectedGist]).ToList();
          var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed], testGists);
          var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
-         var webCrawlHandlerMock = CreateWebCrawlHandlerMock(200, "another different url");
+         var webCrawlHandlerMock = CreateWebCrawlHandlerMock(200, true);
          var service = CreateCleanupService(
              [testFeed],
              mariaDbHandlerMock,
@@ -252,24 +251,12 @@ public class CleanupServiceTests
         return chromaDbHandlerMock;
     }
 
-    private static IWebCrawlHandler CreateWebCrawlHandlerMock(int returnedStatusCode, string? urlInResponse = null)
+    private static IWebCrawlHandler CreateWebCrawlHandlerMock(int returnedStatusCode, bool redirected = false)
     {
         var webCrawlHandlerMock = Substitute.For<IWebCrawlHandler>();
-        var response = CreateFakePlaywrightResponse(returnedStatusCode, urlInResponse);
-        webCrawlHandlerMock.FetchResponseAsync(Arg.Any<string>()).Returns(Task.FromResult(response));
+        var response = new FetchResponse(returnedStatusCode, "test content", redirected);
+        webCrawlHandlerMock.FetchAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
         return webCrawlHandlerMock;
-    }
-
-    private static IResponse? CreateFakePlaywrightResponse(int statusCode, string? urlInResponse = null)
-    {
-        var responseMock = Substitute.For<IResponse?>();
-        responseMock!.Status.Returns(statusCode);
-
-        if (urlInResponse is null) return responseMock;
-
-        var requestMock = Substitute.For<IRequest>();
-        requestMock.Url.Returns(urlInResponse);
-        responseMock.Request.Returns(requestMock);
-        return responseMock;
     }
 }

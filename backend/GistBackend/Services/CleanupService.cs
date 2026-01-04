@@ -2,12 +2,12 @@ using GistBackend.Exceptions;
 using GistBackend.Handlers;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
+using GistBackend.Handlers.WebCrawlHandler;
 using GistBackend.Types;
 using GistBackend.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Playwright;
 using Prometheus;
 using static GistBackend.Utils.LogEvents;
 using Summary = Prometheus.Summary;
@@ -99,28 +99,26 @@ public class CleanupService(
                 }
                 return;
             }
-            var shouldBeDisabled = await GistShouldBeDisabledAsync(gist);
+            var shouldBeDisabled = await GistShouldBeDisabledAsync(gist, ct);
             await mariaDbHandler.EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, shouldBeDisabled, ct);
             await chromaDbHandler.EnsureGistHasCorrectMetadataAsync(gist, shouldBeDisabled, ct);
         }
-        catch (Exception e) when (e is PlaywrightException or TimeoutException)
+        catch (Exception e) when (e is ExternalServiceException or HttpRequestException)
         {
             logger?.LogError(FetchingPageContentFailed, e, "Skipping gist, failed to fetch page content for {Url}",
                 gist.Url.AbsoluteUri);
         }
     }
 
-    private async Task<bool> GistShouldBeDisabledAsync(Gist gist)
+    private async Task<bool> GistShouldBeDisabledAsync(Gist gist, CancellationToken ct)
     {
         if (options.Value.DomainsToIgnore.Any(domain => gist.Url.Host.Equals(domain))) return false;
         var feedTitle = GetFeedTitleByFeedId(gist.FeedId);
         using (new SelfReportingStopwatch(elapsed => CheckGistSummary.WithLabels(feedTitle).Observe(elapsed)))
         {
-            var response = await webCrawlHandler.FetchResponseAsync(gist.Url.AbsoluteUri);
-
-            if (response is null) return true;
-            if (response.Status is >= 400 and < 500) return true;
-            return WasRedirectedAndNotPresentInFeedAnymore(gist, response);
+            var response = await webCrawlHandler.FetchAsync(gist.Url.AbsoluteUri, ct);
+            return response.Status is >= 400 and < 500 ||
+                   WasRedirectedAndNotPresentInFeedAnymore(gist, response.Redirected);
         }
     }
 
@@ -133,10 +131,9 @@ public class CleanupService(
         return feed.Title ?? throw new InvalidOperationException($"Feed with ID {feedId} has no title");
     }
 
-    private bool WasRedirectedAndNotPresentInFeedAnymore(Gist gist, IResponse response)
+    private bool WasRedirectedAndNotPresentInFeedAnymore(Gist gist, bool redirected)
     {
-        var wasRedirected = gist.Url.AbsoluteUri != response.Request.Url;
         var isPresentInFeed = _feedsByFeedId[gist.FeedId].Entries!.Any(entry => entry.Url == gist.Url);
-        return wasRedirected && !isPresentInFeed;
+        return redirected && !isPresentInFeed;
     }
 }

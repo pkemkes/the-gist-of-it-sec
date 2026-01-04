@@ -6,6 +6,8 @@ services:
     depends_on:
       aiapi:
         condition: service_healthy
+      fetcher:
+        condition: service_healthy
       database:
         condition: service_healthy
       chromadb:
@@ -25,6 +27,7 @@ services:
       - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
       - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT}
       - AIHandlerOptions__Host=http://aiapi:8000
+      - WebCrawlHandlerOptions__Host=http://fetcher:8000
       - ChromaDbHandlerOptions__Server=chromadb
       - ChromaDbHandlerOptions__ServerAuthnCredentials=${CHROMA_SERVER_AUTHN_CREDENTIALS}
       - TelegramBotClientHandlerOptions__BotToken=${TELEGRAM_API_KEY}
@@ -49,6 +52,7 @@ services:
       - chromadb
       - monitoring
       - aiapi
+      - fetcher
     ports:
       - "8080:8080"
   
@@ -71,6 +75,20 @@ services:
       - LANGSMITH_PROJECT=${LANGSMITH_PROJECT}
     networks:
       - aiapi
+  
+  fetcher:
+    image: pkemkes/the-gist-of-it-sec-fetcher
+    container_name: fetcher
+    depends_on:
+      promtail:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
+    networks:
+      - fetcher
 
   frontend:
     image: pkemkes/the-gist-of-it-sec-frontend
@@ -215,6 +233,7 @@ networks:
   chromadb:
   monitoring:
   aiapi:
+  fetcher:
 
 volumes:
   database-data:
