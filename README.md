@@ -1,4 +1,6 @@
-[<img src="./assets/logo.png" alt="screenshot.png" height="100"/>](https://gist.pkemkes.de/) &nbsp; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/pkemkes/the-gist-of-it-sec/blob/main/LICENSE)
+[<img src="./assets/logo.png" alt="screenshot.png" height="100"/>](https://gist.pkemkes.de/) 
+
+[![GitHub license](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue.svg)](https://github.com/pkemkes/the-gist-of-it-sec/blob/main/LICENSE)
 
 ----
 
@@ -20,6 +22,6 @@ The newest docker containers are always automatically built and pushed to https:
 
 # License
 
-This project is released under the [MIT License](./LICENSE).
+This project is released under the [PolyForm Noncommercial License 1.0.0](./LICENSE). Commercial use is not permitted.
 
-The licenses of other thrird party libaries used in this project can be found in [NOTICE](./NOTICE.md).
+The licenses of other third-party libraries used in this project can be found in [NOTICE](./NOTICE.md).
