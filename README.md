@@ -1,6 +1,6 @@
 [<img src="./assets/logo.png" alt="screenshot.png" height="100"/>](https://gist.pkemkes.de/) 
 
-[![GitHub license](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue.svg)](https://github.com/pkemkes/the-gist-of-it-sec/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue.svg)](https://github.com/pkemkes/the-gist-of-it-sec/blob/main/LICENSE.md)
 
 ----
 
@@ -22,6 +22,6 @@ The newest docker containers are always automatically built and pushed to https:
 
 # License
 
-This project is released under the [PolyForm Noncommercial License 1.0.0](./LICENSE). Commercial use is not permitted.
+This project is released under the [PolyForm Noncommercial License 1.0.0](./LICENSE.md). Commercial use is not permitted.
 
 The licenses of other third-party libraries used in this project can be found in [NOTICE](./NOTICE.md).
