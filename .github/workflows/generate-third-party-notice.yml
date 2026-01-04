@@ -18,11 +18,11 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
-      
-      - name: Install pnpm packages
+          version: 10.26.2
+
+      - name: Clean pnpm store and install packages
         working-directory: ./frontend
-        run: pnpm install
+        run: pnpm install --force
 
       - name: Build with pnpm
         working-directory: ./frontend
@@ -32,36 +32,34 @@ jobs:
         working-directory: ./frontend
         run: npx --yes @quantco/pnpm-licenses generate-disclaimer --output-file=Npm.txt
       
-      - name: Install Mariadb and Python dev files
-        run: sudo apt-get update; sudo apt-get install -y libmariadb-dev python3-dev
+      - name: Install Python dev files
+        run: sudo apt-get update; sudo apt-get install -y python3-dev
 
       - name: Create licenses dir
-        run: mkdir ./backend/licenses
+        run: mkdir ./licenses
 
       - name: Create venv
-        run: python -m venv ./backend/licenses/venv
+        run: python -m venv ./licenses/venv
 
       - name: Activate venv
-        run: echo PATH=${GITHUB_WORKSPACE}/backend/licenses/.venv/bin:$PATH >> $GITHUB_ENV
+        run: echo PATH=${GITHUB_WORKSPACE}/licenses/venv/bin:$PATH >> $GITHUB_ENV
       
       - name: Combine requirements.txt files
-        working-directory: ./backend
+        working-directory: ./
         run: |
-          cat ./gists_bot/requirements.txt \
-              ./rest_server/requirements.txt \
-              ./telegram_bot/requirements.txt \
-              ./cleanup_bot/requirements.txt \
+          cat ./aiapi/requirements.txt \
+              ./fetcher/requirements.txt \
               > ./licenses/requirements.txt
 
       - name: Install requirements
-        working-directory: ./backend/licenses
+        working-directory: ./licenses
         run: pip install -r ./requirements.txt
       
       - name: Install third-party-license-file-generator
         run: pip install third-party-license-file-generator
       
       - name: Run third_party_license_file_generator
-        working-directory: ./backend/licenses
+        working-directory: ./licenses
         run: |
           python -m third_party_license_file_generator -c -d \
             -r requirements.txt \
@@ -69,11 +67,31 @@ jobs:
             -o Python.txt
       
       - name: Remove prefix and suffix from file
-        working-directory: ./backend/licenses
+        working-directory: ./licenses
         run: tail -n +5 Python.txt | head -n -2 > temp.txt && mv temp.txt Python.txt
+
+      - name: Setup .NET SDKs (9.0 for app, 7.0 for tool runtime)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            7.0.x
+
+      - name: Install dotnet-project-licenses tool
+        run: |
+          dotnet tool install -g dotnet-project-licenses || dotnet tool update -g dotnet-project-licenses
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Restore backend dependencies
+        working-directory: ./backend
+        run: dotnet restore GistBackend/GistBackend.csproj
+
+      - name: Generate .NET license report
+        working-directory: ./backend
+        run: dotnet-project-licenses --input ./GistBackend/GistBackend.csproj -e -t -c -o --outfile ../licenses/DotNet.txt
       
       - name: Combine files into new NOTICE.md
-        run: cat ./backend/licenses/Python.txt ./frontend/Npm.txt > NOTICE.md
+        run: cat ./licenses/Python.txt ./frontend/Npm.txt ./licenses/DotNet.txt > NOTICE.md
       
       - name: Commit new NOTICE.md
         run: |
