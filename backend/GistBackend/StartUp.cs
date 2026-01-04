@@ -48,6 +48,8 @@ public class StartUp(IConfiguration configuration)
             configuration.GetSection(nameof(EmbeddingClientHandlerOptions)));
         services.Configure<AIHandlerOptions>(
             configuration.GetSection(nameof(AIHandlerOptions)));
+        services.Configure<WebCrawlHandlerOptions>(
+            configuration.GetSection(nameof(WebCrawlHandlerOptions)));
         services.Configure<ChromaDbHandlerOptions>(
             configuration.GetSection(nameof(ChromaDbHandlerOptions)));
         services.Configure<TelegramBotClientHandlerOptions>(
