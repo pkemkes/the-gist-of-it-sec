@@ -227,6 +227,19 @@ services:
       - database
     ports:
       - 3000:3000
+  
+  feed_watcher:
+    image: pkemkes/the-gist-of-it-sec-feed-watcher
+    container_name: feed_watcher
+    logging:
+      driver: json-file
+      options:
+        max-size: 1g
+        tag: "{{.Name}}"
+    environment:
+      - LOGPATH=/usr/bin/thegistofitsec/feed_watcher.log
+    volumes:
+      - ./feed_watcher.log:/usr/bin/thegistofitsec/feed_watcher.log
 
 networks:
   database:

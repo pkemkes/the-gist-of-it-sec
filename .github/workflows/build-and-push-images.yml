@@ -106,6 +106,15 @@ jobs:
           tags: |
             pkemkes/the-gist-of-it-sec-frontend:latest
             pkemkes/the-gist-of-it-sec-frontend:${{ github.ref_name }}
+
+      - name: Build and push feed-watcher
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:feed_watcher"
+          push: true
+          tags: |
+            pkemkes/the-gist-of-it-sec-feed-watcher:latest
+            pkemkes/the-gist-of-it-sec-feed-watcher:${{ github.ref_name }}
       
       - name: Build release body
         run: |

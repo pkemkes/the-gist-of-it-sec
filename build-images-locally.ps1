@@ -7,3 +7,4 @@ docker build -t pkemkes/the-gist-of-it-sec-prometheus .\prometheus
 docker build -t pkemkes/the-gist-of-it-sec-loki .\loki
 docker build -t pkemkes/the-gist-of-it-sec-grafana .\grafana
 docker build -t pkemkes/the-gist-of-it-sec-frontend .\frontend
+docker build -t pkemkes/the-gist-of-it-sec-feed-watcher .\feed_watcher
