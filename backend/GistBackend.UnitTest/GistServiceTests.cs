@@ -143,13 +143,13 @@ public class GistServiceTests
         await gistService.StartAsync(CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
 
-        foreach (var ((entry, text, summaryAIResponse), gist) in testFeed.Entries
-                     .Zip(testFeed.Texts, testFeed.SummaryAIResponses).Zip(testFeed.Gists))
+        foreach (var (entry, summaryAIResponse, gist) in testFeed.Entries.Zip(testFeed.SummaryAIResponses,
+                     testFeed.Gists))
         {
             var feedLanguage = testFeed.RssFeed.Language;
             await chromaDbHandlerMock.Received(1)
                 .UpsertEntryAsync(Arg.Is<RssEntry>(e => e.Reference == entry.Reference && e.FeedId == entry.FeedId),
-                    text, Arg.Any<CancellationToken>());
+                    summaryAIResponse.SummaryEnglish, Arg.Any<CancellationToken>());
             await mariaDbHandlerMock.Received(1)
                 .InsertGistAsync(gist with { Id = null }, Arg.Any<TransactionHandle>(), Arg.Any<CancellationToken>());
             var summary = new Summary(gist.Id!.Value, feedLanguage, false, entry.Title,

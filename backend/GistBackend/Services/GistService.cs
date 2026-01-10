@@ -117,7 +117,7 @@ public class GistService(
             var summaryAIResponse = await GenerateSummaryAIResponse(feed.Language, entry.Title, entryText, ct);
             var gist = new Gist(entry, summaryAIResponse);
 
-            await chromaDbHandler.UpsertEntryAsync(entry, entryText, ct);
+            await chromaDbHandler.UpsertEntryAsync(entry, summaryAIResponse.SummaryEnglish, ct);
 
             if (existingGist is null)
             {

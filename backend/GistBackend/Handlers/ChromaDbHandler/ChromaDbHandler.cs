@@ -13,8 +13,7 @@ namespace GistBackend.Handlers.ChromaDbHandler;
 
 public interface IChromaDbHandler
 {
-    Task<bool> EntryExistsByReferenceAsync(string reference, CancellationToken ct, string? collectionId = null);
-    Task UpsertEntryAsync(RssEntry entry, string text, CancellationToken ct);
+    Task UpsertEntryAsync(RssEntry entry, string summary, CancellationToken ct);
     Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct);
     Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(
         string reference, int nResults, IEnumerable<int> disabledFeedIds, CancellationToken ct);
@@ -120,7 +119,7 @@ public class ChromaDbHandler : IChromaDbHandler
 
     private static float ConvertCosineDistanceToSimilarity(float distance) => float.Clamp(1 - distance/2, 0, 1);
 
-    public async Task UpsertEntryAsync(RssEntry entry, string text, CancellationToken ct)
+    public async Task UpsertEntryAsync(RssEntry entry, string summary, CancellationToken ct)
     {
         ValidateReference(entry.Reference);
         var collectionId = await GetOrCreateCollectionAsync(ct);
@@ -133,7 +132,7 @@ public class ChromaDbHandler : IChromaDbHandler
         }
 
         var metadata = new Metadata(entry.Reference, entry.FeedId);
-        var embedding = await _aiHandler.GenerateEmbeddingAsync(text, ct);
+        var embedding = await _aiHandler.GenerateEmbeddingAsync(summary, ct);
         var content = CreateStringContent(new Document([entry.Reference], [metadata], [embedding]));
         var response = await SendPostRequestAsync(
             $"/api/v2/tenants/{_tenantName}/databases/{_databaseName}/collections/{collectionId}/{mode}", content, ct);
