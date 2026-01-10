@@ -315,95 +315,96 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         Assert.Equal(expected, actual);
     }
 
-    [Fact]
-    public async Task DailyRecapExistsAsync_NoRecapsExist_False()
+    [Theory]
+    [InlineData(RecapType.Daily)]
+    [InlineData(RecapType.Weekly)]
+    public async Task RecapExistsAsync_NoRecapsExist_False(RecapType recapType)
     {
         var handler = CreateRecapHandler();
 
-        var actual = await handler.DailyRecapExistsAsync(CancellationToken.None);
+        var actual = recapType == RecapType.Daily
+            ? await handler.DailyRecapExistsAsync(CancellationToken.None)
+            : await handler.WeeklyRecapExistsAsync(CancellationToken.None);
 
         Assert.False(actual);
     }
 
-    [Fact]
-    public async Task DailyRecapExistsAsync_OneRecapInLast24HoursExists_True()
+    [Theory]
+    [InlineData(RecapType.Daily)]
+    [InlineData(RecapType.Weekly)]
+    public async Task RecapExistsAsync_NoRecapOfTodayExists_False(RecapType recapType)
     {
-        var testCreated = _random.NextDateTime();
+        var baseCreated = _random.NextDateTime();
+        var yesterday = new DateTime(baseCreated.Year, baseCreated.Month, baseCreated.Day, 12, 0, 0, DateTimeKind.Utc);
         var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
         var handler = CreateRecapHandler(dateTimeHandlerMock);
-        dateTimeHandlerMock.GetUtcNow().Returns(testCreated);
-        await handler.InsertDailyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        var newerTestCreated = testCreated.AddDays(1);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated);
-        await handler.InsertDailyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated.AddDays(0.5));
+        dateTimeHandlerMock.GetUtcNow().Returns(yesterday);
+        await InsertTestRecapAsync(handler, recapType);
+        var now = yesterday.AddDays(1);
+        dateTimeHandlerMock.GetUtcNow().Returns(now);
 
-        var actual = await handler.DailyRecapExistsAsync(CancellationToken.None);
-
-        Assert.True(actual);
-    }
-
-    [Fact]
-    public async Task DailyRecapExistsAsync_TwoRecapsInLast24HoursExist_DatabaseOperationException()
-    {
-        var testCreated = _random.NextDateTime();
-        var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
-        var handler = CreateRecapHandler(dateTimeHandlerMock);
-        dateTimeHandlerMock.GetUtcNow().Returns(testCreated);
-        await handler.InsertDailyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        var newerTestCreated = testCreated.AddDays(0.25);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated);
-        await handler.InsertDailyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated.AddDays(0.25));
-
-        await Assert.ThrowsAsync<DatabaseOperationException>(
-            () => handler.DailyRecapExistsAsync(CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task WeeklyRecapExistsAsync_NoRecapsExist_False()
-    {
-        var handler = CreateRecapHandler();
-
-        var actual = await handler.WeeklyRecapExistsAsync(CancellationToken.None);
+        var actual = recapType == RecapType.Daily
+            ? await handler.DailyRecapExistsAsync(CancellationToken.None)
+            : await handler.WeeklyRecapExistsAsync(CancellationToken.None);
 
         Assert.False(actual);
     }
 
-    [Fact]
-    public async Task WeeklyRecapExistsAsync_OneRecapInLast24HoursExists_True()
+    [Theory]
+    [InlineData(RecapType.Daily)]
+    [InlineData(RecapType.Weekly)]
+    public async Task RecapExistsAsync_OneRecapOfTodayExists_True(RecapType recapType)
     {
-        var testCreated = _random.NextDateTime();
+        var baseCreated = _random.NextDateTime();
+        var yesterday = new DateTime(baseCreated.Year, baseCreated.Month, baseCreated.Day, 12, 0, 0, DateTimeKind.Utc);
         var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
         var handler = CreateRecapHandler(dateTimeHandlerMock);
-        dateTimeHandlerMock.GetUtcNow().Returns(testCreated);
-        await handler.InsertWeeklyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        var newerTestCreated = testCreated.AddDays(1);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated);
-        await handler.InsertWeeklyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated.AddDays(0.5));
+        dateTimeHandlerMock.GetUtcNow().Returns(yesterday);
+        await InsertTestRecapAsync(handler, recapType);
+        var today = yesterday.AddDays(1);
+        dateTimeHandlerMock.GetUtcNow().Returns(today);
+        await InsertTestRecapAsync(handler, recapType);
+        var now = today.AddHours(6);
+        dateTimeHandlerMock.GetUtcNow().Returns(now);
 
-        var actual = await handler.WeeklyRecapExistsAsync(CancellationToken.None);
+        var actual = recapType == RecapType.Daily
+            ? await handler.DailyRecapExistsAsync(CancellationToken.None)
+            : await handler.WeeklyRecapExistsAsync(CancellationToken.None);
 
         Assert.True(actual);
     }
 
-    [Fact]
-    public async Task WeeklyRecapExistsAsync_TwoRecapsInLast24HoursExist_DatabaseOperationException()
+    [Theory]
+    [InlineData(RecapType.Daily)]
+    [InlineData(RecapType.Weekly)]
+    public async Task RecapExistsAsync_TwoRecapsOfTodayExist_DatabaseOperationException(RecapType recapType)
     {
-        var testCreated = _random.NextDateTime();
+        var baseCreated = _random.NextDateTime();
+        var yesterday = new DateTime(baseCreated.Year, baseCreated.Month, baseCreated.Day, 12, 0, 0, DateTimeKind.Utc);
         var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
         var handler = CreateRecapHandler(dateTimeHandlerMock);
-        dateTimeHandlerMock.GetUtcNow().Returns(testCreated);
-        await handler.InsertWeeklyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        var newerTestCreated = testCreated.AddDays(0.25);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated);
-        await handler.InsertWeeklyRecapAsync(CreateTestRecap(), CancellationToken.None);
-        dateTimeHandlerMock.GetUtcNow().Returns(newerTestCreated.AddDays(0.25));
+        dateTimeHandlerMock.GetUtcNow().Returns(yesterday);
+        await InsertTestRecapAsync(handler, recapType);
+        var today = yesterday.AddDays(1);
+        dateTimeHandlerMock.GetUtcNow().Returns(today);
+        await InsertTestRecapAsync(handler, recapType);
+        dateTimeHandlerMock.GetUtcNow().Returns(today.AddHours(1));
+        await InsertTestRecapAsync(handler, recapType);
+        var now = today.AddHours(6);
+        dateTimeHandlerMock.GetUtcNow().Returns(now);
 
-        await Assert.ThrowsAsync<DatabaseOperationException>(
-            () => handler.WeeklyRecapExistsAsync(CancellationToken.None));
+        await Assert.ThrowsAsync<DatabaseOperationException>(() =>
+            recapType == RecapType.Daily
+                ? handler.DailyRecapExistsAsync(CancellationToken.None)
+                : handler.WeeklyRecapExistsAsync(CancellationToken.None));
     }
+
+    private static Task<int> InsertTestRecapAsync(MariaDbHandler handler, RecapType recapType) =>
+        recapType switch {
+            RecapType.Daily => handler.InsertDailyRecapAsync(CreateTestRecap(), CancellationToken.None),
+            RecapType.Weekly => handler.InsertWeeklyRecapAsync(CreateTestRecap(), CancellationToken.None),
+            _ => throw new ArgumentOutOfRangeException(nameof(recapType), recapType, null)
+        };
 
     [Fact]
     public async Task GetGistsOfLastDayAsync_NoGistsExist_EmptyList()

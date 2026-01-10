@@ -341,11 +341,10 @@ public class MariaDbHandler : IMariaDbHandler
     private async Task<bool> RecapExistsAsync(RecapType recapType, CancellationToken ct)
     {
         var query = $"SELECT COUNT(id) FROM Recaps{recapType.ToTypeString()}" +
-            " WHERE Created >= @EarliestCreated AND Created <= @Now";
-        var now = _dateTimeHandler.GetUtcNow();
-        // We always want to check whether the last recap was created in the last 24 hours
-        // because we want to create new recaps every day, even if it is the weekly one.
-        var command = new CommandDefinition(query, new { Now = now, EarliestCreated = now.AddDays(-1) },
+            " WHERE Created >= @StartOfDay AND Created < @StartOfNextDay";
+        var startOfDay = _dateTimeHandler.GetUtcNow().Date;
+        var command = new CommandDefinition(query,
+            new { StartOfDay = startOfDay, StartOfNextDay = startOfDay.AddDays(1) },
             cancellationToken: ct);
 
         try
