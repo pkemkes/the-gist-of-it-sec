@@ -6,6 +6,8 @@
 [![Line Coverage](https://pkemkes.github.io/the-gist-of-it-sec/badge_linecoverage.svg)](https://pkemkes.github.io/the-gist-of-it-sec/)
 [![Method Coverage](https://pkemkes.github.io/the-gist-of-it-sec/badge_methodcoverage.svg)](https://pkemkes.github.io/the-gist-of-it-sec/)
 
+[![Tech stack](https://img.shields.io/badge/stack-.NET%20%7C%20Python%20%7C%20React-5c2d91?logo=stackshare)](https://github.com/pkemkes/the-gist-of-it-sec)
+
 ----
 
 The Gist of IT Sec aggregates multiple RSS feeds, parses their entries, generates short summaries ("gists") using OpenAIs ChatGPT and collects those in a sleek web UI. A Telegram Bot can also easily be set up that sends a short message to each registered user for every new RSS feed entry.
