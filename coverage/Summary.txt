@@ -1,0 +1,99 @@
+Summary
+  Generated on: 01/11/2026 - 08:55:35
+  Coverage date: 01/11/2026 - 08:55:14 - 01/11/2026 - 08:55:33
+  Parser: MultiReport (2x Cobertura)
+  Assemblies: 2
+  Classes: 75
+  Files: 65
+  Line coverage: 74.1%
+  Covered lines: 1417
+  Uncovered lines: 493
+  Coverable lines: 1910
+  Total lines: 3715
+  Branch coverage: 54.2% (341 of 628)
+  Covered branches: 341
+  Total branches: 628
+  Method coverage: 85.8% (310 of 361)
+  Full method coverage: 68.9% (249 of 361)
+  Covered methods: 310
+  Fully covered methods: 249
+  Total methods: 361
+
+GistBackend                                                                         72%
+  GistBackend.Controllers.GistsController                                         45.4%
+  GistBackend.Exceptions.DatabaseOperationException                                100%
+  GistBackend.Exceptions.ExternalServiceException                                    0%
+  GistBackend.Exceptions.ExtractingEntryTextException                                0%
+  GistBackend.Exceptions.FeedNotFoundException                                     100%
+  GistBackend.Exceptions.ParsingFeedException                                        0%
+  GistBackend.Exceptions.UnexpectedMessagesException                                 0%
+  GistBackend.Handlers.AIHandler.AIHandler                                        32.2%
+  GistBackend.Handlers.AIHandler.AIHandlerOptions                                  100%
+  GistBackend.Handlers.AIHandler.EmbeddingClientHandler                              0%
+  GistBackend.Handlers.AIHandler.EmbeddingClientHandlerOptions                    66.6%
+  GistBackend.Handlers.AIHandler.RecapRequest                                        0%
+  GistBackend.Handlers.AIHandler.SummarizeRequest                                    0%
+  GistBackend.Handlers.AIHandler.SummaryForRecap                                     0%
+  GistBackend.Handlers.ChromaDbHandler.ChromaDbHandler                            91.7%
+  GistBackend.Handlers.ChromaDbHandler.ChromaDbHandlerOptions                      100%
+  GistBackend.Handlers.ChromaDbHandler.Collection                                   75%
+  GistBackend.Handlers.ChromaDbHandler.CollectionDefinition                        100%
+  GistBackend.Handlers.ChromaDbHandler.Document                                    100%
+  GistBackend.Handlers.ChromaDbHandler.Metadata                                    100%
+  GistBackend.Handlers.ChromaDbHandler.MetadataConfiguration                       100%
+  GistBackend.Handlers.ChromaDbHandler.QueryResponse                               100%
+  GistBackend.Handlers.DateTimeHandler                                             100%
+  GistBackend.Handlers.MariaDbHandler.DatabaseRetryExtensions                     66.6%
+  GistBackend.Handlers.MariaDbHandler.MariaDbHandler                              81.8%
+  GistBackend.Handlers.MariaDbHandler.MariaDbHandlerOptions                       93.7%
+  GistBackend.Handlers.MariaDbHandler.TransactionHandle                            100%
+  GistBackend.Handlers.MariaDbHandler.UriTypeHandler                               100%
+  GistBackend.Handlers.RssFeedHandler                                             10.8%
+  GistBackend.Handlers.TelegramBotClientHandler.TelegramBotClientHandler             0%
+  GistBackend.Handlers.TelegramBotClientHandler.TelegramBotClientHandlerOptions      0%
+  GistBackend.Handlers.WebCrawlHandler.WebCrawlHandler                               0%
+  GistBackend.Handlers.WebCrawlHandler.WebCrawlHandlerOptions                        0%
+  GistBackend.Program                                                              100%
+  GistBackend.Services.CleanupService                                             86.1%
+  GistBackend.Services.CleanupServiceOptions                                       100%
+  GistBackend.Services.GistService                                                76.9%
+  GistBackend.Services.RecapService                                               97.6%
+  GistBackend.Services.TelegramService                                            89.4%
+  GistBackend.Services.TelegramServiceOptions                                      100%
+  GistBackend.StartUp                                                             88.2%
+  GistBackend.Types.Chat                                                           100%
+  GistBackend.Types.ConstructedGist                                                100%
+  GistBackend.Types.DeserializedRecap                                                0%
+  GistBackend.Types.DeserializedRecapSection                                         0%
+  GistBackend.Types.FetchResponse                                                  100%
+  GistBackend.Types.Gist                                                           100%
+  GistBackend.Types.LanguageExtensions                                            14.2%
+  GistBackend.Types.RecapAIResponse                                                100%
+  GistBackend.Types.RecapSection                                                   100%
+  GistBackend.Types.RecapTypeExtensions                                           83.3%
+  GistBackend.Types.RelatedGistInfo                                                  0%
+  GistBackend.Types.RssEntry                                                       100%
+  GistBackend.Types.RssFeed                                                       92.3%
+  GistBackend.Types.RssFeedInfo                                                    100%
+  GistBackend.Types.SerializedRecap                                                100%
+  GistBackend.Types.SimilarDocument                                                100%
+  GistBackend.Types.SimilarGistWithFeed                                            100%
+  GistBackend.Types.Summary                                                        100%
+  GistBackend.Types.SummaryAIResponse                                              100%
+  GistBackend.Types.TranslationAIResponse                                            0%
+  GistBackend.Utils.DateTimeExtensions                                             100%
+  GistBackend.Utils.EnumerableExtensions                                          83.3%
+  GistBackend.Utils.GistDebouncer                                                  100%
+  GistBackend.Utils.LogEvents                                                        0%
+  GistBackend.Utils.SelfReportingStopwatch                                         100%
+  GistBackend.Utils.SerializerDefaults                                             100%
+  GistBackend.Utils.ServiceProviderExtensions                                        0%
+  GistBackend.Utils.ServiceUtils                                                  57.1%
+  GistBackend.Utils.SyndicationItemExtensions                                      100%
+  GistBackend.Utils.SyndicationPersonExtensions                                    100%
+
+GistBackend.TestUtilities                                                         97.5%
+  GistBackend.IntegrationTest.Utils.RandomExtensions                               100%
+  TestUtilities.SyndicationFeedExtensions                                          100%
+  TestUtilities.TestData                                                          96.7%
+  TestUtilities.TestFeedData                                                       100%
