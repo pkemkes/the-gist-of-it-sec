@@ -64,6 +64,16 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tag is on main
+        run: |
+          git fetch origin main --depth=1
+          git merge-base --is-ancestor origin/main "$GITHUB_SHA"
+
       - name: Deploy coverage to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
