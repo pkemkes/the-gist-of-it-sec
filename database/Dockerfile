@@ -1,4 +1,4 @@
-FROM mariadb:12.2.1
+FROM mariadb:12.1.2
 
 HEALTHCHECK --interval=10s --start-period=10s --retries=3 --timeout=5s \
         CMD healthcheck.sh --connect --innodb_initialized
