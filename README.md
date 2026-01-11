@@ -1,6 +1,8 @@
 [<img src="./assets/logo.png" alt="screenshot.png" height="100"/>](https://gist.pkemkes.de/) 
 
 [![GitHub license](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue.svg)](https://github.com/pkemkes/the-gist-of-it-sec/blob/main/LICENSE.md)
+[![Release tests](https://img.shields.io/github/actions/workflow/status/pkemkes/the-gist-of-it-sec/build-and-push-images.yml?label=release%20tests&event=push)](https://github.com/pkemkes/the-gist-of-it-sec/actions/workflows/build-and-push-images.yml)
+[![Coverage](https://pkemkes.github.io/the-gist-of-it-sec/coverage/badge_line.svg)](https://pkemkes.github.io/the-gist-of-it-sec/coverage/index.html)
 
 ----
 
