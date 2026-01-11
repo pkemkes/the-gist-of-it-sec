@@ -1,11 +1,14 @@
 using System.Net;
+using System.Reflection;
 using GistBackend.Exceptions;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
 using GistBackend.Handlers.WebCrawlHandler;
 using GistBackend.Services;
 using GistBackend.Types;
+using GistBackend.UnitTest.Utils;
 using GistBackend.Utils;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using TestUtilities;
@@ -103,10 +106,8 @@ public class CleanupServiceTests
          var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeedInDb], testGists);
          var service = CreateCleanupService(testFeeds, mariaDbHandlerMock);
 
-         await Assert.ThrowsAsync<FeedNotFoundException>(async () => {
-             await service.StartAsync(CancellationToken.None);
-             await Task.Delay(TimeSpan.FromSeconds(2));
-         });
+         var executingTask = await service.StartWaitAndFindExecutingTaskAsync();
+         await Assert.ThrowsAsync<FeedNotFoundException>(() => executingTask);
      }
 
      [Fact]

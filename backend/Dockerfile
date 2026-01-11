@@ -1,7 +1,7 @@
 # =============================================================================
 # BUILD STAGE
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 # Set up build workspace
 WORKDIR /src
@@ -21,7 +21,7 @@ RUN dotnet publish -c Release -o /app
 # =============================================================================
 # RUNTIME STAGE
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 
 # Set up runtime workspace
 WORKDIR /app
@@ -30,7 +30,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
-RUN adduser --disabled-password --gecos "" --no-create-home appuser
+RUN groupadd --system appuser \
+    && useradd --system --no-create-home --gid appuser --shell /usr/sbin/nologin appuser
 
 # Copy application from build stage
 COPY --from=build /app ./

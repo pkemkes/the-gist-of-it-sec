@@ -16,14 +16,14 @@ public partial class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
 {
     public List<RssFeed> Definitions { get; set; } = [
         new(new Uri("https://krebsonsecurity.com/feed"), ExtractTextKrebsOnSecurity, En),
-        new(new Uri("https://www.bleepingcomputer.com/feed/"), ExtractTextBleepingComputer, En, ["Security"]),
-        new(new Uri("https://www.darkreading.com/rss.xml"), ExtractTextDarkReading, En),
-        new(new Uri("https://www.theverge.com/rss/cyber-security/index.xml"), ExtractTextTheVerge, En),
-        new(new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"), ExtractTextGData, En),
-        new(new Uri("https://therecord.media/feed"), ExtractTextTheRecord, En),
-        new(new Uri("https://feeds.arstechnica.com/arstechnica/technology-lab"), ExtractTextArsTechnica, En, ["Security"]),
-        new(new Uri("https://www.heise.de/security/feed.xml"), ExtractTextHeise, De),
-        new(new Uri("https://www.security-insider.de/rss/news.xml"), ExtractTextSecurityInsider, De),
+        // new(new Uri("https://www.bleepingcomputer.com/feed/"), ExtractTextBleepingComputer, En, ["Security"]),
+        // new(new Uri("https://www.darkreading.com/rss.xml"), ExtractTextDarkReading, En),
+        // new(new Uri("https://www.theverge.com/rss/cyber-security/index.xml"), ExtractTextTheVerge, En),
+        // new(new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"), ExtractTextGData, En),
+        // new(new Uri("https://therecord.media/feed"), ExtractTextTheRecord, En),
+        // new(new Uri("https://feeds.arstechnica.com/arstechnica/technology-lab"), ExtractTextArsTechnica, En, ["Security"]),
+        // new(new Uri("https://www.heise.de/security/feed.xml"), ExtractTextHeise, De),
+        // new(new Uri("https://www.security-insider.de/rss/news.xml"), ExtractTextSecurityInsider, De),
         // new(new Uri("https://rss.golem.de/rss.php?ms=security&feed=ATOM1.0"), ExtractTextGolem)  // Golem has ad accept popup that blocks content
     ];
 

@@ -1,4 +1,4 @@
-FROM chromadb/chroma:0.5.23
+FROM chromadb/chroma:1.4.1
 
 ENV CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.token_authn.TokenAuthenticationServerProvider
 ENV CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
