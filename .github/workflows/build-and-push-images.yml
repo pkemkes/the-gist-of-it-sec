@@ -46,7 +46,7 @@ jobs:
           reportgenerator \
             -reports:coverage/TestResults/**/coverage.cobertura.xml \
             -targetdir:coverage/report \
-            "-reporttypes:Badges;TextSummary"
+            "-reporttypes:Html;Badges;TextSummary"
           cat coverage/report/Summary.txt
 
       - name: Upload coverage report for GitHub Pages
