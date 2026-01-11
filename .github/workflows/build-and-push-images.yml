@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   test-backend:
@@ -40,13 +42,24 @@ jobs:
             "-reporttypes:Badges;TextSummary"
           cat coverage/report/Summary.txt
 
-      - name: Publish coverage badge to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload coverage report for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: coverage/report
-          destination_dir: coverage
-          keep_files: true
+          path: coverage/report
+
+  deploy-coverage:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy coverage to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   build-and-push:
     needs: test-backend
