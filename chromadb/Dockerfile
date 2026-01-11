@@ -1,5 +1,9 @@
 FROM chromadb/chroma:1.4.0
 
+RUN apt-get update \
+        && apt-get install -y --no-install-recommends curl ca-certificates \
+        && rm -rf /var/lib/apt/lists/*
+
 ENV CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.token_authn.TokenAuthenticationServerProvider
 ENV CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
 
