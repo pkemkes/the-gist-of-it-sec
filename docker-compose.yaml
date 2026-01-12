@@ -147,11 +147,9 @@ services:
         max-size: 1g
         tag: "{{.Name}}"
     environment:
-      - IS_PERSISTENT=TRUE
       - CHROMA_SERVER_AUTHN_CREDENTIALS=${CHROMA_SERVER_AUTHN_CREDENTIALS}
-      - PERSIST_DIRECTORY=/chroma/chroma
     volumes:
-      - chromadb-data:/chroma/chroma
+      - chromadb-data:/data
     networks:
       - chromadb
   
