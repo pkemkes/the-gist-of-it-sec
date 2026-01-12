@@ -1,5 +1,7 @@
 import argparse
 import uvicorn
+import logging
+import sys
 
 from api import app
 
@@ -14,6 +16,13 @@ def main() -> None:
         help="Enable auto-reload when running the dev server",
     )
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
+        force=True,
+    )
 
     uvicorn.run(
         "api:app",

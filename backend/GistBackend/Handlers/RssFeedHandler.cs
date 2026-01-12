@@ -16,15 +16,15 @@ public partial class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
 {
     public List<RssFeed> Definitions { get; set; } = [
         new(new Uri("https://krebsonsecurity.com/feed"), ExtractTextKrebsOnSecurity, En),
-        // new(new Uri("https://www.bleepingcomputer.com/feed/"), ExtractTextBleepingComputer, En, ["Security"]),
-        // new(new Uri("https://www.darkreading.com/rss.xml"), ExtractTextDarkReading, En),
-        // new(new Uri("https://www.theverge.com/rss/cyber-security/index.xml"), ExtractTextTheVerge, En),
-        // new(new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"), ExtractTextGData, En),
-        // new(new Uri("https://therecord.media/feed"), ExtractTextTheRecord, En),
-        // new(new Uri("https://feeds.arstechnica.com/arstechnica/technology-lab"), ExtractTextArsTechnica, En, ["Security"]),
-        // new(new Uri("https://www.heise.de/security/feed.xml"), ExtractTextHeise, De),
-        // new(new Uri("https://www.security-insider.de/rss/news.xml"), ExtractTextSecurityInsider, De),
-        // new(new Uri("https://rss.golem.de/rss.php?ms=security&feed=ATOM1.0"), ExtractTextGolem)  // Golem has ad accept popup that blocks content
+        new(new Uri("https://www.bleepingcomputer.com/feed/"), ExtractTextBleepingComputer, En, ["Security"]),
+        new(new Uri("https://www.darkreading.com/rss.xml"), ExtractTextDarkReading, En),
+        new(new Uri("https://www.theverge.com/rss/cyber-security/index.xml"), ExtractTextTheVerge, En),
+        new(new Uri("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1"), ExtractTextGData, En),
+        new(new Uri("https://therecord.media/feed"), ExtractTextTheRecord, En),
+        new(new Uri("https://feeds.arstechnica.com/arstechnica/technology-lab"), ExtractTextArsTechnica, En, ["Security"]),
+        new(new Uri("https://www.heise.de/security/feed.xml"), ExtractTextHeise, De),
+        new(new Uri("https://www.security-insider.de/rss/news.xml"), ExtractTextSecurityInsider, De),
+        new(new Uri("https://rss.golem.de/rss.php?ms=security&feed=ATOM1.0"), ExtractTextGolem, De)  // Golem has ad accept popup that blocks content
     ];
 
     public Task ParseFeedAsync(RssFeed rssFeed, CancellationToken ct) =>
@@ -265,30 +265,30 @@ public partial class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         return decodedText.Trim();
     }
 
-    // private static string ExtractTextGolem(string content)
-    // {
-    //     var doc = new HtmlDocument();
-    //     doc.LoadHtml(content);
-    //
-    //     var entryContainer = doc.DocumentNode.SelectSingleNode("//article[contains(@class, 'go-article')]");
-    //     if (entryContainer == null)
-    //     {
-    //         throw new ExtractingEntryTextException("Missing container element");
-    //     }
-    //
-    //     var paragraphsAndHeadings = entryContainer.SelectNodes(".//p | .//h1 | .//h2 | .//h3 | .//h4 | .//h5 | .//h6");
-    //     if (paragraphsAndHeadings == null || paragraphsAndHeadings.Count == 0)
-    //     {
-    //         throw new ExtractingEntryTextException("Missing paragraph or heading elements");
-    //     }
-    //
-    //     var combinedTextContents = string.Join("\n", paragraphsAndHeadings.Select(node => node.InnerText));
-    //     if (string.IsNullOrWhiteSpace(combinedTextContents))
-    //     {
-    //         throw new ExtractingEntryTextException("No text found in container");
-    //     }
-    //
-    //     var decodedText = HtmlDecode(combinedTextContents);
-    //     return decodedText;
-    // }
+    private static string ExtractTextGolem(string content)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(content);
+
+        var entryContainer = doc.DocumentNode.SelectSingleNode("//article[contains(@class, 'go-article')]");
+        if (entryContainer == null)
+        {
+            throw new ExtractingEntryTextException("Missing container element");
+        }
+
+        var paragraphsAndHeadings = entryContainer.SelectNodes(".//p | .//h1 | .//h2 | .//h3 | .//h4 | .//h5 | .//h6");
+        if (paragraphsAndHeadings == null || paragraphsAndHeadings.Count == 0)
+        {
+            throw new ExtractingEntryTextException("Missing paragraph or heading elements");
+        }
+
+        var combinedTextContents = string.Join("\n", paragraphsAndHeadings.Select(node => node.InnerText));
+        if (string.IsNullOrWhiteSpace(combinedTextContents))
+        {
+            throw new ExtractingEntryTextException("No text found in container");
+        }
+
+        var decodedText = HtmlDecode(combinedTextContents);
+        return decodedText;
+    }
 }

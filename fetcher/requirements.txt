@@ -2,3 +2,4 @@ fastapi==0.128.0
 uvicorn==0.40.0
 brotli==1.2.0
 curl_cffi[requests]==0.14.0
+playwright==1.57.0
