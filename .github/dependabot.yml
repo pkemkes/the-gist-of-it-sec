@@ -30,6 +30,5 @@ updates:
       - "/grafana"
       - "/loki"
       - "/prometheus"
-      - "/frontend"
     schedule:
       interval: "weekly"
