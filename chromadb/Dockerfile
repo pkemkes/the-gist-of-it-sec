@@ -1,4 +1,4 @@
-FROM chromadb/chroma:1.4.0
+FROM chromadb/chroma:1.4.1
 
 RUN apt-get update \
         && apt-get install -y --no-install-recommends curl ca-certificates \
