@@ -1,85 +1,47 @@
-name: build-and-push-images
+name: build-and-push
 
 on:
   push:
     tags:
-    - '*'
+      - '*'
 
 permissions:
+  actions: read
   contents: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  test-backend:
+  verify-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - name: Verify tests passed on main for this commit
+        uses: actions/github-script@v7
         with:
-          dotnet-version: 10.0.x
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const headSha = context.sha;
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner,
+              repo,
+              branch: 'main',
+              event: 'push',
+              head_sha: headSha,
+              per_page: 20,
+            });
 
-      - name: Run backend unit and integration tests with coverage
-        env:
-          DOTNET_CLI_TELEMETRY_OPTOUT: 1
-        run: |
-          dotnet test backend/GistBackend.sln \
-            --configuration Release \
-            --collect "XPlat Code Coverage" \
-            --results-directory coverage/TestResults
+            const matching = runs.data.workflow_runs.find(
+              (run) => run.name === 'test-and-deploy-coverage' && run.conclusion === 'success'
+            );
 
-      - name: Install reportgenerator
-        run: dotnet tool install -g dotnet-reportgenerator-globaltool
-
-      - name: Create coverage report and badge
-        run: |
-          reportgenerator \
-            -reports:coverage/TestResults/**/coverage.cobertura.xml \
-            -targetdir:coverage/report \
-            "-reporttypes:Html;Badges;TextSummary"
-          cat coverage/report/Summary.txt
-
-      - name: Upload coverage report for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: coverage/report
-
-  deploy-coverage:
-    needs: test-backend
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Ensure tag is on main
-        run: |
-          git fetch origin main --depth=1
-          git merge-base --is-ancestor origin/main "$GITHUB_SHA"
-
-      - name: Deploy coverage to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+            if (!matching) {
+              core.setFailed(
+                `No successful main-branch test run found for commit ${headSha}. ` +
+                'Push the tag after tests pass on main.'
+              );
+            }
 
   build-and-push:
-    needs: test-backend
+    needs: verify-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -168,7 +130,7 @@ jobs:
           tags: |
             pkemkes/the-gist-of-it-sec-grafana:latest
             pkemkes/the-gist-of-it-sec-grafana:${{ github.ref_name }}
-            
+
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
@@ -179,7 +141,7 @@ jobs:
           tags: |
             pkemkes/the-gist-of-it-sec-frontend:latest
             pkemkes/the-gist-of-it-sec-frontend:${{ github.ref_name }}
-      
+
       - name: Build release body
         run: |
           previous_tag=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=2 | tail -n 1))
@@ -190,7 +152,7 @@ jobs:
             cat ./inner_release_body
             echo "**Full changelog**: https://github.com/pkemkes/the-gist-of-it-sec/compare/${previous_tag}..${{ github.ref_name }}"
           } > ./release_body 
-      
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:

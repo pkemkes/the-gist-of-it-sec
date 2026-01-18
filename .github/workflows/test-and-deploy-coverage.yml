@@ -1,0 +1,89 @@
+name: test-and-deploy-coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run backend unit and integration tests with coverage
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+        run: |
+          dotnet test backend/GistBackend.sln \
+            --configuration Release \
+            --collect "XPlat Code Coverage" \
+            --results-directory coverage/TestResults
+
+      - name: Install reportgenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Create coverage report and badge
+        run: |
+          reportgenerator \
+            -reports:coverage/TestResults/**/coverage.cobertura.xml \
+            -targetdir:coverage/report \
+            "-reporttypes:Html;Badges;TextSummary"
+          cat coverage/report/Summary.txt
+
+      - name: Upload coverage report for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: coverage/report
+
+
+  deploy-coverage:
+    needs: test-backend
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tag is on main
+        run: |
+          git fetch origin main --depth=1
+          git merge-base --is-ancestor origin/main "$GITHUB_SHA"
+
+      - name: Deploy coverage to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+  
+
+
+
