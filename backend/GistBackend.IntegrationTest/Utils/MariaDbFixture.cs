@@ -34,8 +34,7 @@ public class MariaDbFixture : IAsyncLifetime {
             .WithCleanUp(true)
             .Build();
 
-        _container = new ContainerBuilder()
-            .WithImage(_image)
+        _container = new ContainerBuilder(_image)
             .WithPortBinding(3306, true)
             .WithEnvironment("MARIADB_ROOT_PASSWORD", RootPassword)
             .WithEnvironment("DB_GISTSERVICE_USERNAME", GistServiceDbUsername)
@@ -48,7 +47,7 @@ public class MariaDbFixture : IAsyncLifetime {
             .WithEnvironment("DB_GISTSCONTROLLER_PASSWORD", GistsControllerDbPassword)
             .WithEnvironment("DB_TELEGRAMSERVICE_USERNAME", TelegramServiceDbUsername)
             .WithEnvironment("DB_TELEGRAMSERVICE_PASSWORD", TelegramServiceDbPassword)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(3306)
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(3306)
                 .UntilCommandIsCompleted($"mariadb -u{RootUser} -p{RootPassword} -e 'SELECT 1'"))
             .Build();
     }

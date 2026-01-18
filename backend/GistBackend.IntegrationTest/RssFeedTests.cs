@@ -5,8 +5,7 @@ using GistBackend.Types;
 namespace GistBackend.IntegrationTest;
 
 public class RssFeedTests : IAsyncLifetime {
-    private readonly IContainer _container = new ContainerBuilder()
-        .WithImage("nginx:latest")
+    private readonly IContainer _container = new ContainerBuilder("nginx:latest")
         .WithPortBinding(80, true)
         .WithResourceMapping(new DirectoryInfo("testData"), "/usr/share/nginx/html/")
         .WithWaitStrategy(Wait.ForUnixContainer()

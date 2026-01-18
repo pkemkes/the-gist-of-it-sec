@@ -22,11 +22,10 @@ public class ChromaDbFixture : IAsyncLifetime
             .WithCleanUp(true)
             .Build();
 
-        _container = new ContainerBuilder()
-            .WithImage(_image)
+        _container = new ContainerBuilder(_image)
             .WithPortBinding(8000, true)
             .WithEnvironment("CHROMA_SERVER_AUTHN_CREDENTIALS", GistServiceServerAuthnCredentials)
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8000))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(8000))
             .Build();
     }
 
