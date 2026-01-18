@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -74,7 +74,7 @@ jobs:
         run: tail -n +5 Python.txt | head -n -2 > temp.txt && mv temp.txt Python.txt
 
       - name: Setup .NET SDKs (9.0 for app, 7.0 for tool runtime)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             9.0.x
