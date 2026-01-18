@@ -18,7 +18,7 @@
         "@emotion/react": "11.14.0",
         "@emotion/styled": "11.14.1",
         "@mui/icons-material": "7.3.6",
-        "@mui/material": "7.3.6",
+        "@mui/material": "7.3.7",
         "@reduxjs/toolkit": "2.11.2",
         "@types/lodash.throttle": "4.1.9",
         "@types/react": "19.2.8",
