@@ -182,7 +182,7 @@ services:
       - "3100:3100"
   
   promtail:
-    image: grafana/promtail:3.5.3
+    image: grafana/promtail:3.6.3
     container_name: promtail
     logging:
       driver: json-file
