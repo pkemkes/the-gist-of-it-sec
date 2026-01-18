@@ -3,6 +3,9 @@ name: generate-third-party-notice
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   generate-and-commit:
     runs-on: ubuntu-latest

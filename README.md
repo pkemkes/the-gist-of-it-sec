@@ -1,8 +1,10 @@
 [<img src="./assets/logo.png" alt="screenshot.png" height="100"/>](https://gist.pkemkes.de/) 
 
+[![Version](https://img.shields.io/github/v/release/pkemkes/the-gist-of-it-sec?display_name=tag&label=version)](https://github.com/pkemkes/the-gist-of-it-sec/releases/latest)
+[![Deployment](https://img.shields.io/github/actions/workflow/status/pkemkes/the-gist-of-it-sec/build-and-push.yml?event=push&label=build%20and%20push)](https://github.com/pkemkes/the-gist-of-it-sec/actions/workflows/build-and-push.yml)
 [![GitHub license](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue.svg)](https://github.com/pkemkes/the-gist-of-it-sec/blob/main/LICENSE.md)
 
-[![Release tests](https://img.shields.io/github/actions/workflow/status/pkemkes/the-gist-of-it-sec/build-and-push-images.yml?label=release%20tests&event=push)](https://github.com/pkemkes/the-gist-of-it-sec/actions/workflows/build-and-push-images.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/pkemkes/the-gist-of-it-sec/test-and-deploy-coverage.yml?branch=main&label=main%20push)](https://github.com/pkemkes/the-gist-of-it-sec/actions/workflows/test-and-deploy-coverage.yml)
 [![Line Coverage](https://pkemkes.github.io/the-gist-of-it-sec/badge_linecoverage.svg)](https://pkemkes.github.io/the-gist-of-it-sec/)
 [![Method Coverage](https://pkemkes.github.io/the-gist-of-it-sec/badge_methodcoverage.svg)](https://pkemkes.github.io/the-gist-of-it-sec/)
 
