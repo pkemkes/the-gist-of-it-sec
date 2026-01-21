@@ -1,7 +1,6 @@
 using System.Net;
 using System.ServiceModel.Syndication;
-using GistBackend.Handlers;
-using GistBackend.IntegrationTest.Utils;
+using GistBackend.Handlers.RssFeedHandler;
 using GistBackend.Types;
 
 namespace TestUtilities;
@@ -10,7 +9,8 @@ public static class TestData
 {
     private static readonly Random Random = new();
 
-    public static RssFeed CreateTestRssFeed(Language language) => new(Random.NextUri(), s => s, language);
+    public static RssFeed CreateTestRssFeed(Language language) =>
+        new(Random.NextUri(), s => s, language, Random.NextFeedType());
 
     public static List<TestFeedData> CreateTestFeeds(int count = 5) =>
         Enumerable.Range(0, count).Select(_ => new TestFeedData()).ToList();
@@ -18,7 +18,8 @@ public static class TestData
     public static RssFeedInfo CreateTestFeedInfo(Language language) => new(
         Random.NextString(),
         Random.NextUri(),
-        language
+        language,
+        Random.NextFeedType()
     );
 
     public static RssFeedInfo CreateTestFeedInfo() => CreateTestFeedInfo(Language.De);
@@ -96,7 +97,7 @@ public static class TestData
         return Enumerable.Range(0, count).Select(_ => CreateTestConstructedGist(feed)).ToList();
     }
 
-    public static ConstructedGist CreateTestConstructedGist(RssFeedInfo? feed = null, string? reference = null,
+    private static ConstructedGist CreateTestConstructedGist(RssFeedInfo? feed = null, string? reference = null,
         DateTime? updated = null, Language language = Language.De, LanguageMode languageMode = LanguageMode.Original)
     {
         feed ??= CreateTestFeedInfo(language);

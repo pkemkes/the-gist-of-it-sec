@@ -10,6 +10,7 @@ public record RssFeed(
     Uri RssUrl,
     Func<string, string> ExtractText,
     Language Language,
+    FeedType Type,
     IEnumerable<string>? AllowedCategories = null)
 {
     private SyndicationFeed? SyndicationFeed { get; set; }
@@ -44,8 +45,9 @@ public record RssFeed(
 
     public RssFeedInfo ToRssFeedInfo()
     {
-        if (Title is null) throw new ArgumentNullException($"{nameof(Title)} is null, need to parse feed first");
-        return new RssFeedInfo(Title, RssUrl, Language) { Id = Id };
+        return Title is null
+            ? throw new ArgumentNullException($"{nameof(Title)} is null, need to parse feed first")
+            : new RssFeedInfo(Title, RssUrl, Language, Type) { Id = Id };
     }
 
     private RssEntry SyndicationItemToRssEntry(SyndicationItem item) =>

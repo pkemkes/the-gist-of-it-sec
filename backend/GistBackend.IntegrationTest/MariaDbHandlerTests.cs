@@ -8,6 +8,7 @@ using GistBackend.Utils;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 using NSubstitute;
+using TestUtilities;
 using static TestUtilities.TestData;
 
 namespace GistBackend.IntegrationTest;

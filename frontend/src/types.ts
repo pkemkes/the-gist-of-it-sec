@@ -2,6 +2,7 @@ export interface Gist {
   id: number,
   feedTitle: string,
   feedUrl: string,
+  feedType: FeedType,
   title: string,
   author: string,
   url: string,
@@ -44,4 +45,9 @@ export enum LanguageMode {
   ORIGINAL = "Original",
   ENGLISH = "En",
   GERMAN = "De",
+}
+
+export enum FeedType {
+  News = 0,
+  Blog = 1,
 }

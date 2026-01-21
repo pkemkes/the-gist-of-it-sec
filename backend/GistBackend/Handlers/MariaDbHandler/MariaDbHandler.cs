@@ -93,7 +93,7 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task<RssFeedInfo?> GetFeedInfoByRssUrlAsync(Uri rssUrl, CancellationToken ct)
     {
-        const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds WHERE RssUrl = @RssUrl";
+        const string query = "SELECT Title, RssUrl, Language, Type, Id FROM Feeds WHERE RssUrl = @RssUrl";
         var command = new CommandDefinition(query, new { RssUrl = rssUrl }, cancellationToken: ct);
 
         try
@@ -111,8 +111,8 @@ public class MariaDbHandler : IMariaDbHandler
     public async Task<int> InsertFeedInfoAsync(RssFeedInfo feedInfo, CancellationToken ct)
     {
         const string query = """
-            INSERT INTO Feeds (Title, RssUrl, Language)
-                VALUES (@Title, @RssUrl, @Language);
+            INSERT INTO Feeds (Title, RssUrl, Language, Type)
+                VALUES (@Title, @RssUrl, @Language, @Type);
             SELECT LAST_INSERT_ID();
         """;
         var command = new CommandDefinition(query, feedInfo, cancellationToken: ct);
@@ -131,7 +131,8 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task UpdateFeedInfoAsync(RssFeedInfo feedInfo, CancellationToken ct)
     {
-        const string query = "UPDATE Feeds SET Title = @Title, Language = @Language WHERE RssUrl = @RssUrl";
+        const string query =
+            "UPDATE Feeds SET Title = @Title, Language = @Language, Type = @Type WHERE RssUrl = @RssUrl";
         var command = new CommandDefinition(query, feedInfo, cancellationToken: ct);
 
         await using var connection = await GetOpenConnectionAsync(ct);
@@ -177,6 +178,7 @@ public class MariaDbHandler : IMariaDbHandler
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
+                f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
@@ -380,6 +382,7 @@ public class MariaDbHandler : IMariaDbHandler
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
+                f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
@@ -524,6 +527,7 @@ public class MariaDbHandler : IMariaDbHandler
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
+                f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
@@ -623,6 +627,7 @@ public class MariaDbHandler : IMariaDbHandler
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
+                f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,
@@ -652,7 +657,7 @@ public class MariaDbHandler : IMariaDbHandler
 
     public async Task<List<RssFeedInfo>> GetAllFeedInfosAsync(CancellationToken ct)
     {
-        const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds";
+        const string query = "SELECT Title, RssUrl, Language, Type, Id FROM Feeds";
         var command = new CommandDefinition(query, cancellationToken: ct);
 
         try
@@ -799,6 +804,7 @@ public class MariaDbHandler : IMariaDbHandler
                 g.Reference as Reference,
                 f.Title as FeedTitle,
                 f.RssUrl as FeedUrl,
+                f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
                 g.Url as Url,

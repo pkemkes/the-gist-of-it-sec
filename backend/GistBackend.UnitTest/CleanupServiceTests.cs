@@ -1,5 +1,4 @@
 using System.Net;
-using System.Reflection;
 using GistBackend.Exceptions;
 using GistBackend.Handlers.ChromaDbHandler;
 using GistBackend.Handlers.MariaDbHandler;
@@ -8,7 +7,6 @@ using GistBackend.Services;
 using GistBackend.Types;
 using GistBackend.UnitTest.Utils;
 using GistBackend.Utils;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using TestUtilities;

@@ -1,5 +1,5 @@
 import Card from "@mui/material/Card";
-import { Gist } from "../types";
+import { FeedType, Gist } from "../types";
 import { Box, Button, CardContent, SxProps, Typography } from "@mui/material";
 import { ClickableTag } from "./GistList/ClickableTag";
 import { useNavigate } from "react-router";
@@ -48,12 +48,12 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
 
   let dateString = ToLocaleString(gist.published, timezone);
   if (gist.published != gist.updated) {
-    dateString += " — updated: " + ToLocaleString(gist.updated, timezone)
+    dateString += " – updated: " + ToLocaleString(gist.updated, timezone)
   }
 
   let feedTitle = gist.feedTitle;
   if (gist.author) {
-    feedTitle += " — " + gist.author;
+    feedTitle += " – " + gist.author;
   }
 
   let sxProps: SxProps = { 
@@ -76,10 +76,15 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
     : <Box sx={{
         display: "flex",
         justifyContent: "right",
+        justifySelf: "end",
+        textAlign: "right",
+        alignSelf: "start",
+        mt: "calc(var(--first-line-height) / 2)",
+        transform: "translateY(-50%)",
       }}>
         <Typography sx={{ 
           color: "text.secondary",
-          mr: "0.5rem"
+          mr: "0.25rem"
         }}>
           Similarity:
         </Typography>
@@ -93,13 +98,30 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
       <CardContent>
         <Box sx={{
           display: "grid",
-          gridTemplateColumns: "auto auto",
-          columnGap: similarity ? "1rem" : undefined,
+          gridTemplateColumns: "1fr auto auto",
+          columnGap: similarity ? "0.5rem" : undefined,
+          alignItems: "start",
+          "--first-line-height": "1.5rem",
         }}>
-          <Typography>
+          <Typography sx={{ justifySelf: "start", textAlign: "left", lineHeight: "var(--first-line-height)" }}>
             { feedTitle }
           </Typography>
           { similarityNote }
+          <Typography 
+            color={gist.feedType == FeedType.News ? "primary" : "success"} 
+            sx={{
+              textTransform: "uppercase",
+              fontWeight: "bold",
+              fontSize: "0.875rem",
+              justifySelf: "end",
+              textAlign: "right",
+              alignSelf: "start",
+              mt: "calc(var(--first-line-height) / 2)",
+              transform: "translateY(-50%)",
+            }}
+          >
+            {FeedType[gist.feedType]}
+          </Typography>
         </Box>
         <Typography variant="h5" component="div">
           { gist.title }

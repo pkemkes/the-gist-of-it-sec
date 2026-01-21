@@ -9,7 +9,7 @@ public class TestFeedData
     public RssFeed RssFeed { get; } = CreateTestRssFeed(Language.De);
     public string SyndicationFeedXml => SyndicationFeed.ToEncodedXmlString();
     public RssFeedInfo RssFeedInfo =>
-        new(SyndicationFeed.Title.Text, RssFeed.RssUrl, RssFeed.Language, RssFeed.Id);
+        new(SyndicationFeed.Title.Text, RssFeed.RssUrl, RssFeed.Language, RssFeed.Type, RssFeed.Id);
     public List<RssEntry> Entries { get; }
     public List<SummaryAIResponse> SummaryAIResponses { get; }
     public List<string> Texts { get; }

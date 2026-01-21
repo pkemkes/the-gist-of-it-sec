@@ -5,3 +5,7 @@ HEALTHCHECK --interval=10s --start-period=10s --retries=3 --timeout=5s \
 
 COPY ./ /docker-entrypoint-initdb.d/
 RUN chmod 644 /docker-entrypoint-initdb.d/*
+
+COPY ./02-update-mariadb-tables.sql /migrations/02-update-mariadb-tables.sql
+
+CMD ["mariadbd", "--init-file=/migrations/02-update-mariadb-tables.sql"]
