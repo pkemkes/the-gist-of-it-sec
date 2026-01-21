@@ -20,7 +20,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
 
     public async Task AssertFeedInfoIsInDbAsync(RssFeedInfo expectedFeedInfo)
     {
-        const string query = "SELECT Title, RssUrl, Language, Id FROM Feeds WHERE RssUrl = @RssUrl";
+        const string query = "SELECT Title, RssUrl, Language, Type, Id FROM Feeds WHERE RssUrl = @RssUrl";
         var command = new CommandDefinition(query, expectedFeedInfo);
 
         await using var connection = await GetOpenConnectionAsync();
