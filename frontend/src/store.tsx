@@ -4,7 +4,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import gistSlice, { initialState } from "./GistViewer/slice";
 import throttle from "lodash.throttle";
-import { loadDisabledFeeds, loadLanguageMode, loadTimezone, saveStateData } from "./localStorage";
+import { loadDisabledFeeds, loadIncludeSponsoredContent, loadLanguageMode, loadTimezone, saveStateData } from "./localStorage";
 
 const throttledSaveDisabledFeeds = throttle(() => {
   const state = store.getState().gists;
@@ -12,6 +12,7 @@ const throttledSaveDisabledFeeds = throttle(() => {
     disabledFeeds: state.disabledFeeds,
     timezone: state.timezone,
     languageMode: state.languageMode,
+    includeSponsoredContent: state.includeSponsoredContent,
   })
 }, 1000);
 
@@ -29,7 +30,8 @@ export const store = configureStore({
     disabledFeeds: loadDisabledFeeds() ?? initialState.disabledFeeds,
     timezone: loadTimezone() ?? initialState.timezone,
     languageMode: loadLanguageMode() ?? initialState.languageMode,
-  } }
+    includeSponsoredContent: loadIncludeSponsoredContent() ?? initialState.includeSponsoredContent,
+  }},
 });
 
 store.subscribe(throttledSaveDisabledFeeds);

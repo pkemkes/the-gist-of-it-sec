@@ -10,7 +10,8 @@ export interface GistsState {
   tags: string[],
   disabledFeeds: number[],
   timezone: string,
-  languageMode: LanguageMode
+  languageMode: LanguageMode,
+  includeSponsoredContent: boolean,
 }
 
 export const initialState: GistsState = {
@@ -20,6 +21,7 @@ export const initialState: GistsState = {
   disabledFeeds: [],
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   languageMode: LanguageMode.ORIGINAL,
+  includeSponsoredContent: false,
 }
 
 export const slice = createSlice({
@@ -65,6 +67,9 @@ export const slice = createSlice({
     languageModeChanged: (state, action: PayloadAction<LanguageMode>) => {
       state.languageMode = action.payload;
     },
+    includeSponsoredContentChanged: (state, action: PayloadAction<boolean>) => {
+      state.includeSponsoredContent = action.payload;
+    },
   }
 });
 
@@ -78,6 +83,7 @@ export const {
   gistListReset,
   timezoneChanged,
   languageModeChanged,
+  includeSponsoredContentChanged,
 } = slice.actions;
 
 export const selectLastGist = (state: RootState) => state.gists.lastGist;
@@ -86,5 +92,5 @@ export const selectTags = (state: RootState) => state.gists.tags;
 export const selectDisabledFeeds = (state: RootState) => state.gists.disabledFeeds;
 export const selectTimezone = (state: RootState) => state.gists.timezone;
 export const selectLanguageMode = (state: RootState) => state.gists.languageMode;
-
+export const selectIncludeSponsoredContent = (state: RootState) => state.gists.includeSponsoredContent;
 export default slice.reducer;

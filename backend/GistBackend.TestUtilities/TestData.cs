@@ -10,7 +10,7 @@ public static class TestData
     private static readonly Random Random = new();
 
     public static RssFeed CreateTestRssFeed(Language language) =>
-        new(Random.NextUri(), s => s, language, Random.NextFeedType());
+        new TestFeed(Random.NextUri(), language, Random.NextFeedType());
 
     public static List<TestFeedData> CreateTestFeeds(int count = 5) =>
         Enumerable.Range(0, count).Select(_ => new TestFeedData()).ToList();
@@ -23,9 +23,6 @@ public static class TestData
     );
 
     public static RssFeedInfo CreateTestFeedInfo() => CreateTestFeedInfo(Language.De);
-
-    public static List<RssFeed> CreateTestRssFeeds(int count, Language language) =>
-        Enumerable.Range(0, count).Select(_ => CreateTestRssFeed(language)).ToList();
 
     public static SyndicationFeed CreateTestSyndicationFeed(List<RssEntry>? entries = null)
     {
@@ -53,19 +50,18 @@ public static class TestData
             };
     }
 
-    public static Gist CreateTestGist(int? feedId = null, string? reference = null, DateTime? updated = null) => new(
+    public static Gist CreateTestGist(int? feedId = null, string? reference = null, DateTime? updated = null,
+        bool isSponsoredContent = false) => new(
         reference ?? Random.NextString(),
         feedId ?? Random.Next(),
         Random.NextString(),
+        isSponsoredContent,
         Random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
         updated ?? Random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
         Random.NextUri(),
         string.Join(";;", Random.NextArrayOfStrings()),
         Random.Next()
     );
-
-    public static List<Gist> CreateTestGists(int count, int? feedId = null) =>
-        Enumerable.Range(0, count).Select(_ => CreateTestGist(feedId ?? Random.Next())).ToList();
 
     public static Gist CreateTestGistFromEntry(RssEntry entry, SummaryAIResponse? summaryAIResponse = null)
     {
@@ -74,6 +70,7 @@ public static class TestData
             entry.Reference,
             entry.FeedId,
             entry.Author,
+            false,
             entry.Published,
             entry.Updated,
             entry.Url,
@@ -134,8 +131,7 @@ public static class TestData
         Random.NextDateTime(max: DateTime.UnixEpoch.AddYears(30)),
         Random.NextDateTime(min: DateTime.UnixEpoch.AddYears(30)),
         Random.NextUri(),
-        [Random.NextString(), Random.NextString(), Random.NextString()],
-        text => text
+        [Random.NextString(), Random.NextString(), Random.NextString()]
     );
 
     public static List<string> CreateTestStrings(int count) =>

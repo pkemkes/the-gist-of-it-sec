@@ -19,7 +19,7 @@ public class CleanupServiceTests
      [Fact]
      public async Task StartAsync_NoGistsInFeeds_NothingCleanedUp()
      {
-         var testFeed = new TestFeedData([], 0);
+         var testFeed = new TestFeedData(entries: [], feedId: 0);
          var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed]);
          var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
          var gistDebouncerMock = Substitute.For<IGistDebouncer>();

@@ -7,13 +7,13 @@ using static GistBackend.Types.Language;
 
 namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 
-public record SecurityInsiderNews() : RssFeed(
-    new Uri("https://www.security-insider.de/rss/news.xml"),
-    ExtractText,
-    De,
-    News)
+public record SecurityInsiderNews : RssFeed
 {
-    private new static string ExtractText(string content)
+    public override Uri RssUrl => new("https://www.security-insider.de/rss/news.xml");
+    public override Language Language => De;
+    public override FeedType Type => News;
+
+    public override string ExtractText(string content)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(content);
@@ -48,6 +48,15 @@ public record SecurityInsiderNews() : RssFeed(
 
         var decodedText = HtmlDecode(textContent);
         return decodedText.Trim();
+    }
+
+    public override bool CheckForSponsoredContent(string content)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(content);
+        var companiesSection = doc.DocumentNode.SelectSingleNode("//section[contains(@class, 'inf-companies-rel')]");
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        return companiesSection is not null;
     }
 }
 

@@ -89,7 +89,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
-        var gist = new Gist(entry, TestSummaryAIResponse);
+        var gist = new Gist(entry, TestSummaryAIResponse, false);
 
         var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
@@ -106,7 +106,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
-        var gist = new Gist(entry, TestSummaryAIResponse);
+        var gist = new Gist(entry, TestSummaryAIResponse, false);
         await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
         var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
@@ -124,7 +124,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
-        var gist = new Gist(entry, TestSummaryAIResponse);
+        var gist = new Gist(entry, TestSummaryAIResponse, false);
         await handler.EnsureGistHasCorrectMetadataAsync(gist, true, CancellationToken.None);
 
         var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, false, CancellationToken.None);
@@ -142,7 +142,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         var entry = CreateTestEntry();
         var (text, embedding) = TestTextsAndEmbeddings.First();
         await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
-        var gist = new Gist(entry, TestSummaryAIResponse);
+        var gist = new Gist(entry, TestSummaryAIResponse, false);
 
         var actual = await handler.EnsureGistHasCorrectMetadataAsync(gist, false, CancellationToken.None);
 
@@ -159,7 +159,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry();
-        var gist = new Gist(entry, TestSummaryAIResponse);
+        var gist = new Gist(entry, TestSummaryAIResponse, false);
 
         await Assert.ThrowsAsync<DatabaseOperationException>(() =>
             handler.EnsureGistHasCorrectMetadataAsync(gist, disabled, CancellationToken.None));
@@ -172,7 +172,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry() with { Reference = "" };
-        var gist = new Gist(entry, TestSummaryAIResponse);
+        var gist = new Gist(entry, TestSummaryAIResponse, false);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             handler.EnsureGistHasCorrectMetadataAsync(gist, disabled, CancellationToken.None));
@@ -185,7 +185,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
     {
         var handler = CreateChromaDbHandler();
         var entry = CreateTestEntry() with { Reference = new string('A', 1000000) };
-        var gist = new Gist(entry, TestSummaryAIResponse);
+        var gist = new Gist(entry, TestSummaryAIResponse, false);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             handler.EnsureGistHasCorrectMetadataAsync(gist, disabled, CancellationToken.None));
@@ -269,7 +269,7 @@ public class ChromaDbHandlerTests(ChromaDbFixture fixture) : IClassFixture<Chrom
         {
             await handler.UpsertEntryAsync(entry, text, CancellationToken.None);
         }
-        var disabledGist = new Gist(entries.Last(), TestSummaryAIResponse);
+        var disabledGist = new Gist(entries.Last(), TestSummaryAIResponse, false);
         await handler.EnsureGistHasCorrectMetadataAsync(disabledGist, true, CancellationToken.None);
         var testReference = entries.First().Reference;
         var expectedReferences = entries.SkipLast(1).Select(entry => entry.Reference)

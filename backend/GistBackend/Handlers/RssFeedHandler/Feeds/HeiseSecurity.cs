@@ -7,13 +7,13 @@ using static GistBackend.Types.Language;
 
 namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 
-public record HeiseSecurity() : RssFeed(
-    new Uri("https://www.heise.de/security/feed.xml"),
-    ExtractText,
-    De,
-    News)
+public record HeiseSecurity : RssFeed
 {
-    private new static string ExtractText(string content)
+    public override Uri RssUrl => new("https://www.heise.de/security/feed.xml");
+    public override Language Language => De;
+    public override FeedType Type => News;
+
+    public override string ExtractText(string content)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(content);

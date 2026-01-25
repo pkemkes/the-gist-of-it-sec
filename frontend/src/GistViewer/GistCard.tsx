@@ -126,9 +126,27 @@ export const GistCard = ({ gist, highlighted, similarity }: GistCardProps) => {
         <Typography variant="h5" component="div">
           { gist.title }
         </Typography>
-        <Typography sx={{ color: "text.secondary", mb: 1.5 }}>
+        <Typography sx={{ color: "text.secondary" }}>
           { dateString }
         </Typography>
+        { gist.isSponsoredContent ? (
+          <Typography 
+            sx={{ 
+              color: "warning.main",
+              fontSize: "0.7rem",
+              my: 1,
+              textTransform: "uppercase",
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: "4px",
+              px: 1,
+              py: 0.25,
+              display: "inline-block",
+            }}
+          >
+            Sponsored Content!
+          </Typography>
+        ) : null }
         <Typography variant="body2" sx={{ mb: 1.5 }}>
           { gist.summary }
         </Typography>

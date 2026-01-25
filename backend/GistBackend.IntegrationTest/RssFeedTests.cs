@@ -1,6 +1,7 @@
 ﻿using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using GistBackend.Types;
+using TestUtilities;
 
 namespace GistBackend.IntegrationTest;
 
@@ -21,7 +22,7 @@ public class RssFeedTests : IAsyncLifetime {
     public async Task ParseFeedAsync_Rss2FeedXML_FeedIsCorrectlyParsed()
     {
         var rssFeedUrl = new Uri($"{GetBaseUrl()}/test_rss_2.xml");
-        var rssFeed = new RssFeed(rssFeedUrl, content => content, Language.En, FeedType.News);
+        var rssFeed = new TestFeed(rssFeedUrl, Language.En, FeedType.News);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
         rssFeed.ParseEntries(0);
@@ -57,7 +58,7 @@ public class RssFeedTests : IAsyncLifetime {
     public async Task ParseFeedAsync_AtomFeedXML_FeedIsCorrectlyParsed()
     {
         var rssFeedUrl = new Uri($"{GetBaseUrl()}/test_atom.xml");
-        var rssFeed = new RssFeed(rssFeedUrl, content => content, Language.En, FeedType.Blog);
+        var rssFeed = new TestFeed(rssFeedUrl, Language.En, FeedType.Blog);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
         rssFeed.ParseEntries(0);
@@ -96,7 +97,7 @@ public class RssFeedTests : IAsyncLifetime {
         string rssFeedPath)
     {
         var rssFeedUrl = new Uri($"{GetBaseUrl()}/{rssFeedPath}");
-        var rssFeed = new RssFeed(rssFeedUrl, content => content, Language.De, FeedType.News, ["Test Category 1"]);
+        var rssFeed = new TestFeed(rssFeedUrl, Language.De, FeedType.News, ["Test Category 1"]);
 
         await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
         rssFeed.ParseEntries(0);

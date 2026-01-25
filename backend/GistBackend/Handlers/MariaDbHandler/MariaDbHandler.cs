@@ -33,7 +33,8 @@ public interface IMariaDbHandler {
     Task<List<Gist>> GetAllGistsAsync(CancellationToken ct);
     Task<bool> EnsureCorrectDisabledStateForGistAsync(int gistId, bool disabled, CancellationToken ct);
     Task<List<ConstructedGist>> GetPreviousConstructedGistsAsync(int take, int? lastGistId, IEnumerable<string> tags,
-        string? searchQuery, IEnumerable<int> disabledFeeds, LanguageMode? languageMode, CancellationToken ct);
+        string? searchQuery, IEnumerable<int> disabledFeeds, LanguageMode? languageMode, bool? includeSponsoredContent,
+        CancellationToken ct);
     Task<ConstructedGist?> GetConstructedGistByIdAsync(int id, LanguageMode? languageMode, CancellationToken ct);
     Task<List<RssFeedInfo>> GetAllFeedInfosAsync(CancellationToken ct);
     Task<SerializedRecap?> GetLatestRecapAsync(RecapType recapType, CancellationToken ct);
@@ -151,7 +152,7 @@ public class MariaDbHandler : IMariaDbHandler
     public async Task<Gist?> GetGistByReferenceAsync(string reference, CancellationToken ct)
     {
         const string query = """
-            SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, Id
+            SELECT Reference, FeedId, Author, IsSponsoredContent, Published, Updated, Url, Tags, Id
                 FROM Gists WHERE Reference = @Reference
         """;
         var command = new CommandDefinition(query, new { Reference = reference }, cancellationToken: ct);
@@ -181,6 +182,7 @@ public class MariaDbHandler : IMariaDbHandler
                 f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
+                g.IsSponsoredContent as IsSponsoredContent,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
@@ -189,7 +191,7 @@ public class MariaDbHandler : IMariaDbHandler
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
-            WHERE g.Reference = @Reference AND {GetLanguageModeCondition(parameters, languageMode)}
+            WHERE g.Reference = @Reference AND {GetLanguageModeConstraint(parameters, languageMode)}
         """;
         parameters.Add("Reference", reference);
         var command = new CommandDefinition(query, parameters, cancellationToken: ct);
@@ -221,13 +223,13 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public async Task<int> InsertGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct)
+    public async Task<int> InsertGistAsync(Gist gist, TransactionHandle handle, CancellationToken ct)
     {
         const string query = """
             INSERT INTO Gists
-                (Reference, FeedId, Author, Published, Updated, Url, Tags)
+                (Reference, FeedId, Author, IsSponsoredContent, Published, Updated, Url, Tags)
                 VALUES (
-                    @Reference, @FeedId, @Author, @Published, @Updated, @Url, @Tags
+                    @Reference, @FeedId, @Author, @IsSponsoredContent, @Published, @Updated, @Url, @Tags
                 );
             SELECT LAST_INSERT_ID();
         """;
@@ -297,8 +299,8 @@ public class MariaDbHandler : IMariaDbHandler
     {
         const string query = """
             UPDATE Gists
-                SET FeedId = @FeedId, Author = @Author, Published = @Published, Updated = @Updated, Url = @Url,
-                    Tags = @Tags
+                SET FeedId = @FeedId, Author = @Author, IsSponsoredContent = @IsSponsoredContent,
+                    Published = @Published, Updated = @Updated, Url = @Url, Tags = @Tags
                 WHERE Reference = @Reference;
         """;
         var command = new CommandDefinition(query, gist, handle.Transaction, cancellationToken: ct);
@@ -385,6 +387,7 @@ public class MariaDbHandler : IMariaDbHandler
                 f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
+                g.IsSponsoredContent as IsSponsoredContent,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
@@ -393,7 +396,7 @@ public class MariaDbHandler : IMariaDbHandler
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
-            WHERE {GetLanguageModeCondition(parameters, LanguageMode.Original)}
+            WHERE {GetLanguageModeConstraint(parameters, LanguageMode.Original)} AND g.IsSponsoredContent IS FALSE
                 AND Updated >= @EarliestUpdated AND Updated <= @Now
         """;
         var now = _dateTimeHandler.GetUtcNow();
@@ -449,7 +452,7 @@ public class MariaDbHandler : IMariaDbHandler
     public async Task<List<Gist>> GetAllGistsAsync(CancellationToken ct)
     {
         const string query =
-            "SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, Id FROM Gists";
+            "SELECT Reference, FeedId, Author, IsSponsoredContent, Published, Updated, Url, Tags, Id FROM Gists";
         var command = new CommandDefinition(query, cancellationToken: ct);
 
         try
@@ -505,14 +508,16 @@ public class MariaDbHandler : IMariaDbHandler
     }
 
     public async Task<List<ConstructedGist>> GetPreviousConstructedGistsAsync(int take, int? lastGistId, IEnumerable<string> tags,
-        string? searchQuery, IEnumerable<int> disabledFeeds, LanguageMode? languageMode, CancellationToken ct)
+        string? searchQuery, IEnumerable<int> disabledFeeds, LanguageMode? languageMode, bool? includeSponsoredContent,
+        CancellationToken ct)
     {
         var parameters = new DynamicParameters();
         var constraints = new List<string> {
             "Disabled IS FALSE",
-            GetLanguageModeCondition(parameters, languageMode)
+            GetLanguageModeConstraint(parameters, languageMode)
         };
 
+        AddSponsoredContentConstraint(constraints, includeSponsoredContent);
         AddLastGistIdConstraint(parameters, constraints, lastGistId);
         AddSearchQueryConstraint(parameters, constraints, searchQuery);
         AddTagsConstraint(parameters, constraints, tags);
@@ -530,6 +535,7 @@ public class MariaDbHandler : IMariaDbHandler
                 f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
+                g.IsSponsoredContent as IsSponsoredContent,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
@@ -555,7 +561,7 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    private static string GetLanguageModeCondition(DynamicParameters parameters, LanguageMode? languageMode)
+    private static string GetLanguageModeConstraint(DynamicParameters parameters, LanguageMode? languageMode)
     {
         languageMode ??= LanguageMode.Original;
         switch (languageMode)
@@ -618,6 +624,11 @@ public class MariaDbHandler : IMariaDbHandler
         constraints.Add("g.FeedId NOT IN @DisabledFeeds");
     }
 
+    private static void AddSponsoredContentConstraint(List<string> constraints, bool? includeSponsoredContent)
+    {
+        if (includeSponsoredContent is not true) constraints.Add("g.IsSponsoredContent IS FALSE");
+    }
+
     public async Task<ConstructedGist?> GetConstructedGistByIdAsync(int id, LanguageMode? languageMode, CancellationToken ct)
     {
         var parameters = new DynamicParameters();
@@ -630,6 +641,7 @@ public class MariaDbHandler : IMariaDbHandler
                 f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
+                g.IsSponsoredContent as IsSponsoredContent,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
@@ -638,7 +650,7 @@ public class MariaDbHandler : IMariaDbHandler
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
-            WHERE g.Id = @Id AND {GetLanguageModeCondition(parameters, languageMode)}
+            WHERE g.Id = @Id AND {GetLanguageModeConstraint(parameters, languageMode)}
         """;
         parameters.Add("Id", id);
         var command = new CommandDefinition(query, parameters, cancellationToken: ct);
@@ -744,7 +756,7 @@ public class MariaDbHandler : IMariaDbHandler
 
     private async Task<ConstructedGist?> GetMostRecentGistWithFeedAsync(CancellationToken ct)
     {
-        var gistsWithFeed = await GetPreviousConstructedGistsAsync(1, null, [], null, [], null, ct);
+        var gistsWithFeed = await GetPreviousConstructedGistsAsync(1, null, [], null, [], null, false, ct);
         if (gistsWithFeed.Count != 0) return gistsWithFeed.Single();
         _logger?.LogInformation(NoRecentGistFound, "No recent gist found in database");
         return null;
@@ -807,6 +819,7 @@ public class MariaDbHandler : IMariaDbHandler
                 f.Type as FeedType,
                 s.Title as Title,
                 g.Author as Author,
+                g.IsSponsoredContent as IsSponsoredContent,
                 g.Url as Url,
                 DATE_FORMAT(g.Published, '%Y-%m-%dT%H:%i:%s.%fZ') as Published,
                 DATE_FORMAT(g.Updated, '%Y-%m-%dT%H:%i:%s.%fZ') as Updated,
@@ -815,7 +828,8 @@ public class MariaDbHandler : IMariaDbHandler
             FROM Gists g
             INNER JOIN Feeds f ON g.FeedId = f.Id
             INNER JOIN Summaries s ON s.GistId = g.Id
-            WHERE g.Id > @LastGistId AND g.Disabled IS FALSE AND {GetLanguageModeCondition(parameters, languageMode)}
+            WHERE g.Id > @LastGistId AND g.Disabled IS FALSE AND {GetLanguageModeConstraint(parameters, languageMode)}
+              AND g.IsSponsoredContent IS FALSE
             ORDER BY g.Id ASC LIMIT 5
         """;
         parameters.Add("LastGistId", lastGistId);
@@ -852,6 +866,7 @@ public class MariaDbHandler : IMariaDbHandler
         {
             _logger?.LogError(SettingGistIdLastSentFailed, e,
                 "Setting GistIdLastSent for chat with ID {ChatId} to {GistId} failed", chatId, gistId);
+
             throw;
         }
     }

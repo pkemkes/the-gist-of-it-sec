@@ -30,12 +30,13 @@ public class GistsController(
         [FromQuery] string? q = null,
         [FromQuery] string? disabledFeeds = null,
         [FromQuery] LanguageMode? languageMode = null,
+        [FromQuery] bool? includeSponsoredContent = null,
         CancellationToken ct = default)
     {
         try
         {
             var gists = await mariaDbHandler.GetPreviousConstructedGistsAsync(take, lastGist, ParseTags(tags), q,
-                ParseDisabledFeeds(disabledFeeds), languageMode, ct);
+                ParseDisabledFeeds(disabledFeeds), languageMode, includeSponsoredContent, ct);
             return Ok(gists);
         }
         catch (Exception e)
@@ -48,7 +49,7 @@ public class GistsController(
 
     [HttpGet("health")]
     public Task<IActionResult> GetHealthAsync(CancellationToken ct = default) =>
-        GetGistsQueryAsync(1, null, null, null, null, null, ct);
+        GetGistsQueryAsync(1, null, null, null, null, null, null, ct);
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetGistWithFeedByIdAsync(

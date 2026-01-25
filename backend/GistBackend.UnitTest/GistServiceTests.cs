@@ -23,7 +23,7 @@ public class GistServiceTests
         mariaDbHandlerMock
             .GetFeedInfoByRssUrlAsync(Arg.Any<Uri>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(null as RssFeedInfo));
-        var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock, testFeeds: testFeeds);
+        var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock, testFeedDatas: testFeeds);
 
         await gistService.StartAsync(CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
@@ -39,43 +39,43 @@ public class GistServiceTests
     [Fact]
     public async Task StartAsync_DifferentFeedInfoExistsInDb_FeedInfoIsUpdated()
     {
-        var oldFeed = new TestFeedData {
+        var oldFeedData = new TestFeedData {
             RssFeed = {
                 Id = 0
             }
         };
-        var newFeed = new TestFeedData {
+        var newFeedData = new TestFeedData {
             RssFeed = {
-                Id = oldFeed.RssFeed.Id
+                Id = oldFeedData.RssFeed.Id
             }
         };
-        var testFeeds = new List<TestFeedData> { oldFeed, newFeed };
-        var mariaDbHandlerMock = CreateMariaDbHandlerMock(testFeeds);
+        var testFeedDatas = new List<TestFeedData> { oldFeedData, newFeedData };
+        var mariaDbHandlerMock = CreateMariaDbHandlerMock(testFeedDatas);
         mariaDbHandlerMock
-            .GetFeedInfoByRssUrlAsync(newFeed.RssFeed.RssUrl, Arg.Any<CancellationToken>())!
-            .Returns(Task.FromResult(oldFeed.RssFeedInfo));
+            .GetFeedInfoByRssUrlAsync(newFeedData.RssFeed.RssUrl, Arg.Any<CancellationToken>())!
+            .Returns(Task.FromResult(oldFeedData.RssFeedInfo));
         var gistService = CreateGistService(
-            testFeeds: testFeeds,
+            testFeedDatas: testFeedDatas,
             mariaDbHandlerMock: mariaDbHandlerMock
         );
 
         await gistService.StartAsync(CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
 
-        await mariaDbHandlerMock.Received(1).UpdateFeedInfoAsync(newFeed.RssFeedInfo, Arg.Any<CancellationToken>());
+        await mariaDbHandlerMock.Received(1).UpdateFeedInfoAsync(newFeedData.RssFeedInfo, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task StartAsync_TwoTestEntriesInFeed_EntriesProcessedFromOldestToNewest()
     {
-        var testFeed = new TestFeedData(CreateTestEntries(5).OrderByDescending(entry => entry.Updated).ToList());
-        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeed]);
-        var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock, testFeeds: [ testFeed ]);
+        var testFeedData = new TestFeedData(CreateTestEntries(5).OrderByDescending(entry => entry.Updated).ToList());
+        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeedData]);
+        var gistService = CreateGistService(mariaDbHandlerMock: mariaDbHandlerMock, testFeedDatas: [ testFeedData ]);
 
         await gistService.StartAsync(CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
 
-        var orderedEntries = testFeed.Entries.OrderBy(entry => entry.Updated).ToArray();
+        var orderedEntries = testFeedData.Entries.OrderBy(entry => entry.Updated).ToArray();
         Received.InOrder(async () => {
             foreach (var entry in orderedEntries)
                 await mariaDbHandlerMock.GetGistByReferenceAsync(entry.Reference, Arg.Any<CancellationToken>());
@@ -85,15 +85,15 @@ public class GistServiceTests
     [Fact]
     public async Task StartAsync_OldVersionOfGistsExist_GistsAreGeneratedAndUpdated()
     {
-        var testFeed = new TestFeedData(feedId: 0);
-        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeed]);
-        testFeed.Gists.ForEach(gist =>
+        var testFeedData = new TestFeedData(feedId: 0);
+        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeedData]);
+        testFeedData.Gists.ForEach(gist =>
             mariaDbHandlerMock.GetGistByReferenceAsync(gist.Reference, Arg.Any<CancellationToken>())!
                 .Returns(Task.FromResult(gist with { Updated = gist.Updated.AddDays(-5)}))
         );
         var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
         var gistService = CreateGistService(
-            testFeeds: [testFeed],
+            testFeedDatas: [testFeedData],
             mariaDbHandlerMock: mariaDbHandlerMock,
             chromaDbHandlerMock: chromaDbHandlerMock
         );
@@ -101,13 +101,13 @@ public class GistServiceTests
         await gistService.StartAsync(CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
 
-        foreach (var (entry, summaryAIResponse) in testFeed.Entries.Zip(testFeed.SummaryAIResponses))
+        foreach (var (entry, summaryAIResponse) in testFeedData.Entries.Zip(testFeedData.SummaryAIResponses))
         {
             await chromaDbHandlerMock.Received(1).UpsertEntryAsync(
                 Arg.Is<RssEntry>(e => e.Reference == entry.Reference && e.FeedId == entry.FeedId),
                 Arg.Any<string>(), Arg.Any<CancellationToken>());
-            var gistId = testFeed.Gists.First(gist => gist.Reference == entry.Reference).Id!.Value;
-            var feedLanguage = testFeed.RssFeed.Language;
+            var gistId = testFeedData.Gists.First(gist => gist.Reference == entry.Reference).Id!.Value;
+            var feedLanguage = testFeedData.RssFeed.Language;
             await mariaDbHandlerMock.Received(1)
                 .UpdateGistAsync(
                     Arg.Is<Gist>(gist => gist.Reference == entry.Reference && gist.Updated == entry.Updated),
@@ -131,25 +131,77 @@ public class GistServiceTests
     [Fact]
     public async Task StartAsync_GistDoesNotExist_GistIsGeneratedAndInserted()
     {
-        var testFeed = new TestFeedData(feedId: 0);
-        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeed]);
+        var testFeedData = new TestFeedData(feedId: 0);
+        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeedData]);
         var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
         var gistService = CreateGistService(
             mariaDbHandlerMock: mariaDbHandlerMock,
             chromaDbHandlerMock: chromaDbHandlerMock,
-            testFeeds: [testFeed]
+            testFeedDatas: [testFeedData]
         );
 
         await gistService.StartAsync(CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
 
-        foreach (var (entry, summaryAIResponse, gist) in testFeed.Entries.Zip(testFeed.SummaryAIResponses,
-                     testFeed.Gists))
+        foreach (var (entry, summaryAIResponse, gist) in testFeedData.Entries.Zip(testFeedData.SummaryAIResponses,
+                     testFeedData.Gists))
         {
-            var feedLanguage = testFeed.RssFeed.Language;
+            var feedLanguage = testFeedData.RssFeed.Language;
             await chromaDbHandlerMock.Received(1)
                 .UpsertEntryAsync(Arg.Is<RssEntry>(e => e.Reference == entry.Reference && e.FeedId == entry.FeedId),
                     summaryAIResponse.SummaryEnglish, Arg.Any<CancellationToken>());
+            await mariaDbHandlerMock.Received(1)
+                .InsertGistAsync(gist with { Id = null }, Arg.Any<TransactionHandle>(), Arg.Any<CancellationToken>());
+            var summary = new Summary(gist.Id!.Value, feedLanguage, false, entry.Title,
+                feedLanguage == Language.En ? summaryAIResponse.SummaryEnglish : summaryAIResponse.SummaryGerman);
+            await mariaDbHandlerMock.Received(1)
+                .InsertSummaryAsync(summary, Arg.Any<TransactionHandle>(), Arg.Any<CancellationToken>());
+            var translatedSummary = new Summary(gist.Id!.Value, feedLanguage.Invert(), true,
+                summaryAIResponse.TitleTranslated,
+                feedLanguage == Language.En ? summaryAIResponse.SummaryGerman : summaryAIResponse.SummaryEnglish);
+            await mariaDbHandlerMock.Received(1).InsertSummaryAsync(translatedSummary, Arg.Any<TransactionHandle>(),
+                Arg.Any<CancellationToken>());
+        }
+        await mariaDbHandlerMock.DidNotReceive()
+            .UpdateGistAsync(Arg.Any<Gist>(), Arg.Any<TransactionHandle>(), Arg.Any<CancellationToken>());
+        await mariaDbHandlerMock.DidNotReceive().UpdateSummaryAsync(Arg.Any<Summary>(), Arg.Any<TransactionHandle>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartAsync_FeedHasSomeSponsoredEntries_SponsoredStateCorrectlyInserted()
+    {
+        const int feedId = 0;
+        var texts = new List<string>
+        {
+            "Normal content",
+            "Another normal content",
+            $"Content with a {TestFeed.SponsoredContentMarker}",
+            "More normal content",
+            $"Sponsored content here {TestFeed.SponsoredContentMarker}"
+        };
+        var entries = CreateTestEntries(texts.Count, feedId);
+        var summaryAIResponses = CreateTestSummaryAIResponses(entries.Count);
+        var gists = entries.Zip(summaryAIResponses, CreateTestGistFromEntry).ToList();
+        for (var i = 0; i < entries.Count; i++)
+        {
+            if (texts[i].Contains(TestFeed.SponsoredContentMarker))
+                gists[i] = gists[i] with { IsSponsoredContent = true };
+        }
+        var testFeedData = new TestFeedData(entries, summaryAIResponses, texts, gists, feedId);
+        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeedData]);
+        var gistService = CreateGistService(
+            mariaDbHandlerMock: mariaDbHandlerMock,
+            testFeedDatas: [testFeedData]
+        );
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        foreach (var (entry, summaryAIResponse, gist) in testFeedData.Entries.Zip(testFeedData.SummaryAIResponses,
+                     testFeedData.Gists))
+        {
+            var feedLanguage = testFeedData.RssFeed.Language;
             await mariaDbHandlerMock.Received(1)
                 .InsertGistAsync(gist with { Id = null }, Arg.Any<TransactionHandle>(), Arg.Any<CancellationToken>());
             var summary = new Summary(gist.Id!.Value, feedLanguage, false, entry.Title,
@@ -218,7 +270,7 @@ public class GistServiceTests
     }
 
     private static GistService CreateGistService(
-        List<TestFeedData> testFeeds,
+        List<TestFeedData> testFeedDatas,
         IWebCrawlHandler? webCrawlHandler = null,
         IMariaDbHandler? mariaDbHandlerMock = null,
         IAIHandler? aiHandlerMock = null,
@@ -226,10 +278,10 @@ public class GistServiceTests
         ILogger<GistService>? loggerMock = null
     ) =>
         new(
-            CreateRssFeedHandler(CreateMockedHttpClient(testFeeds), testFeeds),
-            webCrawlHandler ?? CreateMockedWebCrawlHandler(testFeeds),
+            CreateRssFeedHandler(CreateMockedHttpClient(testFeedDatas), testFeedDatas),
+            webCrawlHandler ?? CreateMockedWebCrawlHandler(testFeedDatas),
             mariaDbHandlerMock ?? Substitute.For<IMariaDbHandler>(),
-            aiHandlerMock ?? CreateMockedAIHandler(testFeeds),
+            aiHandlerMock ?? CreateMockedAIHandler(testFeedDatas),
             chromaDbHandlerMock ?? Substitute.For<IChromaDbHandler>(),
             loggerMock
         );

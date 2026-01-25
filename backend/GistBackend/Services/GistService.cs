@@ -113,9 +113,11 @@ public class GistService(
                 return;
             }
 
-            var entryText = entry.ExtractText(fetchResponse.Content);
+            var entryText = feed.ExtractText(fetchResponse.Content);
             var summaryAIResponse = await GenerateSummaryAIResponse(feed.Language, entry.Title, entryText, ct);
-            var gist = new Gist(entry, summaryAIResponse);
+            var isSponsoredContent = feed.CheckForSponsoredContent(fetchResponse.Content);
+
+            var gist = new Gist(entry, summaryAIResponse, isSponsoredContent);
 
             await chromaDbHandler.UpsertEntryAsync(entry, summaryAIResponse.SummaryEnglish, ct);
 

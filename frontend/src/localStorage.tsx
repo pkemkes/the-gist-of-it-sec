@@ -3,11 +3,13 @@ import { LanguageMode } from "./types";
 const disabledFeedsLocalStorageKey = "disabledFeeds";
 const timezoneStorageKey = "timezone";
 const languageModeStorageKey = "languageMode";
+const includeSponsoredContentStorageKey = "includeSponsoredContent";
 
 interface SaveableStateData {
   disabledFeeds: number[],
   timezone: string,
   languageMode: LanguageMode,
+  includeSponsoredContent: boolean,
 }
 
 export const saveStateData = (stateData: SaveableStateData) => {
@@ -16,8 +18,8 @@ export const saveStateData = (stateData: SaveableStateData) => {
     localStorage.setItem(disabledFeedsLocalStorageKey, serializedDisabledFeeds);
     localStorage.setItem(timezoneStorageKey, stateData.timezone);
     localStorage.setItem(languageModeStorageKey, stateData.languageMode);
-  }
-  catch { }
+    localStorage.setItem(includeSponsoredContentStorageKey, JSON.stringify(stateData.includeSponsoredContent));
+  } catch { }
 };
 
 export const loadDisabledFeeds = (): number[] | undefined => {
@@ -43,4 +45,14 @@ export const loadLanguageMode = (): LanguageMode | undefined => {
     return savedLanguageMode as LanguageMode;
   }
   return undefined;
+}
+
+export const loadIncludeSponsoredContent = (): boolean | undefined => {
+  const savedIncludeSponsoredContent = localStorage.getItem(includeSponsoredContentStorageKey);
+  if (savedIncludeSponsoredContent == null) return undefined;
+  try {
+    return JSON.parse(savedIncludeSponsoredContent);
+  } catch {
+    return undefined;
+  }
 }

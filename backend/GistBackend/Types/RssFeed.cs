@@ -6,17 +6,19 @@ using GistBackend.Utils;
 
 namespace GistBackend.Types;
 
-public record RssFeed(
-    Uri RssUrl,
-    Func<string, string> ExtractText,
-    Language Language,
-    FeedType Type,
-    IEnumerable<string>? AllowedCategories = null)
+public abstract record RssFeed(IEnumerable<string>? AllowedCategories = null)
 {
+    public abstract Uri RssUrl { get; }
+    public abstract Language Language { get; }
+    public abstract FeedType Type { get; }
+    public readonly IEnumerable<string>? AllowedCategories = AllowedCategories;
     private SyndicationFeed? SyndicationFeed { get; set; }
     public int? Id { get; set; }
     public string? Title { get; set; }
     public IEnumerable<RssEntry>? Entries { get; private set; }
+    public abstract string ExtractText(string content);
+
+    public virtual bool CheckForSponsoredContent(string content) => false;
 
     public async Task ParseFeedAsync(HttpClient httpClient, CancellationToken ct)
     {
@@ -59,7 +61,6 @@ public record RssFeed(
             item.PublishDate.UtcDateTime,
             item.ExtractUpdated(),
             item.ExtractUrl(),
-            item.ExtractCategories(),
-            ExtractText
+            item.ExtractCategories()
         );
 }

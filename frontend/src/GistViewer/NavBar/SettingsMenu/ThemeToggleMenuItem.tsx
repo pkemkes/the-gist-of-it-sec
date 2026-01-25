@@ -6,20 +6,6 @@ import PhonelinkOutlinedIcon from "@mui/icons-material/PhonelinkOutlined";
 
 export const ThemeToggleMenuItem = () => {
 	const { mode, setMode } = useColorScheme();
-  
-	const toggleTheme = () => {
-	  switch (mode) {
-      case "system":
-        setMode("dark");
-        break;
-      case "dark":
-        setMode("light");
-        break;
-      case "light":
-        setMode("system");
-        break;
-	  }
-	}
 
   const handleModeChange = (
     _: React.MouseEvent<HTMLElement>,

@@ -33,13 +33,14 @@ public static class MariaDbHandlerTestExtensions
             return gists;
         }
 
-        public async Task<List<ConstructedGist>> InsertTestConstructedGistsAsync(int count, RssFeedInfo? feed = null, LanguageMode languageMode = LanguageMode.Original)
+        public async Task<List<ConstructedGist>> InsertTestConstructedGistsAsync(int count, RssFeedInfo? feed = null,
+            LanguageMode languageMode = LanguageMode.Original, bool isSponsoredContent = false)
         {
             feed ??= (await handler.InsertTestFeedInfosAsync(Language.De, 1)).Single();
             var constructedGists = new List<ConstructedGist>();
             for (var i = 0; i < count; i++)
             {
-                var gist = CreateTestGist(feed.Id);
+                var gist = CreateTestGist(feed.Id, isSponsoredContent: isSponsoredContent);
                 gist.Id = await handler.InsertGistAsync(gist, CancellationToken.None);
                 var summaries = await handler.InsertTestSummariesAsync(gist.Id!.Value, feed.Language);
                 var summary = languageMode == LanguageMode.Original ? summaries.First()
@@ -67,7 +68,7 @@ public static class MariaDbHandlerTestExtensions
         {
             var gistWithFeedLastSent =
                 (await handler.GetPreviousConstructedGistsAsync(1, null, [], null, [], LanguageMode.Original,
-                    CancellationToken.None)).FirstOrDefault();
+                    null, CancellationToken.None)).FirstOrDefault();
             var chats = Enumerable.Range(0, count)
                 .Select(_ => new Chat(Random.NextInt64(), gistWithFeedLastSent?.Id - 5 ?? 0)).ToList();
             foreach (var chat in chats) await handler.RegisterChatAsync(chat.Id, CancellationToken.None);

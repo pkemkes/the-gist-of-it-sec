@@ -2,7 +2,7 @@ import { backendApi } from "../../backend";
 import { GistCard } from "../GistCard";
 import { GistEndCard } from "../GistEndCard";
 import { useAppDispatch, useAppSelector } from "../../store";
-import { lastGistChanged, selectDisabledFeeds, selectLastGist, selectSearchQuery, selectTags, selectLanguageMode } from "../slice";
+import { lastGistChanged, selectDisabledFeeds, selectLastGist, selectSearchQuery, selectTags, selectLanguageMode, selectIncludeSponsoredContent } from "../slice";
 import { Gist } from "src/types";
 import { GistViewerBody } from "../GistViewerBody";
 import { ErrorMessage } from "../ErrorMessage";
@@ -30,9 +30,10 @@ export const GistList = () => {
   const tags = useAppSelector(selectTags);
   const disabledFeeds = useAppSelector(selectDisabledFeeds);
   const languageMode = useAppSelector(selectLanguageMode);
+  const includeSponsoredContent = useAppSelector(selectIncludeSponsoredContent)
 
   const { data, error, isFetching } = backendApi.useGetGistsQuery(
-    { lastGist, searchQuery, tags, disabledFeeds, languageMode },
+    { lastGist, searchQuery, tags, disabledFeeds, languageMode, includeSponsoredContent },
     { refetchOnMountOrArgChange: true }
   );
 

@@ -5,6 +5,7 @@ import { FeedSelectorMenuItem } from "./FeedSelectorMenuItem";
 import { ThemeToggleMenuItem } from "./ThemeToggleMenuItem";
 import { TimezoneSelectorMenuItem } from "./TimezonSelectorMenuItem";
 import { LanguageModeSelectorMenuItem } from "./LanguageModeSelectorMenuItem";
+import { IncludeSponsoredContentMenuItem } from "./IncludeSponsoredContentMenuItem";
 
 
 export const SettingsMenu = () => {
@@ -51,6 +52,7 @@ export const SettingsMenu = () => {
       <FeedSelectorMenuItem />
       <TimezoneSelectorMenuItem />
       <LanguageModeSelectorMenuItem />
+      <IncludeSponsoredContentMenuItem />
       <ThemeToggleMenuItem />
     </Menu>
   </div>

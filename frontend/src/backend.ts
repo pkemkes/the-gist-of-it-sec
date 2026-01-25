@@ -7,6 +7,7 @@ interface GistsQueryParameters {
   tags: string[],
   disabledFeeds: number[],
   languageMode: LanguageMode,
+  includeSponsoredContent: boolean,
 }
 
 interface SimilarGistsQueryParameters {
@@ -32,7 +33,7 @@ export const backendApi = createApi({
   }),
   endpoints: builder => ({
     getGists: builder.query<Gist[], GistsQueryParameters>({
-      query: ({ lastGist, searchQuery, tags, disabledFeeds, languageMode }) => {
+      query: ({ lastGist, searchQuery, tags, disabledFeeds, languageMode, includeSponsoredContent }) => {
         const params = [];
         if (lastGist != undefined) {
           params.push(`lastGist=${lastGist}`);
@@ -42,6 +43,7 @@ export const backendApi = createApi({
         params.push(`tags=${encodeURIComponent(tags.join(";;"))}`);
         params.push(`disabledFeeds=${JoinDisabledFeedsParam(disabledFeeds)}`);
         params.push(`languageMode=${languageMode}`);
+        params.push(`includeSponsoredContent=${includeSponsoredContent}`);
         return `?${params.join("&")}`;
       },
       // taken from: https://redux-toolkit.js.org/rtk-query/api/createApi#merge
@@ -64,7 +66,8 @@ export const backendApi = createApi({
           currentArg?.lastGist !== previousArg?.lastGist 
           || currentArg?.searchQuery !== previousArg?.searchQuery
           || currentArg?.languageMode !== previousArg?.languageMode
-        )
+          || currentArg?.includeSponsoredContent !== previousArg?.includeSponsoredContent
+        );
       },
     }),
     getAllFeedInfo: builder.query<FeedInfo[], void>({

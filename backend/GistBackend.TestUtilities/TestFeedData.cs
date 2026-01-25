@@ -16,14 +16,15 @@ public class TestFeedData
     public List<Gist> Gists { get; }
     private SyndicationFeed SyndicationFeed { get;  }
 
-    public TestFeedData(List<RssEntry>? entries = null, int? feedId = null)
+    public TestFeedData(List<RssEntry>? entries = null, List<SummaryAIResponse>? summaryAIResponses = null,
+        List<string>? texts = null, List<Gist>? gists = null, int? feedId = null)
     {
         if (feedId is not null)
             RssFeed.Id = feedId.Value;
         Entries = entries ?? CreateTestEntries(5, feedId);
-        SummaryAIResponses = CreateTestSummaryAIResponses(Entries.Count);
-        Texts = CreateTestStrings(Entries.Count);
-        Gists = Entries.Zip(SummaryAIResponses, CreateTestGistFromEntry).ToList();
+        SummaryAIResponses = summaryAIResponses ?? CreateTestSummaryAIResponses(Entries.Count);
+        Texts = texts ?? CreateTestStrings(Entries.Count);
+        Gists = gists ?? Entries.Zip(SummaryAIResponses, CreateTestGistFromEntry).ToList();
         SyndicationFeed = CreateTestSyndicationFeed(Entries);
     }
 }

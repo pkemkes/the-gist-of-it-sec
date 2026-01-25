@@ -7,6 +7,7 @@ public record Gist(
     string Reference,
     int FeedId,
     string Author,
+    bool IsSponsoredContent,
     DateTime Published,
     DateTime Updated,
     Uri Url,
@@ -17,11 +18,13 @@ public record Gist(
 
     public Gist(
         RssEntry entry,
-        SummaryAIResponse summaryAIResponse
+        SummaryAIResponse summaryAIResponse,
+        bool isSponsoredContent
     ) : this(
         entry.Reference,
         entry.FeedId,
         entry.Author,
+        isSponsoredContent,
         entry.Published,
         entry.Updated,
         entry.Url,

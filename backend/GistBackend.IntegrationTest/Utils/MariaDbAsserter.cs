@@ -35,7 +35,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
     public async Task AssertGistIsInDbAsync(Gist expectedGist)
     {
         const string query = """
-            SELECT Reference, FeedId, Author, Published, Updated, Url, Tags, Id
+            SELECT Reference, FeedId, Author, IsSponsoredContent, Published, Updated, Url, Tags, Id
                 FROM Gists WHERE Reference = @Reference
         """;
         var command = new CommandDefinition(query, expectedGist);

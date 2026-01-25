@@ -23,8 +23,7 @@ services:
         tag: "{{.Name}}"
     environment:
       # - Serilog__MinimumLevel__Default=Debug
-      # - CORS_ALLOWED_ORIGIN=http://localhost:8081  # NOTE: Change this to your frontend's base URL
-      - CORS_ALLOWED_ORIGIN=http://localhost:5173
+      - CORS_ALLOWED_ORIGIN=http://localhost:8081  # NOTE: Change this to your frontend's base URL
       - EmbeddingClientHandlerOptions__ApiKey=${OPENAI_API_KEY}
       - EmbeddingClientHandlerOptions__ProjectId=${OPENAI_PROJECT}
       - AIHandlerOptions__Host=http://aiapi:8000

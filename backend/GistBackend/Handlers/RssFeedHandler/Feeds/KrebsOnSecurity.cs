@@ -7,13 +7,13 @@ using static GistBackend.Types.Language;
 
 namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 
-public record KrebsOnSecurity() : RssFeed(
-    new Uri("https://krebsonsecurity.com/feed"),
-    ExtractText,
-    En,
-    Blog)
+public record KrebsOnSecurity : RssFeed
 {
-    private new static string ExtractText(string content)
+    public override Uri RssUrl => new("https://krebsonsecurity.com/feed");
+    public override Language Language => En;
+    public override FeedType Type => Blog;
+
+    public override string ExtractText(string content)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(content);

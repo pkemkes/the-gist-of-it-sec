@@ -450,6 +450,40 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     }
 
     [Fact]
+    public async Task GetConstructedGistsOfLastDayAsync_SomeGistsAreSponsoredContent_OnlyNotSponsoredGists()
+    {
+        var testNow = _random.NextDateTime();
+        var gistHandler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedInfoId = await gistHandler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var nonSponsoredGist = CreateTestGist(feedInfoId) with {
+            Published = testNow.AddHours(-12),
+            Updated = testNow.AddHours(-12),
+            IsSponsoredContent = false
+        };
+        nonSponsoredGist.Id = await gistHandler.InsertGistAsync(nonSponsoredGist, CancellationToken.None);
+        var nonSponsoredSummaries =
+            await gistHandler.InsertTestSummariesAsync(nonSponsoredGist.Id!.Value, feedInfo.Language);
+        var nonSponsoredConstructedGist =
+            ConstructedGist.FromGistFeedAndSummary(nonSponsoredGist, feedInfo, nonSponsoredSummaries.First());
+        var sponsoredGist = CreateTestGist(feedInfoId) with {
+            Published = testNow.AddHours(-10),
+            Updated = testNow.AddHours(-10),
+            IsSponsoredContent = true
+        };
+        sponsoredGist.Id = await gistHandler.InsertGistAsync(sponsoredGist, CancellationToken.None);
+        await gistHandler.InsertTestSummariesAsync(sponsoredGist.Id!.Value, feedInfo.Language);
+        var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
+        dateTimeHandlerMock.GetUtcNow().Returns(testNow);
+        var recapHandler = CreateRecapHandler(dateTimeHandlerMock);
+
+        var actual = await recapHandler.GetConstructedGistsOfLastDayAsync(CancellationToken.None);
+
+        Assert.Single(actual);
+        Assert.Equivalent(nonSponsoredConstructedGist, actual.Single());
+    }
+
+    [Fact]
     public async Task GetConstructedGistsOfLastWeekAsync_NoGistsExist_EmptyList()
     {
         var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
@@ -489,6 +523,40 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         Assert.Single(actual);
         Assert.Equivalent(testConstructedGist, actual.Single());
+    }
+
+    [Fact]
+    public async Task GetConstructedGistsOfLastWeekAsync_SomeGistsAreSponsoredContent_OnlyNotSponsoredGists()
+    {
+        var testNow = _random.NextDateTime();
+        var gistHandler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedInfoId = await gistHandler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var nonSponsoredGist = CreateTestGist(feedInfoId) with {
+            Published = testNow.AddDays(-3),
+            Updated = testNow.AddDays(-3),
+            IsSponsoredContent = false
+        };
+        nonSponsoredGist.Id = await gistHandler.InsertGistAsync(nonSponsoredGist, CancellationToken.None);
+        var nonSponsoredSummaries =
+            await gistHandler.InsertTestSummariesAsync(nonSponsoredGist.Id!.Value, feedInfo.Language);
+        var nonSponsoredConstructedGist =
+            ConstructedGist.FromGistFeedAndSummary(nonSponsoredGist, feedInfo, nonSponsoredSummaries.First());
+        var sponsoredGist = CreateTestGist(feedInfoId) with {
+            Published = testNow.AddDays(-2),
+            Updated = testNow.AddDays(-2),
+            IsSponsoredContent = true
+        };
+        sponsoredGist.Id = await gistHandler.InsertGistAsync(sponsoredGist, CancellationToken.None);
+        await gistHandler.InsertTestSummariesAsync(sponsoredGist.Id!.Value, feedInfo.Language);
+        var dateTimeHandlerMock = Substitute.For<IDateTimeHandler>();
+        dateTimeHandlerMock.GetUtcNow().Returns(testNow);
+        var recapHandler = CreateRecapHandler(dateTimeHandlerMock);
+
+        var actual = await recapHandler.GetConstructedGistsOfLastWeekAsync(CancellationToken.None);
+
+        Assert.Single(actual);
+        Assert.Equivalent(nonSponsoredConstructedGist, actual.Single());
     }
 
     [Fact]
@@ -610,7 +678,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var handler = CreateGistControllerHandler();
 
         var gists = await handler.GetPreviousConstructedGistsAsync(10, null, [], null, [], LanguageMode.Original,
-            CancellationToken.None);
+            null, CancellationToken.None);
 
         Assert.Empty(gists);
     }
@@ -623,13 +691,15 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     {
         var gistHandler = CreateGistHandler();
         const LanguageMode languageMode = LanguageMode.Original;
+        const bool isSponsoredContent = false;
         var expectedConstructedGists =
-            await gistHandler.InsertTestConstructedGistsAsync(gistCount, languageMode: languageMode);
+            await gistHandler.InsertTestConstructedGistsAsync(gistCount, languageMode: languageMode,
+                isSponsoredContent: isSponsoredContent);
         var gistsControllerHandler = CreateGistControllerHandler();
 
         var actualConstructedGists =
             await gistsControllerHandler.GetPreviousConstructedGistsAsync(gistCount + 5, null, [], null, [],
-                languageMode, CancellationToken.None);
+                languageMode, isSponsoredContent, CancellationToken.None);
 
         Assert.Equivalent(expectedConstructedGists, actualConstructedGists);
     }
@@ -640,13 +710,15 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var gistHandler = CreateGistHandler();
         const int take = 5;
         const LanguageMode languageMode = LanguageMode.Original;
-        var constructedGists = await gistHandler.InsertTestConstructedGistsAsync(take+5, languageMode: languageMode);
+        const bool isSponsoredContent = false;
+        var constructedGists = await gistHandler.InsertTestConstructedGistsAsync(take + 5, languageMode: languageMode,
+            isSponsoredContent: isSponsoredContent);
         var expectedConstructedGists = constructedGists.Take(take).ToList();
         var gistsControllerHandler = CreateGistControllerHandler();
 
         var actualConstructedGists =
             await gistsControllerHandler.GetPreviousConstructedGistsAsync(take, null, [], null, [],
-                languageMode, CancellationToken.None);
+                languageMode, isSponsoredContent, CancellationToken.None);
 
         Assert.Equivalent(expectedConstructedGists, actualConstructedGists);
     }
@@ -659,7 +731,9 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
     {
         var gistHandler = CreateGistHandler();
         const LanguageMode languageMode = LanguageMode.Original;
-        var testConstructedGists = await gistHandler.InsertTestConstructedGistsAsync(10, languageMode: languageMode);
+        const bool isSponsoredContent = false;
+        var testConstructedGists = await gistHandler.InsertTestConstructedGistsAsync(10, languageMode: languageMode,
+            isSponsoredContent: isSponsoredContent);
         var firstHalfOfGists = testConstructedGists.Skip(5).ToList();
         var lastGistId = testConstructedGists[4].Id;
         var expectedConstructedGists = firstHalfOfGists.Take(take).ToList();
@@ -667,7 +741,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         var actualGistsWithFeed =
             await gistsControllerHandler.GetPreviousConstructedGistsAsync(take, lastGistId, [], null, [],
-                LanguageMode.Original, CancellationToken.None);
+                LanguageMode.Original, isSponsoredContent, CancellationToken.None);
 
         Assert.Equivalent(expectedConstructedGists, actualGistsWithFeed);
     }
@@ -706,8 +780,8 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         var gistsControllerHandler = CreateGistControllerHandler();
 
         var actualGistsWithFeed =
-            await gistsControllerHandler.GetPreviousConstructedGistsAsync(10, null, tags, null, [], LanguageMode.Original,
-                CancellationToken.None);
+            await gistsControllerHandler.GetPreviousConstructedGistsAsync(10, null, tags, null, [],
+                LanguageMode.Original, null, CancellationToken.None);
 
         Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
     }
@@ -756,7 +830,7 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         var actualGistsWithFeed =
             await gistsControllerHandler.GetPreviousConstructedGistsAsync(10, null, [], searchQuery, [],
-                LanguageMode.Original, CancellationToken.None);
+                LanguageMode.Original, null, CancellationToken.None);
 
         Assert.Equivalent(expectedConstructedGists, actualGistsWithFeed);
     }
@@ -782,9 +856,49 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
 
         var actualGistsWithFeed =
             await gistsControllerHandler.GetPreviousConstructedGistsAsync(take, null, [], null,
-                [disabledFeed.Id!.Value, otherDisabledFeed.Id!.Value], LanguageMode.Original, CancellationToken.None);
+                [disabledFeed.Id!.Value, otherDisabledFeed.Id!.Value], LanguageMode.Original, null,
+                CancellationToken.None);
 
         Assert.Equivalent(expectedGistsWithFeed, actualGistsWithFeed);
+    }
+
+    [Fact]
+    public async Task GetPreviousConstructedGistsAsync_SomeGistsAreSponsoredContentButExcludedInQuery_OnlyNotSponsoredGists()
+    {
+        var gistHandler = CreateGistHandler();
+        const LanguageMode languageMode = LanguageMode.Original;
+        var sponsoredConstructedGists =
+            await gistHandler.InsertTestConstructedGistsAsync(5, languageMode: languageMode, isSponsoredContent: true);
+        var notSponsoredConstructedGists =
+            await gistHandler.InsertTestConstructedGistsAsync(5, languageMode: languageMode, isSponsoredContent: false);
+        var take = sponsoredConstructedGists.Count + notSponsoredConstructedGists.Count;
+        var gistsControllerHandler = CreateGistControllerHandler();
+
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousConstructedGistsAsync(take, null, [], null, [],
+                LanguageMode.Original, false, CancellationToken.None);
+
+        Assert.Equivalent(notSponsoredConstructedGists, actualGistsWithFeed);
+    }
+
+    [Fact]
+    public async Task GetPreviousConstructedGistsAsync_SomeGistsAreSponsoredContentAndIncludedInQuery_AllGists()
+    {
+        var gistHandler = CreateGistHandler();
+        const LanguageMode languageMode = LanguageMode.Original;
+        var sponsoredConstructedGists =
+            await gistHandler.InsertTestConstructedGistsAsync(5, languageMode: languageMode, isSponsoredContent: true);
+        var notSponsoredConstructedGists =
+            await gistHandler.InsertTestConstructedGistsAsync(5, languageMode: languageMode, isSponsoredContent: false);
+        var take = sponsoredConstructedGists.Count + notSponsoredConstructedGists.Count;
+        var expectedConstructedGists = notSponsoredConstructedGists.Concat(sponsoredConstructedGists).ToList();
+        var gistsControllerHandler = CreateGistControllerHandler();
+
+        var actualGistsWithFeed =
+            await gistsControllerHandler.GetPreviousConstructedGistsAsync(take, null, [], null, [],
+                LanguageMode.Original, true, CancellationToken.None);
+
+        Assert.Equivalent(expectedConstructedGists, actualGistsWithFeed);
     }
 
     [Fact]
@@ -1115,6 +1229,31 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         testGists.Reverse();  // need to reverse to get gists in ascending order by ID
         var previousGist = testGists.First();
         var expected = testGists.Skip(1).Take(5).ToList();
+        var telegramHandler = CreateTelegramHandler();
+
+        var actual =
+            await telegramHandler.GetNextFiveConstructedGistsAsync(previousGist.Id, languageMode, CancellationToken.None);
+
+        Assert.Equivalent(expected, actual);
+    }
+
+    [Fact]
+    public async Task GetNextFiveConstructedGistsAsync_SomeGistsAreSponsoredContent_OnlyNonSponsoredGists()
+    {
+        var gistHandler = CreateGistHandler();
+        const LanguageMode languageMode = LanguageMode.Original;
+        var nonSponsoredGists =
+            await gistHandler.InsertTestConstructedGistsAsync(2, languageMode: languageMode, isSponsoredContent: false);
+        var sponsoredGists =
+            await gistHandler.InsertTestConstructedGistsAsync(2, languageMode: languageMode, isSponsoredContent: true);
+        var moreNonSponsoredGists =
+            await gistHandler.InsertTestConstructedGistsAsync(2, languageMode: languageMode, isSponsoredContent: false);
+        // need to reverse to get gists in ascending order by ID
+        nonSponsoredGists.Reverse();
+        sponsoredGists.Reverse();
+        moreNonSponsoredGists.Reverse();
+        var previousGist = nonSponsoredGists.First();
+        var expected = nonSponsoredGists.Skip(1).Concat(moreNonSponsoredGists).ToList();
         var telegramHandler = CreateTelegramHandler();
 
         var actual =

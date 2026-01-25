@@ -8,6 +8,5 @@ public record RssEntry(
     DateTime Published,
     DateTime Updated,
     Uri Url,
-    IEnumerable<string> Categories,
-    Func<string, string> ExtractText
+    IEnumerable<string> Categories
 );

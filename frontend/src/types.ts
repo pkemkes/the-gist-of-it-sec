@@ -5,6 +5,7 @@ export interface Gist {
   feedType: FeedType,
   title: string,
   author: string,
+  isSponsoredContent: boolean,
   url: string,
   published: string,
   updated: string,
