@@ -21,28 +21,28 @@
         "@mui/material": "7.3.7",
         "@reduxjs/toolkit": "2.11.2",
         "@types/lodash.throttle": "4.1.9",
-        "@types/react": "19.2.8",
+        "@types/react": "19.2.10",
         "@types/react-dom": "19.2.3",
         "@vitejs/plugin-react": "5.1.2",
         "lodash.throttle": "4.1.1",
-        "pnpm": "10.28.0",
-        "react": "19.2.3",
-        "react-dom": "19.2.3",
+        "pnpm": "10.28.2",
+        "react": "19.2.4",
+        "react-dom": "19.2.4",
         "react-redux": "9.2.0",
-        "react-router": "7.12.0",
+        "react-router": "7.13.0",
         "react-timezone-select": "3.2.8",
         "typescript": "5.9.3",
         "vite": "7.3.1",
-        "vitest": "4.0.17"
+        "vitest": "4.0.18"
     },
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "8.53.0",
-        "@typescript-eslint/parser": "8.53.0",
+        "@typescript-eslint/eslint-plugin": "8.54.0",
+        "@typescript-eslint/parser": "8.54.0",
         "eslint": "9.39.2",
         "eslint-config-prettier": "10.1.8",
         "jsdom": "27.4.0",
-        "prettier": "3.8.0",
-        "typescript-eslint": "8.53.0"
+        "prettier": "3.8.1",
+        "typescript-eslint": "8.54.0"
     },
     "prettier": "prettier-config-nick"
 }
