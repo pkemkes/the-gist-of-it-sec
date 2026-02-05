@@ -49,6 +49,21 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         Assert.Equal(expectedGist, actualGist);
     }
 
+    public async Task AssertDisabledGistIsInDbAsync(DisabledGist disabledGist)
+    {
+        var gist = new Gist(
+            disabledGist.Reference,
+            disabledGist.FeedId,
+            disabledGist.Author,
+            false,
+            disabledGist.Published,
+            disabledGist.Updated,
+            disabledGist.Url,
+            ""
+        );
+        await AssertGistIsInDbAsync(gist);
+    }
+
     public async Task AssertSummaryIsInDbAsync(Summary expectedSummary)
     {
         const string query = """

@@ -15,11 +15,13 @@ public class RssFeedHandler(HttpClient httpClient) : IRssFeedHandler
         new ArsTechnicaTechnologyLab(),
         new BleepingComputer(),
         new DarkReading(),
-        new GDATASecurityBlog(),
+        new GDATASecurityBlogEnglish(),
+        new GDATASecurityBlogGerman(),
         new GolemSecurity(),
         new HeiseSecurity(),
         new KrebsOnSecurity(),
         new SecurityInsiderNews(),
+        new T3N(),
         new TheRecord(),
         new TheVerge()
     ];

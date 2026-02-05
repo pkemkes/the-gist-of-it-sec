@@ -32,4 +32,18 @@ public record Gist(
     )
     {
     }
+
+    // Constructor for disabled gists
+    public Gist(RssEntry entry) : this(
+        entry.Reference,
+        entry.FeedId,
+        entry.Author,
+        false,
+        entry.Published,
+        entry.Updated,
+        entry.Url,
+        ""
+    )
+    {
+    }
 }

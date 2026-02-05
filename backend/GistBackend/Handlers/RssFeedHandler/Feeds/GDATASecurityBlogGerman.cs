@@ -7,9 +7,9 @@ using static GistBackend.Types.Language;
 
 namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 
-public record GDATASecurityBlog : RssFeed
+public record GDATASecurityBlogGerman : RssFeed
 {
-    public override Uri RssUrl => new("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1");
+    public override Uri RssUrl => new("https://feeds.feedblitz.com/GDataSecurityBlog-DE&x=1");
     public override Language Language => En;
     public override FeedType Type => Blog;
 
@@ -34,4 +34,3 @@ public record GDATASecurityBlog : RssFeed
         return decodedText.Trim();
     }
 }
-

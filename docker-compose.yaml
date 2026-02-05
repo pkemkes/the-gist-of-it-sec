@@ -87,6 +87,8 @@ services:
       options:
         max-size: 1g
         tag: "{{.Name}}"
+    # ports:
+    #   - "8000:8000"
     networks:
       - fetcher
 

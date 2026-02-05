@@ -175,6 +175,37 @@ public class CleanupServiceTests
      }
 
      [Fact]
+     public async Task StartAsync_GistShouldBeDisabledBecauseOfPaywall_GistEnsuredToBeDisabled()
+     {
+         const int feedId = 0;
+         var testFeed = new TestFeedData(feedId: feedId);
+         var mariaDbHandlerMock = CreateDefaultMariaDbHandlerMock([testFeed]);
+         var chromaDbHandlerMock = CreateDefaultChromaDbHandlerMock();
+         var webCrawlHandlerMock = Substitute.For<IWebCrawlHandler>();
+         webCrawlHandlerMock.FetchAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+             .Returns(Task.FromResult(new FetchResponse(200, $"Content with {TestFeed.PaywallContentMarker}", false)));
+
+         var service = CreateCleanupService(
+             [testFeed],
+             mariaDbHandlerMock,
+             chromaDbHandlerMock,
+             webCrawlHandlerMock: webCrawlHandlerMock);
+
+         await service.StartAsync(CancellationToken.None);
+         await Task.Delay(TimeSpan.FromSeconds(2));
+
+         foreach (var gist in testFeed.Gists)
+         {
+             await mariaDbHandlerMock
+                 .Received()
+                 .EnsureCorrectDisabledStateForGistAsync(gist.Id!.Value, true, Arg.Any<CancellationToken>());
+             await chromaDbHandlerMock
+                 .Received()
+                 .EnsureGistHasCorrectMetadataAsync(gist, true, Arg.Any<CancellationToken>());
+         }
+     }
+
+     [Fact]
      public async Task StartAsync_GistShouldBeDisabledBecauseOfRedirectAndNotPresentInFeed_GistEnsuredToBeDisabled()
      {
          const int feedId = 0;

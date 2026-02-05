@@ -7,19 +7,18 @@ using static GistBackend.Types.Language;
 
 namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 
-public record BleepingComputer() : RssFeed()
+public record GDATASecurityBlogEnglish : RssFeed
 {
-    public override Uri RssUrl => new("https://www.bleepingcomputer.com/feed/");
+    public override Uri RssUrl => new("https://feeds.feedblitz.com/GDataSecurityBlog-EN&x=1");
     public override Language Language => En;
-    public override FeedType Type => News;
-    public override IEnumerable<string> AllowedCategories => ["Security"];
+    public override FeedType Type => Blog;
 
     public override string ExtractText(string content)
     {
         var doc = new HtmlDocument();
         doc.LoadHtml(content);
 
-        var entryContent = doc.DocumentNode.SelectSingleNode("//div[@class='articleBody']");
+        var entryContent = doc.DocumentNode.SelectSingleNode("//div[@class='nm-article-blog']");
         if (entryContent == null)
         {
             throw new ExtractingEntryTextException("Missing container element");
@@ -32,16 +31,7 @@ public record BleepingComputer() : RssFeed()
         }
 
         var decodedText = HtmlDecode(textContent);
-
-        var trimmed = decodedText.Split("Related Articles:");
-        return (trimmed.Length > 0 ? trimmed[0] : decodedText).Trim();
-    }
-
-    public override bool CheckForSponsoredContent(string content)
-    {
-        var doc = new HtmlDocument();
-        doc.LoadHtml(content);
-        var sponsoredNode = doc.DocumentNode.SelectSingleNode("//div[@class='cz-news-title-left-area']/strong");
-        return sponsoredNode?.InnerText.Trim() == "Sponsored by";
+        return decodedText.Trim();
     }
 }
+

@@ -6,12 +6,13 @@ using GistBackend.Utils;
 
 namespace GistBackend.Types;
 
-public abstract record RssFeed(IEnumerable<string>? AllowedCategories = null)
+public abstract record RssFeed()
 {
     public abstract Uri RssUrl { get; }
     public abstract Language Language { get; }
     public abstract FeedType Type { get; }
-    public readonly IEnumerable<string>? AllowedCategories = AllowedCategories;
+    public virtual IEnumerable<string>? AllowedCategories => null;
+    public virtual IEnumerable<string>? ForbiddenCategories => null;
     private SyndicationFeed? SyndicationFeed { get; set; }
     public int? Id { get; set; }
     public string? Title { get; set; }
@@ -19,6 +20,7 @@ public abstract record RssFeed(IEnumerable<string>? AllowedCategories = null)
     public abstract string ExtractText(string content);
 
     public virtual bool CheckForSponsoredContent(string content) => false;
+    public virtual bool CheckForPaywall(string content) => false;
 
     public async Task ParseFeedAsync(HttpClient httpClient, CancellationToken ct)
     {
@@ -42,7 +44,8 @@ public abstract record RssFeed(IEnumerable<string>? AllowedCategories = null)
         Id = feedId;
         Entries = SyndicationFeed.Items.Select(SyndicationItemToRssEntry)
             .FilterForAllowedCategories(AllowedCategories)
-            .FilterPaywallArticles(Title ?? "");
+            .FilterForForbiddenCategories(ForbiddenCategories)
+            .FilterPaywallEntries(Title ?? "");
     }
 
     public RssFeedInfo ToRssFeedInfo()

@@ -69,6 +69,7 @@ public class CleanupService(
             {
                 _feedsInDb.Add(feedInfo.Id!.Value);
                 feed.ParseEntries(feedInfo.Id!.Value);
+
                 _feedsByFeedId.Add(feedInfo.Id!.Value, feed);
             }
         }
@@ -113,23 +114,22 @@ public class CleanupService(
     private async Task<bool> GistShouldBeDisabledAsync(Gist gist, CancellationToken ct)
     {
         if (options.Value.DomainsToIgnore.Any(domain => gist.Url.Host.Equals(domain))) return false;
-        var feedTitle = GetFeedTitleByFeedId(gist.FeedId);
+        var feed = GetFeedByFeedId(gist.FeedId);
+        var feedTitle = feed.Title ?? throw new InvalidOperationException($"Feed with ID {feed.Id} has no title");
         using (new SelfReportingStopwatch(elapsed => CheckGistSummary.WithLabels(feedTitle).Observe(elapsed)))
         {
             var response = await webCrawlHandler.FetchAsync(gist.Url.AbsoluteUri, ct);
-            return response.Status is >= 400 and < 500 ||
-                   WasRedirectedAndNotPresentInFeedAnymore(gist, response.Redirected);
+            if (response.Status is >= 400 and < 500) return true;  // not available anymore
+            if (WasRedirectedAndNotPresentInFeedAnymore(gist, response.Redirected)) return true;
+            if (feed.CheckForPaywall(response.Content)) return true;
+            return false;
         }
     }
 
-    private string GetFeedTitleByFeedId(int feedId)
-    {
-        if (!_feedsByFeedId.TryGetValue(feedId, out var feed))
-        {
-            throw new FeedNotFoundException($"Feed with ID {feedId} not found");
-        }
-        return feed.Title ?? throw new InvalidOperationException($"Feed with ID {feedId} has no title");
-    }
+    private RssFeed GetFeedByFeedId(int feedId) =>
+        !_feedsByFeedId.TryGetValue(feedId, out var feed)
+            ? throw new FeedNotFoundException($"Feed with ID {feedId} not found")
+            : feed;
 
     private bool WasRedirectedAndNotPresentInFeedAnymore(Gist gist, bool redirected)
     {

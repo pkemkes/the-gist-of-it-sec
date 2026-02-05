@@ -12,6 +12,7 @@ public static class LogEvents
 
     public static readonly EventId GistInserted = new(++_eventId, nameof(GistInserted));
     public static readonly EventId GistUpdated = new(++_eventId, nameof(GistUpdated));
+    public static readonly EventId PaywallDetected = new(++_eventId, nameof(PaywallDetected));
     public static readonly EventId OpeningTransactionFailed = new(++_eventId, nameof(OpeningTransactionFailed));
     public static readonly EventId CommittingTransactionFailed = new(++_eventId, nameof(CommittingTransactionFailed));
     public static readonly EventId GettingFeedInfoByUrlFailed = new(++_eventId, nameof(GettingFeedInfoByUrlFailed));

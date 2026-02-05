@@ -106,4 +106,20 @@ public class RssFeedTests : IAsyncLifetime {
         Assert.DoesNotContain("https://www.test-news-site.com/last-news-article",
             rssFeed.Entries!.Select(entry => entry.Reference));
     }
+
+    [Theory]
+    [InlineData("test_rss_2.xml")]
+    [InlineData("test_atom.xml")]
+    public async Task ParseFeedAsync_FeedContainsEntriesWithForbiddenCategory_OnlyEntriesWithoutForbiddenCategoriesParsed(
+        string rssFeedPath)
+    {
+        var rssFeedUrl = new Uri($"{GetBaseUrl()}/{rssFeedPath}");
+        var rssFeed = new TestFeed(rssFeedUrl, Language.De, FeedType.News, ForbiddenCategories: ["Test Category 1"]);
+
+        await rssFeed.ParseFeedAsync(new HttpClient(), CancellationToken.None);
+        rssFeed.ParseEntries(0);
+
+        var entry = Assert.Single(rssFeed.Entries!);
+        Assert.Equal("https://www.test-news-site.com/last-news-article", entry.Reference);
+    }
 }

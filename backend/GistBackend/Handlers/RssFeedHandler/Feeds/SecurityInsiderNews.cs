@@ -4,6 +4,7 @@ using HtmlAgilityPack;
 using static System.Net.WebUtility;
 using static GistBackend.Types.FeedType;
 using static GistBackend.Types.Language;
+using static GistBackend.Utils.RssFeedUtils;
 
 namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 
@@ -27,12 +28,12 @@ public record SecurityInsiderNews : RssFeed
         var textContainerSelectors = new List<string>
         {
             ".//p[contains(@class, 'inf-text-')]",
-            ".//h1[contains(@class, 'inf-xheading')]",
-            ".//h2[contains(@class, 'inf-xheading')]",
-            ".//h3[contains(@class, 'inf-xheading')]",
-            ".//h4[contains(@class, 'inf-xheading')]",
-            ".//h5[contains(@class, 'inf-xheading')]",
-            ".//h6[contains(@class, 'inf-xheading')]"
+            $".//h1[{ContainsClassSpecifier("inf-xheading")}]",
+            $".//h2[{ContainsClassSpecifier("inf-xheading")}]",
+            $".//h3[{ContainsClassSpecifier("inf-xheading")}]",
+            $".//h4[{ContainsClassSpecifier("inf-xheading")}]",
+            $".//h5[{ContainsClassSpecifier("inf-xheading")}]",
+            $".//h6[{ContainsClassSpecifier("inf-xheading")}]"
         };
         var textContainers = entryContainer.SelectNodes(string.Join(" | ", textContainerSelectors));
         if (textContainers == null || textContainers.Count == 0)

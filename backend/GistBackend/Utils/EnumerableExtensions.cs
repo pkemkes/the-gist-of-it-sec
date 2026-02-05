@@ -12,7 +12,13 @@ public static class EnumerableExtensions {
                 : collection.Where(entry => entry.Categories.Any(allowedCategories.Contains));
 
         public IEnumerable<RssEntry>
-            FilterPaywallArticles(string feedTitle) =>
+            FilterForForbiddenCategories(IEnumerable<string>? forbiddenCategories) =>
+            forbiddenCategories is null
+                ? collection
+                : collection.Where(entry => !entry.Categories.Any(forbiddenCategories.Contains));
+
+        public IEnumerable<RssEntry>
+            FilterPaywallEntries(string feedTitle) =>
             feedTitle.Contains("Golem")
                 ? collection.Where(entry => !entry.Title.Contains("(g+)"))
                 : collection;

@@ -1301,6 +1301,21 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         await ChatAsserter.AssertChatIsInDbAsync(chatId, gistIdLastSent);
     }
 
+    [Fact]
+    public async Task InsertDisabledGistAsync_GistDoesNotExist_DisabledGistIsInsertedInDb()
+    {
+        var handler = CreateGistHandler();
+        var feedInfo = CreateTestFeedInfo();
+        var feedInfoId = await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var rssEntry = CreateTestEntry(feedInfoId);
+        var disabledGistToInsert = new DisabledGist(rssEntry);
+
+        await handler.InsertDisabledGistAsync(disabledGistToInsert, CancellationToken.None);
+
+        await GistAsserter.AssertDisabledGistIsInDbAsync(disabledGistToInsert);
+    }
+
+
     private MariaDbHandler CreateGistHandler(IDateTimeHandler? dateTimeHandler = null) =>
         CreateMariaDbHandler(_gistHandlerOptions, dateTimeHandler);
 

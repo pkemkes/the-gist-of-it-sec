@@ -220,6 +220,44 @@ public class GistServiceTests
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task StartAsync_FeedHasPaywalledEntry_PaywallStateCorrectlyInserted()
+    {
+        const int feedId = 0;
+        var texts = new List<string>
+        {
+            $"Content with {TestFeed.PaywallContentMarker}"
+        };
+        var entries = CreateTestEntries(texts.Count, feedId);
+        var testFeedData = new TestFeedData(entries: entries, texts: texts, feedId: feedId);
+        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeedData]);
+        var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
+        var gistService = CreateGistService(
+            mariaDbHandlerMock: mariaDbHandlerMock,
+            chromaDbHandlerMock: chromaDbHandlerMock,
+            testFeedDatas: [testFeedData]
+        );
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        var entry = testFeedData.Entries.First();
+        await mariaDbHandlerMock.Received(1).InsertDisabledGistAsync(
+            Arg.Is<DisabledGist>(dg => dg.Reference == entry.Reference),
+            Arg.Any<CancellationToken>()
+        );
+        await mariaDbHandlerMock.DidNotReceive().InsertGistAsync(
+            Arg.Any<Gist>(),
+            Arg.Any<TransactionHandle>(),
+            Arg.Any<CancellationToken>()
+        );
+        await chromaDbHandlerMock.DidNotReceive().UpsertEntryAsync(
+            Arg.Any<RssEntry>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>()
+        );
+    }
+
     private static IMariaDbHandler CreateMariaDbHandlerMock(List<TestFeedData> testFeeds)
     {
         var mariaDbHandlerMock = Substitute.For<IMariaDbHandler>();

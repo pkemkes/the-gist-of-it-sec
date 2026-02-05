@@ -20,6 +20,7 @@ public interface IMariaDbHandler {
     Task<ConstructedGist?> GetConstructedGistByReference(string reference, LanguageMode? languageMode, CancellationToken ct);
     Task<int> InsertGistAsync(Gist gist, CancellationToken ct);
     Task<int> InsertGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct);
+    Task<int> InsertDisabledGistAsync(DisabledGist gist, CancellationToken ct);
     Task InsertSummaryAsync(Summary summary, CancellationToken ct);
     Task InsertSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct);
     Task UpdateGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct);
@@ -246,6 +247,30 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
+    public async Task<int> InsertDisabledGistAsync(DisabledGist gist, CancellationToken ct)
+    {
+        const string query = """
+            INSERT INTO Gists
+                (Reference, FeedId, Author, IsSponsoredContent, Published, Updated, Url, Tags, Disabled)
+                VALUES (
+                    @Reference, @FeedId, @Author, @IsSponsoredContent, @Published, @Updated, @Url, @Tags, TRUE
+                );
+            SELECT LAST_INSERT_ID();
+        """;
+        var command = new CommandDefinition(query, gist, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            return await connection.ExecuteScalarAsync<int>(command).WithDeadlockRetry(_logger);
+        }
+        catch (MySqlException e)
+        {
+            _logger?.LogError(InsertingGistFailed, e, "Inserting Gist failed");
+            throw;
+        }
+    }
+
     public async Task InsertSummaryAsync(Summary summary, CancellationToken ct)
     {
         try
@@ -317,7 +342,7 @@ public class MariaDbHandler : IMariaDbHandler
         }
     }
 
-    public async Task UpdateSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct)
+    public async Task UpdateSummaryAsync(Summary summary, TransactionHandle handle, CancellationToken ct)
     {
         const string query = """
             UPDATE Summaries

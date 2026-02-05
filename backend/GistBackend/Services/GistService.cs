@@ -101,15 +101,25 @@ public class GistService(
         var currentVersionAlreadyExists = existingGist is not null && existingGist.Updated == entry.Updated;
         if (currentVersionAlreadyExists) return;
 
+        var feed = _feedsByFeedId[entry.FeedId];
+
         try
         {
-            var feed = _feedsByFeedId[entry.FeedId];
             var fetchResponse = await webCrawlHandler.FetchAsync(entry.Url.AbsoluteUri, ct);
             if (fetchResponse.Status != 200)
             {
                 logger?.LogWarning(FetchingPageContentFailed,
                     "Skipping entry, fetched page content returned status {Status} for {Url}", fetchResponse.Status,
                     entry.Url.AbsoluteUri);
+                return;
+            }
+
+            if (feed.CheckForPaywall(fetchResponse.Content))
+            {
+                await mariaDbHandler.InsertDisabledGistAsync(new DisabledGist(entry), ct);
+                logger?.LogInformation(PaywallDetected,
+                    "Inserted disabled gist for entry with reference {Reference} due to detected paywall",
+                    entry.Reference);
                 return;
             }
 
@@ -130,19 +140,22 @@ public class GistService(
                 await UpdateDataInDatabaseAsync(entry, existingGist.Id!.Value, gist, summaryAIResponse, feed.Language,
                     ct);
             }
-
-            stopwatch.Stop();
-            ProcessEntrySummary.WithLabels(feed.Title!).Observe(stopwatch.Elapsed.Seconds);
         }
         catch (ExtractingEntryTextException e)
         {
-            logger?.LogWarning(ExtractingPageContentFailed, e, "Skipping entry, failed to extract text from page content for {Url}",
+            logger?.LogWarning(ExtractingPageContentFailed, e,
+                "Skipping entry, failed to extract text from page content for {Url}",
                 entry.Url.AbsoluteUri);
         }
         catch (Exception e) when (e is ExternalServiceException or HttpRequestException)
         {
             logger?.LogWarning(FetchingPageContentFailed, e, "Skipping entry, failed to fetch page content for {Url}",
                 entry.Url.AbsoluteUri);
+        }
+        finally
+        {
+            stopwatch.Stop();
+            ProcessEntrySummary.WithLabels(feed.Title!).Observe(stopwatch.Elapsed.Seconds);
         }
     }
 
