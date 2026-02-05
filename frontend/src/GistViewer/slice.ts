@@ -67,8 +67,8 @@ export const slice = createSlice({
     languageModeChanged: (state, action: PayloadAction<LanguageMode>) => {
       state.languageMode = action.payload;
     },
-    includeSponsoredContentChanged: (state, action: PayloadAction<boolean>) => {
-      state.includeSponsoredContent = action.payload;
+    includeSponsoredContentChanged: (state, action: PayloadAction<boolean | null>) => {
+      state.includeSponsoredContent = action.payload ?? initialState.includeSponsoredContent;
     },
   }
 });
