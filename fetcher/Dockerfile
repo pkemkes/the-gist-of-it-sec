@@ -1,4 +1,4 @@
-FROM python:3.14.2-slim
+FROM python:3.15.0a5-slim
 
 HEALTHCHECK --interval=10s --start-period=10s --retries=3 --timeout=5s \
         CMD curl localhost:8000/health || exit 1
