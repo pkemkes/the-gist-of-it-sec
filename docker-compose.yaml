@@ -15,7 +15,7 @@ services:
       prometheus:
         condition: service_healthy
       loki:
-        condition: service_started
+        condition: service_healthy
     logging:
       driver: json-file
       options:
@@ -197,7 +197,7 @@ services:
     command: -config.file=/etc/promtail/promtail-config.yaml
     depends_on:
       loki:
-        condition: service_started
+        condition: service_healthy
     networks:
       - monitoring
 
@@ -221,7 +221,7 @@ services:
       prometheus:
         condition: service_healthy
       loki:
-        condition: service_started
+        condition: service_healthy
     networks:
       - monitoring
       - database
