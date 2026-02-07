@@ -20,25 +20,48 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const headSha = context.sha;
-            const runs = await github.rest.actions.listWorkflowRunsForRepo({
-              owner,
-              repo,
-              branch: 'main',
-              event: 'push',
-              head_sha: headSha,
-              per_page: 20,
-            });
+            const targetWorkflow = 'test-and-deploy-coverage';
+            
+            // Config: Wait up to 30 minutes (60 retries * 30 seconds)
+            const retryIntervalSeconds = 30;
+            const maxRetries = 60;
 
-            const matching = runs.data.workflow_runs.find(
-              (run) => run.name === 'test-and-deploy-coverage' && run.conclusion === 'success'
-            );
+            for (let i = 0; i < maxRetries; i++) {
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner,
+                repo,
+                branch: 'main',
+                event: 'push',
+                head_sha: headSha,
+                per_page: 20,
+              });
 
-            if (!matching) {
-              core.setFailed(
-                `No successful main-branch test run found for commit ${headSha}. ` +
-                'Push the tag after tests pass on main.'
+              const matching = runs.data.workflow_runs.find(
+                (run) => run.name === targetWorkflow
               );
+
+              if (matching) {
+                if (matching.conclusion === 'success') {
+                  console.log(`Tests passed for commit ${headSha}.`);
+                  return;
+                }
+
+                if (['failure', 'cancelled', 'timed_out'].includes(matching.conclusion)) {
+                  core.setFailed(`Tests failed for commit ${headSha} with status: ${matching.conclusion}`);
+                  return;
+                }
+
+                console.log(`Tests are ${matching.status} (conclusion: ${matching.conclusion}). Waiting ${retryIntervalSeconds}s...`);
+              } else {
+                console.log(`No test run found yet for commit ${headSha}. Waiting ${retryIntervalSeconds}s...`);
+              }
+
+              if (i < maxRetries - 1) {
+                await new Promise(r => setTimeout(r, retryIntervalSeconds * 1000));
+              }
             }
+
+            core.setFailed(`Timeout: Tests did not finish within ${maxRetries * retryIntervalSeconds / 60} minutes.`);
 
   build-and-push:
     needs: verify-tests
