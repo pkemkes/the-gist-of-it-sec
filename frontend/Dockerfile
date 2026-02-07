@@ -1,4 +1,4 @@
-FROM node:25.5.0-alpine3.23 AS build
+FROM node:25.6.0-alpine3.23 AS build
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
