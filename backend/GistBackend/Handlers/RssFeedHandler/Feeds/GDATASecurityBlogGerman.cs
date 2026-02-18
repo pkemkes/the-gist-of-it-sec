@@ -10,7 +10,7 @@ namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 public record GDATASecurityBlogGerman : RssFeed
 {
     public override Uri RssUrl => new("https://feeds.feedblitz.com/GDataSecurityBlog-DE&x=1");
-    public override Language Language => En;
+    public override Language Language => De;
     public override FeedType Type => Blog;
 
     public override string ExtractText(string content)
