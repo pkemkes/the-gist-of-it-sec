@@ -1,6 +1,6 @@
 import { Link, ListItem } from "@mui/material"
 import { useNavigate, Link as RouterLink } from "react-router";
-import { RecapRelatedGist } from "src/types"
+import { RecapRelatedGist } from "../../types"
 
 
 export const RelatedGist = ( { id, title }: RecapRelatedGist ) => {

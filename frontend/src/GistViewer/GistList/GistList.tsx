@@ -3,7 +3,7 @@ import { GistCard } from "../GistCard";
 import { GistEndCard } from "../GistEndCard";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { lastGistChanged, selectDisabledFeeds, selectLastGist, selectSearchQuery, selectTags, selectLanguageMode, selectIncludeSponsoredContent } from "../slice";
-import { Gist } from "src/types";
+import { Gist } from "../../types";
 import { GistViewerBody } from "../GistViewerBody";
 import { ErrorMessage } from "../ErrorMessage";
 import { useEffect, useRef } from "react";

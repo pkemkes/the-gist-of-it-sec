@@ -11,7 +11,7 @@ import {
   Typography
 } from "@mui/material";
 import { backendApi } from "../../../backend";
-import { FeedInfo } from "src/types";
+import { FeedInfo } from "../../../types";
 import { ShortenedTypography } from "./ShortenedTypography";
 
 
