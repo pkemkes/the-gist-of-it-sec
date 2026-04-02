@@ -13,4 +13,10 @@ public record DisabledGist : Gist
         "")
     {
     }
+
+    public DisabledGist(Gist gist) : base(gist)
+    {
+        IsSponsoredContent = false;
+        Tags = "";
+    }
 }

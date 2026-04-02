@@ -1315,6 +1315,20 @@ public class MariaDbHandlerTests : IClassFixture<MariaDbFixture>
         await GistAsserter.AssertDisabledGistIsInDbAsync(disabledGistToInsert);
     }
 
+    [Fact]
+    public async Task UpdateDisabledGistAsync_GistDoesExist_DisabledGistIsUpdatedInDb()
+    {
+        var handler = CreateGistHandler();
+        var gist = (await handler.InsertTestGistsAsync(1)).Single();
+        var feedInfo = CreateTestFeedInfo();
+        await handler.InsertFeedInfoAsync(feedInfo, CancellationToken.None);
+        var disabledGistToInsert = new DisabledGist(gist);
+
+        await handler.UpdateDisabledGistAsync(disabledGistToInsert, CancellationToken.None);
+
+        await GistAsserter.AssertDisabledGistIsInDbAsync(disabledGistToInsert);
+    }
+
 
     private MariaDbHandler CreateGistHandler(IDateTimeHandler? dateTimeHandler = null) =>
         CreateMariaDbHandler(_gistHandlerOptions, dateTimeHandler);

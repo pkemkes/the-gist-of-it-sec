@@ -246,6 +246,55 @@ public class GistServiceTests
             Arg.Is<DisabledGist>(dg => dg.Reference == entry.Reference),
             Arg.Any<CancellationToken>()
         );
+        await mariaDbHandlerMock.DidNotReceive().UpdateDisabledGistAsync(
+            Arg.Any<DisabledGist>(),
+            Arg.Any<CancellationToken>()
+        );
+        await mariaDbHandlerMock.DidNotReceive().InsertGistAsync(
+            Arg.Any<Gist>(),
+            Arg.Any<TransactionHandle>(),
+            Arg.Any<CancellationToken>()
+        );
+        await chromaDbHandlerMock.DidNotReceive().UpsertEntryAsync(
+            Arg.Any<RssEntry>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>()
+        );
+    }
+
+    [Fact]
+    public async Task StartAsync_FeedHasKnownPaywalledEntry_PaywallStateCorrectlyUpdated()
+    {
+        const int feedId = 0;
+        var texts = new List<string>
+        {
+            $"Content with {TestFeed.PaywallContentMarker}"
+        };
+        var entries = CreateTestEntries(texts.Count, feedId);
+        var testFeedData = new TestFeedData(entries: entries, texts: texts, feedId: feedId);
+        var testEntry = entries.Single();
+        var mariaDbHandlerMock = CreateMariaDbHandlerMock([testFeedData]);
+        mariaDbHandlerMock.GetGistByReferenceAsync(testEntry.Reference, Arg.Any<CancellationToken>())!
+            .Returns(Task.FromResult(new Gist(testEntry with { Updated = testEntry.Updated.AddDays(1)})));
+        var chromaDbHandlerMock = Substitute.For<IChromaDbHandler>();
+        var gistService = CreateGistService(
+            mariaDbHandlerMock: mariaDbHandlerMock,
+            chromaDbHandlerMock: chromaDbHandlerMock,
+            testFeedDatas: [testFeedData]
+        );
+
+        await gistService.StartAsync(CancellationToken.None);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        var entry = testFeedData.Entries.First();
+        await mariaDbHandlerMock.Received(1).UpdateDisabledGistAsync(
+            Arg.Is<DisabledGist>(dg => dg.Reference == entry.Reference),
+            Arg.Any<CancellationToken>()
+        );
+        await mariaDbHandlerMock.DidNotReceive().InsertDisabledGistAsync(
+            Arg.Any<DisabledGist>(),
+            Arg.Any<CancellationToken>()
+        );
         await mariaDbHandlerMock.DidNotReceive().InsertGistAsync(
             Arg.Any<Gist>(),
             Arg.Any<TransactionHandle>(),

@@ -116,9 +116,11 @@ public class GistService(
 
             if (feed.CheckForPaywall(fetchResponse.Content))
             {
-                await mariaDbHandler.InsertDisabledGistAsync(new DisabledGist(entry), ct);
+                var disabledGist = new DisabledGist(entry);
+                if (existingGist is not null) await mariaDbHandler.UpdateDisabledGistAsync(disabledGist, ct);
+                else await mariaDbHandler.InsertDisabledGistAsync(disabledGist, ct);
                 logger?.LogInformation(PaywallDetected,
-                    "Inserted disabled gist for entry with reference {Reference} due to detected paywall",
+                    "Disabled gist for entry with reference {Reference} due to detected paywall",
                     entry.Reference);
                 return;
             }

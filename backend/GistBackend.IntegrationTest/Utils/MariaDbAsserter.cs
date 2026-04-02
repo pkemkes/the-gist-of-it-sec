@@ -32,13 +32,13 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
         Assert.Equal(expectedFeedInfo, actualFeedInfo);
     }
 
-    public async Task AssertGistIsInDbAsync(Gist expectedGist)
+    public async Task AssertGistIsInDbAsync(Gist expectedGist, bool disabled = false)
     {
         const string query = """
             SELECT Reference, FeedId, Author, IsSponsoredContent, Published, Updated, Url, Tags, Id
-                FROM Gists WHERE Reference = @Reference
+                FROM Gists WHERE Reference = @Reference AND Disabled = @Disabled
         """;
-        var command = new CommandDefinition(query, expectedGist);
+        var command = new CommandDefinition(query, new { expectedGist.Reference, Disabled = disabled });
 
         await using var connection = await GetOpenConnectionAsync();
         var gistsInDb = (await connection.QueryAsync<Gist>(command)).ToArray();
@@ -61,7 +61,7 @@ public class MariaDbAsserter(MariaDbHandlerOptions options) {
             disabledGist.Url,
             ""
         );
-        await AssertGistIsInDbAsync(gist);
+        await AssertGistIsInDbAsync(gist, true);
     }
 
     public async Task AssertSummaryIsInDbAsync(Summary expectedSummary)

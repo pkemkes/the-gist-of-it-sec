@@ -21,6 +21,7 @@ public interface IMariaDbHandler {
     Task<int> InsertGistAsync(Gist gist, CancellationToken ct);
     Task<int> InsertGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct);
     Task<int> InsertDisabledGistAsync(DisabledGist gist, CancellationToken ct);
+    Task UpdateDisabledGistAsync(DisabledGist gist, CancellationToken ct);
     Task InsertSummaryAsync(Summary summary, CancellationToken ct);
     Task InsertSummaryAsync(Summary summary,  TransactionHandle handle, CancellationToken ct);
     Task UpdateGistAsync(Gist gist,  TransactionHandle handle, CancellationToken ct);
@@ -338,6 +339,29 @@ public class MariaDbHandler : IMariaDbHandler
         catch (Exception e) when (e is MySqlException or DatabaseOperationException)
         {
             _logger?.LogError(UpdatingGistFailed, e, "Updating gist failed");
+            throw;
+        }
+    }
+
+    public async Task UpdateDisabledGistAsync(DisabledGist gist, CancellationToken ct)
+    {
+        const string query = """
+            UPDATE Gists
+                SET FeedId = @FeedId, Author = @Author, IsSponsoredContent = @IsSponsoredContent,
+                    Published = @Published, Updated = @Updated, Url = @Url, Tags = @Tags, Disabled = TRUE
+                WHERE Reference = @Reference;
+        """;
+        var command = new CommandDefinition(query, gist, cancellationToken: ct);
+
+        try
+        {
+            await using var connection = await GetOpenConnectionAsync(ct);
+            var rowsAffected = await connection.ExecuteAsync(command).WithDeadlockRetry(_logger);
+            if (rowsAffected != 1) throw new DatabaseOperationException("Did not successfully update gist");
+        }
+        catch (MySqlException e)
+        {
+            _logger?.LogError(UpdatingGistFailed, e, "Updating Gist failed");
             throw;
         }
     }
