@@ -1,6 +1,6 @@
-fastapi==0.135.1
-uvicorn==0.41.0
-langchain==1.2.10
-langchain-openai==1.1.10
-langsmith==0.7.14
+fastapi==0.135.3
+uvicorn==0.43.0
+langchain==1.2.15
+langchain-openai==1.1.12
+langsmith==0.7.25
 python-dotenv==1.2.2
