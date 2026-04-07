@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using GistBackend.Exceptions;
 using GistBackend.Types;
 using GistBackend.Utils;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using SharpToken;
 
@@ -27,24 +28,37 @@ public class AIHandler : IAIHandler
     private readonly IEmbeddingClientHandler _embeddingClientHandler;
     private readonly HttpClient _httpClient;
     private readonly GptEncoding _encoding;
+    private readonly IMemoryCache _embeddingCache;
+
+    private static readonly MemoryCacheEntryOptions CacheEntryOptions = new MemoryCacheEntryOptions()
+        .SetSlidingExpiration(TimeSpan.FromHours(1))
+        .SetAbsoluteExpiration(TimeSpan.FromHours(24));
 
     public AIHandler(IEmbeddingClientHandler embeddingClientHandler, HttpClient httpClient,
-        IOptions<AIHandlerOptions> options)
+        IOptions<AIHandlerOptions> options, IMemoryCache embeddingCache)
     {
         _embeddingClientHandler = embeddingClientHandler;
         _encoding = GptEncoding.GetEncodingForModel(embeddingClientHandler.Model);
         _httpClient = httpClient;
         _httpClient.BaseAddress = new Uri(options.Value.Host);
+        _embeddingCache = embeddingCache;
     }
 
-    public Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken ct)
+    public async Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken ct)
     {
         // Tokenize and truncate to stay under 8k context; keep a small buffer for prompts.
         const int maxTokens = 7500;
         var tokens = _encoding.Encode(input);
         var safeInput = tokens.Count > maxTokens ? _encoding.Decode(tokens.Take(maxTokens)) : input;
 
-        return _embeddingClientHandler.GenerateEmbeddingAsync(safeInput, ct);
+        var cacheKey = $"embedding:{safeInput}";
+        var result = await _embeddingCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.SetOptions(CacheEntryOptions);
+            return await _embeddingClientHandler.GenerateEmbeddingAsync(safeInput, ct);
+        });
+
+        return result!;
     }
 
     public async Task<SummaryAIResponse> GenerateSummaryAIResponseAsync(Language feedLanguage, string title,

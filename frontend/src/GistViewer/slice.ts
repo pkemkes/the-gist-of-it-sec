@@ -7,6 +7,7 @@ export const name = "gists"
 export interface GistsState {
   lastGist: number | undefined,
   searchQuery: string,
+  aiSearchQuery: string | undefined,
   tags: string[],
   disabledFeeds: number[],
   timezone: string,
@@ -17,6 +18,7 @@ export interface GistsState {
 export const initialState: GistsState = {
   lastGist: undefined,
   searchQuery: "",
+  aiSearchQuery: undefined,
   tags: [],
   disabledFeeds: [],
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -37,6 +39,10 @@ export const slice = createSlice({
     searchQueryChanged: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
       state.lastGist = initialState.lastGist;
+      state.aiSearchQuery = initialState.aiSearchQuery;
+    },
+    aiSearchQueryChanged: (state, action: PayloadAction<string | undefined>) => {
+      state.aiSearchQuery = action.payload;
     },
     tagToggled: (state, action: PayloadAction<string>) => {
       if (state.tags.includes(action.payload)){
@@ -77,6 +83,7 @@ export const {
   lastGistChanged,
   lastGistReset,
   searchQueryChanged,
+  aiSearchQueryChanged,
   tagToggled,
   disabledFeedToggled,
   disabledFeedsChanged,
@@ -88,6 +95,7 @@ export const {
 
 export const selectLastGist = (state: RootState) => state.gists.lastGist;
 export const selectSearchQuery = (state: RootState) => state.gists.searchQuery;
+export const selectAiSearchQuery = (state: RootState) => state.gists.aiSearchQuery;
 export const selectTags = (state: RootState) => state.gists.tags;
 export const selectDisabledFeeds = (state: RootState) => state.gists.disabledFeeds;
 export const selectTimezone = (state: RootState) => state.gists.timezone;

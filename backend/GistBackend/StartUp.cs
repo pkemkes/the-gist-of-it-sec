@@ -77,6 +77,8 @@ public class StartUp(IConfiguration configuration)
                 options.Retry.BackoffType = DelayBackoffType.Exponential;
             });
 
+        services.AddMemoryCache();
+
         services.AddTransient<IRssFeedHandler, RssFeedHandler>();
         services.AddSingleton<IWebCrawlHandler, WebCrawlHandler>();
         services.AddTransient<IMariaDbHandler, MariaDbHandler>();

@@ -1,7 +1,8 @@
-import { InputAdornment, TextField, useTheme } from "@mui/material"
+import { IconButton, InputAdornment, TextField, Tooltip, useTheme } from "@mui/material"
 import SearchIcon from "@mui/icons-material/Search";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useAppDispatch } from "../../store";
-import { searchQueryChanged } from "../slice";
+import { aiSearchQueryChanged, searchQueryChanged } from "../slice";
 import { useEffect, useState } from "react";
 
 export const SearchBar = () => {
@@ -22,6 +23,12 @@ export const SearchBar = () => {
     setSearchQuery(event.currentTarget.value);
   };
 
+  const handleAiSearch = () => {
+    if (searchQuery.trim()) {
+      dispatch(aiSearchQueryChanged(searchQuery.trim()));
+    }
+  };
+
 	return <TextField 
 		label="Search"
     size="small"
@@ -33,6 +40,11 @@ export const SearchBar = () => {
       input: {
         endAdornment: (
           <InputAdornment position="end">
+            <Tooltip title="AI powered search">
+              <IconButton size="small" aria-label="AI search" onClick={ handleAiSearch }>
+                <AutoAwesomeIcon />
+              </IconButton>
+            </Tooltip>
             <SearchIcon />
           </InputAdornment>
         ),
