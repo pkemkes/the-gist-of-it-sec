@@ -1,4 +1,5 @@
 using GistBackend.Handlers.AIHandler;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using SharpToken;
@@ -59,5 +60,5 @@ public class AIHandlerTests
     }
 
     private static AIHandler CreateAIHandler(IEmbeddingClientHandler embeddingClientHandler) =>
-        new (embeddingClientHandler, new HttpClient(), Options.Create(new AIHandlerOptions()));
+        new (embeddingClientHandler, new HttpClient(), Options.Create(new AIHandlerOptions()), new MemoryCache(new MemoryCacheOptions()));
 }

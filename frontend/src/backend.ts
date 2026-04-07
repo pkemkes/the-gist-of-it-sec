@@ -16,6 +16,12 @@ interface SimilarGistsQueryParameters {
   languageMode: LanguageMode,
 }
 
+interface SearchGistsQueryParameters {
+  query: string,
+  disabledFeeds: number[],
+  languageMode: LanguageMode,
+}
+
 const pageSize = 20;
 
 const backendHostname = import.meta.env.VITE_BACKEND_URL == undefined 
@@ -79,6 +85,10 @@ export const backendApi = createApi({
     getSimilarGists: builder.query<SimilarGist[], SimilarGistsQueryParameters>({
       query: ({ id, disabledFeeds, languageMode }) => 
         `${id}/similar?disabledFeeds=${JoinDisabledFeedsParam(disabledFeeds)}&languageMode=${languageMode}`,
+    }),
+    searchGists: builder.query<SimilarGist[], SearchGistsQueryParameters>({
+      query: ({ query, disabledFeeds, languageMode }) => 
+        `search?q=${encodeURIComponent(query)}&disabledFeeds=${JoinDisabledFeedsParam(disabledFeeds)}&languageMode=${languageMode}`,
     }),
     getRecap: builder.query<Recap, { type: string, languageMode: LanguageMode }>({
       query: ({ type, languageMode }) => `recap/${type}?languageMode=${languageMode}`,

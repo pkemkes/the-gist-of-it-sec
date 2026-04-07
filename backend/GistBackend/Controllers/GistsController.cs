@@ -47,6 +47,31 @@ public class GistsController(
         }
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchSimilarGistsAsync(
+        [FromQuery] string? q = null,
+        [FromQuery] string? disabledFeeds = null,
+        [FromQuery] LanguageMode? languageMode = null,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(q)) return BadRequest("Query parameter 'q' cannot be empty.");
+            var similarDocuments =
+                await chromaDbHandler.SearchSimilarEntriesByQueryAsync(q, 20, ParseDisabledFeeds(disabledFeeds), ct);
+            var gists = await Task.WhenAll(similarDocuments.Select(sd => mariaDbHandler.GetConstructedGistByReference(sd.Reference, languageMode, ct)));
+            var searchResults = gists.Zip(similarDocuments)
+                .Select(zipped => new GistSearchResult(zipped.First!, zipped.Second.Similarity)).ToList();
+            return Ok(searchResults);
+        }
+        catch (Exception e)
+        {
+            const string message = "Could not get gists from the database";
+            logger?.LogError(ErrorInHttpRequest, e, message);
+            return Problem(message);
+        }
+    }
+
     [HttpGet("health")]
     public Task<IActionResult> GetHealthAsync(CancellationToken ct = default) =>
         GetGistsQueryAsync(1, null, null, null, null, null, null, ct);

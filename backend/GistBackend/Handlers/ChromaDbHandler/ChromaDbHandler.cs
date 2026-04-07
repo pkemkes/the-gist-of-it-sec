@@ -17,6 +17,8 @@ public interface IChromaDbHandler
     Task<bool> EnsureGistHasCorrectMetadataAsync(Gist gist, bool disabled, CancellationToken ct);
     Task<List<SimilarDocument>> GetReferenceAndScoreOfSimilarEntriesAsync(
         string reference, int nResults, IEnumerable<int> disabledFeedIds, CancellationToken ct);
+    Task<List<SimilarDocument>> SearchSimilarEntriesByQueryAsync(string query, int nResults,
+        IEnumerable<int> disabledFeedIds, CancellationToken ct);
 }
 
 public class ChromaDbHandler : IChromaDbHandler
@@ -64,9 +66,32 @@ public class ChromaDbHandler : IChromaDbHandler
         }
 
         var document = await GetDocumentByReferenceAsync(reference, collectionId, true, false, ct);
+        var similarDocuments = await GetSimilarDocumentsByEmbeddingsAsync(
+            document.Embeddings!.Single(),
+            nResults + 1,  // +1 to exclude the original entry
+            disabledFeedIds,
+            ct
+        );
+
+        // Exclude the original entry from the results
+        return similarDocuments.Where(referenceAndScore => referenceAndScore.Reference != reference).ToList();
+    }
+
+    public async Task<List<SimilarDocument>> SearchSimilarEntriesByQueryAsync(string query, int nResults,
+        IEnumerable<int> disabledFeedIds, CancellationToken ct)
+    {
+        ValidateSearchQuery(query);
+        var embeddings = await _aiHandler.GenerateEmbeddingAsync(query, ct);
+        return await GetSimilarDocumentsByEmbeddingsAsync(embeddings, nResults, disabledFeedIds, ct);
+    }
+
+    private async Task<List<SimilarDocument>> GetSimilarDocumentsByEmbeddingsAsync(float[] embeddings, int nResults,
+        IEnumerable<int> disabledFeedIds, CancellationToken ct)
+    {
+        var collectionId = await GetOrCreateCollectionAsync(ct);
         var content = CreateStringContent(new {
-            QueryEmbeddings = new[] {document.Embeddings!.Single()},
-            NResults = nResults+1, // +1 to exclude the original entry
+            QueryEmbeddings = new[] {embeddings},
+            NResults = nResults,
             Where = GenerateWhere(disabledFeedIds),
             Include = IncludeOnGet
         });
@@ -80,11 +105,9 @@ public class ChromaDbHandler : IChromaDbHandler
         var responseContent = await response.Content.ReadAsStreamAsync(ct);
         var queryResponse =
             await JsonSerializer.DeserializeAsync<QueryResponse>(responseContent, SerializerDefaults.JsonOptions, ct);
-        if (queryResponse is null) throw new DatabaseOperationException("Could not get similar entries");
-        var referencesAndScores = ExtractReferencesAndScores(queryResponse);
-
-        // Exclude the original entry from the results
-        return referencesAndScores.Where(referenceAndScore => referenceAndScore.Reference != reference).ToList();
+        return queryResponse is null
+            ? throw new DatabaseOperationException("Could not get similar entries")
+            : ExtractReferencesAndScores(queryResponse);
     }
 
     private static Dictionary<string, object> GenerateWhere(IEnumerable<int> disabledFeedIds)
@@ -318,5 +341,10 @@ public class ChromaDbHandler : IChromaDbHandler
     private static void ValidateReference(string reference)
     {
         if (reference.Length is 0 or >= 1000000) throw new ArgumentException("Reference is invalid.");
+    }
+
+    private static void ValidateSearchQuery(string query)
+    {
+        if (query.Length is 0 or >= 1000000) throw new ArgumentException("Query is invalid.");
     }
 }
