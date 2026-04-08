@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 using Prometheus;
+using Scalar.AspNetCore;
 
 namespace GistBackend;
 
@@ -90,6 +91,7 @@ public class StartUp(IConfiguration configuration)
         services.AddTransient<IDateTimeHandler, DateTimeHandler>();
 
         services.AddControllers();
+        services.AddOpenApi();
 
         services.AddHostedService(provider =>
             ActivatorUtilities.CreateInstance<GistService>(provider,
@@ -129,6 +131,8 @@ public class StartUp(IConfiguration configuration)
         {
             endpoints.MapControllers();
             endpoints.MapMetrics();
+            endpoints.MapOpenApi();
+            endpoints.MapScalarApiReference();
         });
     }
 }
