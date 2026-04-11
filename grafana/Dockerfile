@@ -1,4 +1,4 @@
-FROM grafana/grafana-oss:12.3.3
+FROM grafana/grafana-oss:12.4.2
 
 COPY ./dashboards /var/lib/grafana/dashboards
 COPY ./datasources.yml /etc/grafana/provisioning/datasources/datasources.yml
