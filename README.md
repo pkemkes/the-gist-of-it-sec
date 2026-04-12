@@ -28,6 +28,35 @@ If you want to setup the system yourself, you can modify the [docker-compose.yam
 
 The newest docker containers are always automatically built and pushed to https://hub.docker.com/u/pkemkes.
 
+# MCP Server
+
+The project includes an MCP (Model Context Protocol) server that exposes the backend API as tools for AI assistants. Once the stack is running, the MCP server is available at:
+
+```
+http(s)://<your-host>/mcp
+```
+
+To connect from an MCP-compatible client (e.g. VS Code, Claude Desktop, or Claude Code), add the server URL using Streamable HTTP transport. For example, in Claude Code:
+
+```bash
+claude mcp add --transport http the-gist-of-it-sec http(s)://<your-host>/mcp
+```
+
+Or in your VS Code `settings.json`:
+
+```json
+{
+    "mcp": {
+        "servers": {
+            "the-gist-of-it-sec": {
+                "type": "http",
+                "url": "http(s)://<your-host>/mcp"
+            }
+        }
+    }
+}
+```
+
 # License
 
 This project is released under the [PolyForm Noncommercial License 1.0.0](./LICENSE.md). Commercial use is not permitted.

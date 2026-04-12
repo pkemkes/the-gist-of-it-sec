@@ -52,6 +52,7 @@ jobs:
         run: |
           cat ./aiapi/requirements.txt \
               ./fetcher/requirements.txt \
+              ./mcpserver/requirements.txt \
               > ./licenses/requirements.txt
 
       - name: Install requirements
