@@ -1,5 +1,5 @@
 import { Card, CardContent, Typography } from "@mui/material";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { HelpOutlined as HelpOutlineIcon } from "@mui/icons-material";
 
 export const GistNotFoundMessage = () => {
   return <Card elevation={ 3 }>
