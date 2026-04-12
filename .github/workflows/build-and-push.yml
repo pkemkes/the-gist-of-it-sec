@@ -109,6 +109,15 @@ jobs:
             pkemkes/the-gist-of-it-sec-fetcher:latest
             pkemkes/the-gist-of-it-sec-fetcher:${{ github.ref_name }}
 
+      - name: Build and push mcpserver
+        uses: docker/build-push-action@v7
+        with:
+          context: "{{defaultContext}}:mcpserver"
+          push: true
+          tags: |
+            pkemkes/the-gist-of-it-sec-mcpserver:latest
+            pkemkes/the-gist-of-it-sec-mcpserver:${{ github.ref_name }}
+
       - name: Build and push database
         uses: docker/build-push-action@v7
         with:
