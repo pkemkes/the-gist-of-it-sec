@@ -30,6 +30,7 @@ def _error_response(err: Exception) -> CallToolResult:
 
 mcp = FastMCP(
     "The Gist of IT-Sec",
+    host="0.0.0.0",
     stateless_http=True,
     json_response=True,
     instructions=(
