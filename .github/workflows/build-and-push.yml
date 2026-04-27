@@ -30,7 +30,6 @@ jobs:
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner,
                 repo,
-                branch: 'main',
                 event: 'push',
                 head_sha: headSha,
                 per_page: 20,
