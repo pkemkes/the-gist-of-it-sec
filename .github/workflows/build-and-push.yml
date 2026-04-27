@@ -31,11 +31,12 @@ jobs:
                 owner,
                 repo,
                 workflow_id: targetWorkflow,
-                head_sha: headSha,
-                per_page: 5,
+                per_page: 20,
               });
 
-              const matching = runs.data.workflow_runs[0];
+              const matching = runs.data.workflow_runs.find(
+                (run) => run.head_sha === headSha
+              );
 
               if (matching) {
                 if (matching.conclusion === 'success') {
