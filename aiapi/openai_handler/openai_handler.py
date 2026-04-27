@@ -1,7 +1,29 @@
 import json
+import logging
+import os
+from contextlib import contextmanager
 from typing import List
 from os import getenv
 from datetime import datetime, timedelta, timezone
+
+logger = logging.getLogger(__name__)
+
+# Silence LangSmith tracing errors (e.g. rate limits) so they don't surface as critical
+os.environ["LANGCHAIN_CALLBACKS_BACKGROUND"] = "true"
+
+@contextmanager
+def _disable_tracing():
+    """Temporarily disable LangSmith tracing."""
+    prev = os.environ.get("LANGCHAIN_TRACING_V2")
+    os.environ["LANGCHAIN_TRACING_V2"] = "false"
+    try:
+        yield
+    finally:
+        if prev is None:
+            os.environ.pop("LANGCHAIN_TRACING_V2", None)
+        else:
+            os.environ["LANGCHAIN_TRACING_V2"] = prev
+os.environ["LANGSMITH_TRACING_SAMPLING_RATE"] = getenv("LANGSMITH_TRACING_SAMPLING_RATE", "0.1")
 
 from langchain.agents import create_agent
 from langchain_openai.chat_models import ChatOpenAI
@@ -63,9 +85,16 @@ class OpenAIHandler:
         ]
     
     async def summarize_async(self, title: str, article: str, language: Language) -> SummaryAIResponse:
-        result: dict = await self.summary_agent.ainvoke({
-            "messages": [ self._get_summary_user_message(language, title, article) ]
-        })
+        messages = {"messages": [self._get_summary_user_message(language, title, article)]}
+        try:
+            result: dict = await self.summary_agent.ainvoke(messages)
+        except Exception as e:
+            if "LangSmith" in type(e).__module__ or "langsmith" in str(e).lower() or "rate limit" in str(e).lower():
+                logger.warning("LangSmith tracing error, retrying without tracing: %s", e)
+                with _disable_tracing():
+                    result = await self.summary_agent.ainvoke(messages)
+            else:
+                raise
         response = result.get("structured_response")
         if response is None:
             raise ValueError("No structured response from summary agent")
@@ -116,9 +145,16 @@ class OpenAIHandler:
     
     async def recap_async(self, summaries: list[SummaryForRecap], recap_type: RecapType) -> RecapAIResponse:
         agent = self._get_recap_agent(recap_type)
-        result: dict = await agent.ainvoke({
-            "messages": [ self._get_recap_user_message(summary) for summary in summaries ]
-        })
+        messages = {"messages": [self._get_recap_user_message(summary) for summary in summaries]}
+        try:
+            result: dict = await agent.ainvoke(messages)
+        except Exception as e:
+            if "LangSmith" in type(e).__module__ or "langsmith" in str(e).lower() or "rate limit" in str(e).lower():
+                logger.warning("LangSmith tracing error, retrying without tracing: %s", e)
+                with _disable_tracing():
+                    result = await agent.ainvoke(messages)
+            else:
+                raise
         response = result.get("structured_response")
         if response is None:
             raise ValueError("No structured response from recap agent")
