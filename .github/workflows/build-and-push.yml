@@ -30,13 +30,13 @@ jobs:
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner,
                 repo,
+                branch: 'main',
                 event: 'push',
-                head_sha: headSha,
-                per_page: 20,
+                per_page: 10,
               });
 
               const matching = runs.data.workflow_runs.find(
-                (run) => run.name === targetWorkflow
+                (run) => run.name === targetWorkflow && run.head_sha === headSha
               );
 
               if (matching) {
