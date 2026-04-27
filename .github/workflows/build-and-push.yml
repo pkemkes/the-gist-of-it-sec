@@ -20,24 +20,22 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const headSha = context.sha;
-            const targetWorkflow = 'test-and-deploy-coverage';
+            const targetWorkflow = 'test-and-deploy-coverage.yml';
             
             // Config: Wait up to 30 minutes (60 retries * 30 seconds)
             const retryIntervalSeconds = 30;
             const maxRetries = 60;
 
             for (let i = 0; i < maxRetries; i++) {
-              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              const runs = await github.rest.actions.listWorkflowRuns({
                 owner,
                 repo,
-                branch: 'main',
-                event: 'push',
-                per_page: 10,
+                workflow_id: targetWorkflow,
+                head_sha: headSha,
+                per_page: 5,
               });
 
-              const matching = runs.data.workflow_runs.find(
-                (run) => run.name === targetWorkflow && run.head_sha === headSha
-              );
+              const matching = runs.data.workflow_runs[0];
 
               if (matching) {
                 if (matching.conclusion === 'success') {
