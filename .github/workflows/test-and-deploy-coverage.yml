@@ -53,7 +53,7 @@ jobs:
           cat coverage/report/Summary.txt
 
       - name: Upload coverage report for GitHub Pages
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: coverage/report
 
