@@ -84,6 +84,15 @@ jobs:
         with:
           path: coverage/report
 
+  test-fetcher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Build fetcher with Chromium
+        run: docker build -t gist-fetcher-test ./fetcher
+      - name: Test consent and cookie handling
+        run: docker run --rm gist-fetcher-test python -m unittest discover -p 'test_*.py' -v
+
 
   deploy-coverage:
     needs: test-backend

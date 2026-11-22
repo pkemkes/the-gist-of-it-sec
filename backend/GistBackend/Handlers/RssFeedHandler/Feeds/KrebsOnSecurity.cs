@@ -10,6 +10,7 @@ namespace GistBackend.Handlers.RssFeedHandler.Feeds;
 public record KrebsOnSecurity : RssFeed
 {
     public override Uri RssUrl => new("https://krebsonsecurity.com/feed");
+    protected override Uri FetchUrl => new("https://krebsonsecurity.com/feed/");
     public override Language Language => En;
     public override FeedType Type => Blog;
 

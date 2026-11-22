@@ -9,6 +9,8 @@ namespace GistBackend.Types;
 public abstract record RssFeed()
 {
     public abstract Uri RssUrl { get; }
+    // Retrieval can use a canonical URL without changing the persisted feed identity.
+    protected virtual Uri FetchUrl => RssUrl;
     public abstract Language Language { get; }
     public abstract FeedType Type { get; }
     public virtual IEnumerable<string>? AllowedCategories => null;
@@ -24,7 +26,10 @@ public abstract record RssFeed()
 
     public async Task ParseFeedAsync(HttpClient httpClient, CancellationToken ct)
     {
-        var response = await httpClient.GetAsync(RssUrl, ct);
+        using var request = new HttpRequestMessage(HttpMethod.Get, FetchUrl);
+        request.Headers.UserAgent.ParseAdd("TheGistOfITSec/1.0 (+https://github.com/pkemkes/the-gist-of-it-sec)");
+        request.Headers.Accept.ParseAdd("application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.1");
+        using var response = await httpClient.SendAsync(request, ct);
         if (response.StatusCode != HttpStatusCode.OK)
         {
             throw new ParsingFeedException(

@@ -42,25 +42,10 @@ class RequestsHandler:
                 # If the jar is corrupted, start fresh.
                 self.cookie_jar = LWPCookieJar(str(self.cookie_jar_path))
 
-        self.default_headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Cache-Control": "no-cache",
-            "Pragma": "no-cache",
-            "Connection": "keep-alive",
-            "Upgrade-Insecure-Requests": "1",
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "none",
-            "Sec-Fetch-User": "?1",
-            "sec-ch-ua": '"Not_A Brand";v="99", "Chromium";v="131", "Google Chrome";v="131"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"Windows"',
-        }
-        # curl_cffi expects http_version instead of the old http2 flag
-        self.session = requests.Session(impersonate="chrome", http_version=2, timeout=self.timeout)
+        # Keep browser headers and HTTP negotiation consistent with curl_cffi's
+        # current Chrome profile. Numeric http_version=2 forces HTTP/1.1.
+        self.default_headers = {"Accept-Language": "en-US,en;q=0.9"}
+        self.session = requests.Session(impersonate="chrome", timeout=self.timeout)
         self.session.headers.update(self.default_headers)
         self.session.cookies = self.cookie_jar
         self._golem_consent_mgr = GolemConsentManager(self.default_headers, timeout=self.timeout)
@@ -128,6 +113,7 @@ class RequestsHandler:
         try:
             cookies, _ = self._golem_consent_mgr.get_consent_cookies(url, referrer)
         except Exception:
+            logger.warning("Failed to complete Golem consent for %s", url, exc_info=True)
             return False
 
         if not cookies:
@@ -141,6 +127,8 @@ class RequestsHandler:
         for cookie in cookies:
             domain = cookie.get("domain", "")
             domain_initial_dot = domain.startswith(".")
+            expires = cookie.get("expires")
+            expires = int(expires) if expires is not None and expires > 0 else None
             c = Cookie(
                 version=0,
                 name=cookie.get("name", ""),
@@ -153,14 +141,18 @@ class RequestsHandler:
                 path=cookie.get("path", "/"),
                 path_specified=True,
                 secure=cookie.get("secure", False),
-                expires=int(cookie.get("expires")) if cookie.get("expires") else None,
-                discard=False,
+                expires=expires,
+                discard=expires is None,
                 comment=None,
                 comment_url=None,
                 rest={"HttpOnly": cookie.get("httpOnly", False)},
                 rfc2109=False,
             )
             self.cookie_jar.set_cookie(c)
+
+    def close(self) -> None:
+        self._golem_consent_mgr.close()
+        self.session.close()
 
     def _should_attempt_golem_consent(self, url: str, status_code: int, content: str) -> bool:
         if not is_golem_domain(url):
