@@ -1,0 +1,10 @@
+packages:
+  - .
+allowBuilds:
+  esbuild: true
+skills:
+  dirs: []
+peerDependencyRules:
+  # @eslint/compat adapts the React rules to the ESLint 10 rule API.
+  allowedVersions:
+    eslint-plugin-react>eslint: ^10.0.0

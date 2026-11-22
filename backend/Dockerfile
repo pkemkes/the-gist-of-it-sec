@@ -1,7 +1,7 @@
 # =============================================================================
 # BUILD STAGE
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 
 # Set up build workspace
 WORKDIR /src
@@ -21,13 +21,14 @@ RUN dotnet publish -c Release -o /app
 # =============================================================================
 # RUNTIME STAGE
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 
 # Set up runtime workspace
 WORKDIR /app
 
 # Install system dependencies 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/*.sources \
+    && apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
 RUN groupadd --system appuser \

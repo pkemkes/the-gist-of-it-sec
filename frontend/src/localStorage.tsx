@@ -19,7 +19,9 @@ export const saveStateData = (stateData: SaveableStateData) => {
     localStorage.setItem(timezoneStorageKey, stateData.timezone);
     localStorage.setItem(languageModeStorageKey, stateData.languageMode);
     localStorage.setItem(includeSponsoredContentStorageKey, JSON.stringify(stateData.includeSponsoredContent));
-  } catch { }
+  } catch {
+    // Keep the app usable when browser storage is unavailable or full.
+  }
 };
 
 export const loadDisabledFeeds = (): number[] | undefined => {

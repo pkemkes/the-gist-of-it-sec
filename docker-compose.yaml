@@ -61,7 +61,7 @@ services:
     image: pkemkes/the-gist-of-it-sec-aiapi
     container_name: aiapi
     depends_on:
-      promtail:
+      alloy:
         condition: service_started
     logging:
       driver: json-file
@@ -81,7 +81,7 @@ services:
     image: pkemkes/the-gist-of-it-sec-fetcher
     container_name: fetcher
     depends_on:
-      promtail:
+      alloy:
         condition: service_started
     logging:
       driver: json-file
@@ -142,6 +142,7 @@ services:
         tag: "{{.Name}}"
     environment:
       - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MARIADB_AUTO_UPGRADE=1
       - DB_GISTSERVICE_USERNAME=${DB_GISTSERVICE_USERNAME}
       - DB_GISTSERVICE_PASSWORD=${DB_GISTSERVICE_PASSWORD}
       - DB_RECAPSERVICE_USERNAME=${DB_RECAPSERVICE_USERNAME}
@@ -202,18 +203,19 @@ services:
     ports:
       - "3100:3100"
   
-  promtail:
-    image: grafana/promtail:3.6.8
-    container_name: promtail
+  alloy:
+    image: grafana/alloy:v1.22.0
+    container_name: alloy
     logging:
       driver: json-file
       options:
         max-size: 1g
         tag: "{{.Name}}"
     volumes:
-      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-    command: -config.file=/etc/promtail/promtail-config.yaml
+      - alloy-data:/var/lib/alloy
+    command: run --storage.path=/var/lib/alloy /etc/alloy/config.alloy
     depends_on:
       loki:
         condition: service_healthy
@@ -265,4 +267,6 @@ volumes:
   grafana-data:
     driver: local
   loki-data:
+    driver: local
+  alloy-data:
     driver: local
