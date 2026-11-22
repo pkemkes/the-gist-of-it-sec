@@ -1,0 +1,51 @@
+// Converted from the existing Promtail pipeline. Keep the labels used by Grafana.
+loki.process "containers" {
+    forward_to = [loki.write.default.receiver]
+
+    stage.json {
+        expressions = {
+            attrs  = "",
+            output = "log",
+            stream = "stream",
+        }
+    }
+
+    stage.json {
+        expressions = { tag = "" }
+        source = "attrs"
+    }
+
+    stage.regex {
+        expression = "(?P<container_name>(?:[^|]*[^|]))"
+        source = "tag"
+    }
+
+    stage.timestamp {
+        source = "time"
+        format = "RFC3339Nano"
+    }
+
+    stage.labels {
+        values = {
+            container_name = null,
+            stream = null,
+        }
+    }
+
+    stage.output { source = "output" }
+}
+
+loki.source.file "containers" {
+    targets = [{
+        __address__ = "localhost",
+        __path__ = "/var/lib/docker/containers/*/*log",
+        job = "containerlogs",
+    }]
+    forward_to = [loki.process.containers.receiver]
+
+    file_match { enabled = true }
+}
+
+loki.write "default" {
+    endpoint { url = "http://loki:3100/loki/api/v1/push" }
+}

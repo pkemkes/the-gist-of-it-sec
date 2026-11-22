@@ -1,7 +1,7 @@
 from typing import Literal
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel
 from starlette.requests import Request
@@ -18,7 +18,7 @@ from mcpserver_types import (
 
 
 def _structured_response(model: BaseModel) -> CallToolResult:
-    return CallToolResult(content=[], structuredContent=model.model_dump())
+    return CallToolResult(content=[], structured_content=model.model_dump())
 
 
 def _error_response(err: Exception) -> CallToolResult:
@@ -26,13 +26,10 @@ def _error_response(err: Exception) -> CallToolResult:
         msg = f"Backend returned {err.response.status_code}: {err.response.text}"
     else:
         msg = f"Backend request failed: {err}"
-    return CallToolResult(content=[TextContent(type="text", text=msg)], isError=True)
+    return CallToolResult(content=[TextContent(type="text", text=msg)], is_error=True)
 
-mcp = FastMCP(
+mcp = MCPServer(
     "The Gist of IT-Sec",
-    host="0.0.0.0",
-    stateless_http=True,
-    json_response=True,
     instructions=(
         "The Gist of IT-Sec aggregates IT security news articles and blog posts "
         "from curated RSS feeds. Each article is automatically summarised by an AI "

@@ -18,19 +18,46 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '26.13.1'
+      - uses: pnpm/action-setup@v6.1.1
+        with:
+          package_json_file: frontend/package.json
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile
+      - name: Lint, test, and build frontend
+        working-directory: ./frontend
+        run: pnpm lint && pnpm test --run && pnpm build
+
+  test-mcpserver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.15.2'
+      - run: pip install -r mcpserver/requirements.txt
+      - run: python -m unittest discover -s mcpserver -v
+
   test-backend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@v6.0.0
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6.1.0
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 11.0.x
 
       - name: Run backend unit and integration tests with coverage
         env:
@@ -53,9 +80,18 @@ jobs:
           cat coverage/report/Summary.txt
 
       - name: Upload coverage report for GitHub Pages
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: coverage/report
+
+  test-fetcher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Build fetcher with Chromium
+        run: docker build -t gist-fetcher-test ./fetcher
+      - name: Test consent and cookie handling
+        run: docker run --rm gist-fetcher-test python -m unittest discover -p 'test_*.py' -v
 
 
   deploy-coverage:
@@ -71,7 +107,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
@@ -82,7 +118,7 @@ jobs:
 
       - name: Deploy coverage to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v5.0.1
   
 
 

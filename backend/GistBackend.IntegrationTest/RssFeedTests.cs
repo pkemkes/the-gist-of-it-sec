@@ -8,7 +8,7 @@ namespace GistBackend.IntegrationTest;
 public class RssFeedTests : IAsyncLifetime {
     private readonly IContainer _container = new ContainerBuilder("nginx:latest")
         .WithPortBinding(80, true)
-        .WithResourceMapping(new DirectoryInfo("testData"), "/usr/share/nginx/html/")
+        .WithResourceMapping(DirectoryPath.Of(Path.GetFullPath("testData")), DirectoryPath.Of("/usr/share/nginx/html/"))
         .WithWaitStrategy(Wait.ForUnixContainer()
             .UntilHttpRequestIsSucceeded(r => r.ForPort(80).ForPath("/test_atom.xml")))
         .Build();

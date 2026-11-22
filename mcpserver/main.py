@@ -9,9 +9,13 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
     args = parser.parse_args()
 
-    mcp.settings.host = args.host
-    mcp.settings.port = args.port
-    mcp.run(transport="streamable-http")
+    mcp.run(
+        transport="streamable-http",
+        host=args.host,
+        port=args.port,
+        stateless_http=True,
+        json_response=True,
+    )
 
 
 if __name__ == "__main__":

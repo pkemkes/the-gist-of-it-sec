@@ -26,10 +26,14 @@ export const GistInspector = ({ gistId }: GistInspectorProps) => {
     </GistViewerBody>
   }
 
-  const isParsingError = (error: any): error is FetchBaseQueryError => {
+  const isParsingError = (error: unknown): error is FetchBaseQueryError => {
     return (
       typeof error === "object" &&
       error !== null &&
+      "status" in error &&
+      "originalStatus" in error &&
+      "data" in error &&
+      "error" in error &&
       error.status === "PARSING_ERROR" &&
       typeof error.originalStatus === "number" &&
       typeof error.data === "string" &&

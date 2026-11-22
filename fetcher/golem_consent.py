@@ -1,23 +1,23 @@
-import logging
-from contextlib import suppress
+import re
+import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 from urllib.parse import urlparse
 
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import Page
 
 from playwright_client import PlaywrightClient
 
 
-logger = logging.getLogger(__name__)
-
-
 def is_golem_domain(url: str) -> bool:
-    host = urlparse(url).netloc.lower()
-    return host.endswith("golem.de")
+    host = (urlparse(url).hostname or "").lower()
+    return host == "golem.de" or host.endswith(".golem.de")
 
 
 def looks_like_golem_consent(content: str) -> bool:
+    # Article pages also reference the consent scripts and cookie names.
+    if re.search(r'''<article\b[^>]*\bclass\s*=\s*["'][^"']*\bgo-article\b''', content, re.IGNORECASE):
+        return False
     lowered = content.lower()
     markers = [
         "golem_consent",
@@ -32,36 +32,38 @@ class GolemConsentManager:
     def __init__(self, base_headers: dict[str, str], timeout: float = 20.0):
         self.client = PlaywrightClient(base_headers, timeout=timeout)
         self.timeout_ms = int(timeout * 1000)
+        # Playwright's synchronous browser/context must stay on their owning thread.
+        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="golem-consent")
 
     def get_consent_cookies(self, url: str, referrer: str | None = None) -> tuple[list[dict[str, Any]], str | None]:
+        return self._executor.submit(self._get_consent_cookies, url, referrer).result()
+
+    def _get_consent_cookies(self, url: str, referrer: str | None) -> tuple[list[dict[str, Any]], str | None]:
+        deadline = time.monotonic() + self.timeout_ms / 1000
+
+        def remaining_ms() -> int:
+            return max(1, int((deadline - time.monotonic()) * 1000))
+
         page = self.client.new_page()
         try:
-            page.goto(url, wait_until="domcontentloaded", referer=referrer)
-            self._click_accept(page)
-            with suppress(Exception):
-                page.wait_for_load_state("networkidle", timeout=self.timeout_ms)
-            page.wait_for_timeout(500)
+            page.goto(url, wait_until="domcontentloaded", referer=referrer, timeout=remaining_ms())
+            if not page.locator("article.go-article").count():
+                self._click_accept(page, remaining_ms())
+                page.locator("article.go-article").wait_for(state="attached", timeout=remaining_ms())
             cookies = self.client.context_cookies()
             return cookies, page.url
         finally:
             page.close()
 
-    def _click_accept(self, page: Page) -> None:
-        # Wait for either the CMP iframe or the GolemConsent API to become available.
-        wait_target = """() => document.querySelector("iframe[src*='cmp-cdn.golem.de']") || (window.GolemConsent && typeof window.GolemConsent.acceptAll === 'function')"""
+    def close(self) -> None:
         try:
-            page.wait_for_function(wait_target, timeout=self.timeout_ms // 2)
-        except PlaywrightTimeoutError:
-            logger.warning(f"Golem consent elements not found within timeout for {page.url}")
+            self._executor.submit(self.client.shutdown).result()
+        finally:
+            self._executor.shutdown()
 
-        # Try inside the CMP iframe first (as seen in response2.html).
-        try:
-            iframe_el = page.query_selector("iframe[src*='cmp-cdn.golem.de']")
-            if iframe_el:
-                frame = iframe_el.content_frame()
-                if frame:
-                    btn = frame.wait_for_selector("button:has-text(\"Zustimmen und weiter\")", timeout=self.timeout_ms // 2)
-                    btn.click()
-                    return
-        except PlaywrightTimeoutError:
-            logger.warning(f"Golem consent iframe button not found within timeout for {page.url}")
+    def _click_accept(self, page: Page, timeout_ms: int) -> None:
+        # The CMP follows the browser locale; en-US uses "Accept and Continue".
+        label = re.compile(r"^(Zustimmen und weiter|Accept and Continue)$", re.IGNORECASE)
+        page.frame_locator('iframe[src*="cmp-cdn.golem.de"]').get_by_role(
+            "button", name=label
+        ).click(timeout=timeout_ms)

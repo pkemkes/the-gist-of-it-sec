@@ -11,17 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.11'
+          python-version: '3.14.10'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '26.13.1'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.1.1
         with:
-          version: 10.26.2
+          version: 12.21.0
 
       - name: Clean pnpm store and install packages
         working-directory: ./frontend
@@ -74,12 +79,10 @@ jobs:
         working-directory: ./licenses
         run: tail -n +5 Python.txt | head -n -2 > temp.txt && mv temp.txt Python.txt
 
-      - name: Setup .NET SDKs (9.0 for app, 7.0 for tool runtime)
-        uses: actions/setup-dotnet@v5
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6.1.0
         with:
-          dotnet-version: |
-            9.0.x
-            7.0.x
+          dotnet-version: 11.0.x
 
       - name: Install dotnet-project-licenses tool
         run: |
@@ -92,10 +95,10 @@ jobs:
 
       - name: Generate .NET license report
         working-directory: ./backend
-        run: dotnet-project-licenses --input ./GistBackend/GistBackend.csproj -e -t -c -o --outfile ../licenses/DotNet.txt
+        run: DOTNET_ROLL_FORWARD=Major dotnet-project-licenses --input ./GistBackend/GistBackend.csproj -e -t --use-project-assets-json -c -o --output-directory ../licenses/dotnet --outfile ../licenses/DotNet.txt
       
       - name: Combine files into new NOTICE.md
-        run: cat ./licenses/Python.txt ./frontend/Npm.txt ./licenses/DotNet.txt > NOTICE.md
+        run: cat ./licenses/Python.txt ./frontend/Npm.txt ./licenses/DotNet.txt ./licenses/dotnet/*.txt > NOTICE.md
       
       - name: Commit new NOTICE.md
         run: |

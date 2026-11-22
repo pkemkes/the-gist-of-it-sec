@@ -1,12 +1,23 @@
 from fastapi import FastAPI
 from fastapi.concurrency import run_in_threadpool
+from contextlib import asynccontextmanager
 from requests_handler import RequestsHandler
 
 from typing import Any
 
 
-app = FastAPI(title="Fetch API", version="0.1.0")
 handler = RequestsHandler()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        yield
+    finally:
+        await run_in_threadpool(handler.close)
+
+
+app = FastAPI(title="Fetch API", version="0.1.0", lifespan=lifespan)
 
 
 @app.get("/health")
